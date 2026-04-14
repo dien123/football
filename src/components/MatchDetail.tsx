@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Match, BetOption } from '../types';
 import { supabase } from '../lib/supabase';
-import { formatVND } from '../utils/format';
+import { formatVND, formatHandicap } from '../utils/format';
 
 interface MatchDetailProps {
   match: Match;
@@ -158,11 +158,29 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
 
         {/* Handicap Info Badge */}
         <div className="flex justify-center mb-12">
-          <div className="bg-amber-500/20 border border-amber-500/30 px-6 py-2 rounded-full flex items-center gap-2 backdrop-blur-md">
-            <span className="text-lg">⚖️</span>
-            <span className="text-sm font-bold text-amber-200 uppercase tracking-wider">
-              Kèo chấp: {match.favorite_team === 'teamA' ? match.team_a_name : match.team_b_name} chấp {match.handicap}
-            </span>
+          <div className="bg-amber-500/20 w-full border border-amber-500/30 px-4 md:px-8 py-4 rounded-3xl flex flex-col items-center gap-2 backdrop-blur-md shadow-lg shadow-amber-500/10">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">⚖️</span>
+              <span className="text-base md:text-lg font-bold text-amber-400/90 uppercase tracking-widest">
+                KÈO CHẤP
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-center w-full gap-3 md:gap-6 text-lg md:text-3xl font-black text-amber-100 uppercase tracking-wide">
+              <div className="flex-1 text-right">
+                {match.favorite_team === 'teamA' 
+                  ? `${match.team_a_name} 0` 
+                  : `${match.team_a_name} +${formatHandicap(match.handicap)}`}
+              </div>
+              
+              <div className="text-3xl md:text-4xl flex-shrink-0 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]">🏆</div>
+
+              <div className="flex-1 text-left">
+                {match.favorite_team === 'teamA' 
+                  ? `+${formatHandicap(match.handicap)} ${match.team_b_name}` 
+                  : `${match.team_b_name} 0`}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -173,9 +191,8 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
             <button
               onClick={() => (isAdmin || match.status !== 'finished') && onBet('teamA')}
               disabled={!isAdmin && match.status === 'finished'}
-              className={`w-full bg-slate-900/60 border border-white/10 rounded-[32px] p-8 transition-all relative overflow-hidden shadow-2xl backdrop-blur-md group ${
-                (isAdmin || match.status !== 'finished') ? 'hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98]' : 'opacity-60 cursor-not-allowed'
-              }`}
+              className={`w-full bg-slate-900/60 border border-white/10 rounded-[32px] p-8 transition-all relative overflow-hidden shadow-2xl backdrop-blur-md group ${(isAdmin || match.status !== 'finished') ? 'hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98]' : 'opacity-60 cursor-not-allowed'
+                }`}
             >
               <div className="flex flex-col items-center">
                 <div className="w-16 h-10 mb-4 rounded-lg overflow-hidden shadow-lg border border-white/10 group-hover:scale-110 transition-transform">
@@ -186,9 +203,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
                   )}
                 </div>
                 <span className="text-lg font-bold text-slate-300 mb-4">{match.team_a_name}</span>
-                <span className="text-6xl font-black text-indigo-400 mb-4 tracking-tighter">
-                  {match.favorite_team === 'teamA' ? '0' : `+${match.handicap}`}
-                </span>
+
                 <div className="inline-block px-4 py-1.5 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-indigo-300 text-[16px] font-black uppercase">
                   Ăn {match.rate_a}%
                 </div>
@@ -241,9 +256,8 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
             <button
               onClick={() => (isAdmin || match.status !== 'finished') && onBet('teamB')}
               disabled={!isAdmin && match.status === 'finished'}
-              className={`w-full bg-slate-900/60 border border-white/10 rounded-[32px] p-8 transition-all relative overflow-hidden shadow-2xl backdrop-blur-md group ${
-                (isAdmin || match.status !== 'finished') ? 'hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98]' : 'opacity-60 cursor-not-allowed'
-              }`}
+              className={`w-full bg-slate-900/60 border border-white/10 rounded-[32px] p-8 transition-all relative overflow-hidden shadow-2xl backdrop-blur-md group ${(isAdmin || match.status !== 'finished') ? 'hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98]' : 'opacity-60 cursor-not-allowed'
+                }`}
             >
               <div className="flex flex-col items-center">
                 <div className="w-16 h-10 mb-4 rounded-lg overflow-hidden shadow-lg border border-white/10 group-hover:scale-110 transition-transform">
@@ -254,9 +268,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
                   )}
                 </div>
                 <span className="text-lg font-bold text-slate-300 mb-4">{match.team_b_name}</span>
-                <span className="text-6xl font-black text-rose-400 mb-4 tracking-tighter">
-                  {match.favorite_team === 'teamB' ? '0' : `+${match.handicap}`}
-                </span>
+
                 <div className="inline-block px-4 py-1.5 bg-rose-500/20 border border-rose-500/30 rounded-full text-rose-300 text-[16px] font-black uppercase">
                   Ăn {match.rate_b}%
                 </div>

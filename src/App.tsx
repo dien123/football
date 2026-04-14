@@ -5,6 +5,8 @@ import MatchPage from './pages/MatchPage';
 import ResultsPage from './pages/ResultsPage';
 import AdminPage from './pages/AdminPage';
 import AdminGuard from './components/AdminGuard';
+import RealTimeClock from './components/RealTimeClock';
+import ScrollToTop from './components/ScrollToTop';
 import { supabase } from './lib/supabase';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -64,14 +66,14 @@ function NavBar() {
       </div>
 
       {session && (
-        <div className="absolute -top-12 left-4 px-3 py-1.5 bg-white/5 backdrop-blur rounded-full border border-white/10 flex items-center gap-2">
+        <div className="absolute -top-12 left-10 px-3 py-1.5 bg-white/5 backdrop-blur rounded-full border border-white/10 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[10px] text-slate-300 font-bold truncate max-w-[120px]">
+          <span className="text-[12px] text-slate-300 font-bold truncate max-w-[120px]">
             Hi, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
           </span>
           <button
             onClick={handleLogout}
-            className="text-[10px] text-rose-400 hover:text-rose-300 font-black uppercase ml-1 border-l border-white/10 pl-2"
+            className="text-[12px] text-rose-400 hover:text-rose-300 font-black uppercase ml-1 border-l border-white/10 pl-2"
           >
             Thoát
           </button>
@@ -125,6 +127,12 @@ function App() {
             <Route path="/results" element={<ResultsPage />} />
             <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
           </Routes>
+          <div className="fixed top-14 left-10 z-50 pointer-events-none">
+            <div className="pointer-events-auto">
+              <RealTimeClock />
+            </div>
+          </div>
+          <ScrollToTop />
           <NavBar />
         </div>
       </BrowserRouter>

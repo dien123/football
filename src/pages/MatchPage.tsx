@@ -189,7 +189,7 @@ const MatchPage: React.FC = () => {
                       FIFA WORLD CUP 2026
                     </div>
                     <h1 className="text-4xl md:text-8xl font-black text-white tracking-tighter flex items-center gap-4 mt-8 mb-8 drop-shadow-2xl">
-                      LỊCH THI ĐẤU
+                      GIẢI ĐẤU TÔI YÊU
                     </h1>
                     {isAdmin && (
                       <div className="mt-2 px-3 py-1 bg-amber-500 rounded text-[10px] text-black font-black uppercase inline-block">
@@ -198,14 +198,16 @@ const MatchPage: React.FC = () => {
                     )}
                   </div>
 
-                  {!session && (
-                    <button
-                      onClick={() => setAuthModalOpen(true)}
-                      className="px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest bg-white text-black hover:bg-emerald-400 transition-all shadow-lg self-center md:self-auto"
-                    >
-                      🔑 Đăng nhập
-                    </button>
-                  )}
+                  <div className="flex flex-col items-center md:items-end gap-4">
+                    {!session && (
+                      <button
+                        onClick={() => setAuthModalOpen(true)}
+                        className="px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest bg-white text-black hover:bg-emerald-400 transition-all shadow-lg"
+                      >
+                        🔑 Đăng nhập
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Filters Section: Moved Below Title */}
