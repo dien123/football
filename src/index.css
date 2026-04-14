@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply text-slate-50 antialiased selection:bg-indigo-500/30;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #020617;
+    /* Dark slate base fallback */
+    position: relative;
+    min-height: 100vh;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
