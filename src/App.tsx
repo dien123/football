@@ -31,7 +31,7 @@ function NavBar() {
   };
 
   const linkCls = ({ isActive }: { isActive: boolean }) =>
-    `relative flex flex-col items-center gap-0.5 text-xs font-semibold py-2 px-4 transition-colors ${isActive ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
+    `relative flex flex-col items-center gap-0.5 text-xs font-semibold py-2 px-4  transition-colors ${isActive ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
     }`;
 
   return (
@@ -65,16 +65,16 @@ function NavBar() {
 
       {session && (
         <div className="absolute -top-12 left-4 px-3 py-1.5 bg-white/5 backdrop-blur rounded-full border border-white/10 flex items-center gap-2">
-           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-           <span className="text-[10px] text-slate-300 font-bold truncate max-w-[120px]">
-             Hi, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
-           </span>
-           <button 
-             onClick={handleLogout}
-             className="text-[10px] text-rose-400 hover:text-rose-300 font-black uppercase ml-1 border-l border-white/10 pl-2"
-           >
-             Thoát
-           </button>
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] text-slate-300 font-bold truncate max-w-[120px]">
+            Hi, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+          </span>
+          <button
+            onClick={handleLogout}
+            className="text-[10px] text-rose-400 hover:text-rose-300 font-black uppercase ml-1 border-l border-white/10 pl-2"
+          >
+            Thoát
+          </button>
         </div>
       )}
 
@@ -112,11 +112,11 @@ function App() {
   }, []);
 
   return (
-    <AppContext.Provider value={{ 
-      isAdminAuthenticated, 
-      setAdminAuthenticated, 
-      session, 
-      user: session?.user ?? null 
+    <AppContext.Provider value={{
+      isAdminAuthenticated,
+      setAdminAuthenticated,
+      session,
+      user: session?.user ?? null
     }}>
       <BrowserRouter>
         <div className="relative bg-[#111] min-h-screen">
