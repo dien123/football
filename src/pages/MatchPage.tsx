@@ -202,9 +202,9 @@ const MatchPage: React.FC = () => {
                     {!session && (
                       <button
                         onClick={() => setAuthModalOpen(true)}
-                        className="px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest bg-white text-black hover:bg-emerald-400 transition-all shadow-lg"
+                        className="px-2 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest bg-white text-black hover:bg-emerald-400 transition-all shadow-lg"
                       >
-                        🔑 Đăng nhập
+                        Đăng nhập
                       </button>
                     )}
                   </div>
