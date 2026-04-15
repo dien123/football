@@ -91,15 +91,15 @@ function NavBar() {
 
 
       <div className="absolute -top-16 right-10 px-3 py-1.5 pointer-events-none flex items-center">
-        <span className="text-[15px] text-amber-400 font-black uppercase tracking-widest drop-shadow-[0_0_8px_rgba(251,191,36,0.6)] animate-pulse">
-          Provided by Az Tv
+        <span className="text-[15px] text-amber-400 font-black tracking-widest drop-shadow-[0_0_8px_rgba(251,191,36,0.6)] animate-pulse">
+          PROVIDED BY Az TV
         </span>
       </div>
 
       {/* Scrolling Warning Banner */}
       <div className="absolute top-2 -translate-y-full inset-x-0 h-8 bg-rose-900/60 border-t border-white/10 backdrop-blur-md overflow-hidden pointer-events-none shadow-[0_-5px_15px_rgba(0,0,0,0.5)]">
         <div className="animate-marquee whitespace-nowrap text-base sm:text-sm text-rose-500 font-black uppercase tracking-[0.1em] h-full flex items-center drop-shadow-md">
-          TRANG WEB VỚI MỤC ĐÍCH GIẢI TRÍ, KHÔNG TUYÊN TRUYỀN CÁ ĐỘ BÓNG ĐÁ, CÁ ĐỘ LÀ VI PHẠM PHÁP LUẬT TẠI VIỆT NAM
+          TRANG WEB VỚI MỤC ĐÍCH GIẢI TRÍ, KHÔNG TUYÊN TRUYỀN CÁ ĐỘ BÓNG ĐÁ, CÁ ĐỘ LÀ HÀNH VI VI PHẠM PHÁP LUẬT TẠI VIỆT NAM
         </div>
       </div>
     </nav>
