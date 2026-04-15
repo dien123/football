@@ -165,20 +165,20 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
                 KÈO CHẤP
               </span>
             </div>
-            
+
             <div className="flex items-center justify-center w-full gap-3 md:gap-6 text-lg md:text-3xl font-black text-amber-100 uppercase tracking-wide">
               <div className="flex-1 text-right">
-                {match.favorite_team === 'teamA' 
-                  ? `${match.team_a_name} 0` 
+                {match.favorite_team === 'teamA'
+                  ? `${match.team_a_name} 0`
                   : `${match.team_a_name} +${formatHandicap(match.handicap)}`}
               </div>
-              
+
               <div className="text-3xl md:text-4xl flex-shrink-0 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]">🏆</div>
 
               <div className="flex-1 text-left">
-                {match.favorite_team === 'teamA' 
-                  ? `+${formatHandicap(match.handicap)} ${match.team_b_name}` 
-                  : `${match.team_b_name} 0`}
+                {match.favorite_team === 'teamA'
+                  ? `+${formatHandicap(match.handicap)} ${match.team_b_name}`
+                  : `0 ${match.team_b_name} `}
               </div>
             </div>
           </div>
