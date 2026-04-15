@@ -11,7 +11,7 @@ const AdminPage: React.FC = () => {
   const [filter, setFilter] = useState<'date' | 'live' | 'all'>('date');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [localScores, setLocalScores] = useState<Record<string, { a: number, b: number }>>({});
-  
+
   const scrollerRef = useRef<HTMLDivElement>(null);
   const ctx = useContext(AppContext);
   if (!ctx) return null;
@@ -27,11 +27,11 @@ const AdminPage: React.FC = () => {
       .from('matches')
       .select('*')
       .order('start_time', { ascending: true });
-    
+
     if (!error) {
       const fetched = data || [];
       setMatches(fetched);
-      
+
       if (fetched.length > 0 && !selectedDate) {
         const dates = [...new Set(fetched.map(m => new Date(m.start_time).toLocaleDateString('vi-VN')))].sort((a, b) => {
           const [da, ma, ya] = a.split('/').map(Number);
@@ -73,16 +73,16 @@ const AdminPage: React.FC = () => {
     let error;
 
     if (id) {
-       const { error: err } = await supabase
+      const { error: err } = await supabase
         .from('matches')
         .update(payload)
         .eq('id', id);
-       error = err;
+      error = err;
     } else {
-       const { error: err } = await supabase
+      const { error: err } = await supabase
         .from('matches')
         .insert([payload]);
-       error = err;
+      error = err;
     }
 
     if (!error) {
@@ -184,10 +184,10 @@ const AdminPage: React.FC = () => {
   return (
     <div className="min-h-screen relative overflow-hidden text-white pb-24 px-6 pt-12">
       {/* Immersive Background */}
-      <div 
+      <div
         className="fixed inset-0 z-0 opacity-40 blur-sm pointer-events-none"
-        style={{ 
-          backgroundImage: 'url("/world_cup_bg.png")', 
+        style={{
+          backgroundImage: 'url("/world_cup_bg.png")',
           backgroundSize: 'cover',
           backgroundPosition: 'center'
         }}
@@ -196,17 +196,17 @@ const AdminPage: React.FC = () => {
       <div className="max-w-4xl mx-auto relative z-10">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-black uppercase tracking-widest text-emerald-400 drop-shadow-lg flex items-center gap-3">
-             <span className="p-2 bg-emerald-500/20 rounded-xl shadow-inner">⚙️</span>
-             Quản Lý Trận Đấu
+            <span className="p-2 bg-emerald-500/20 rounded-xl shadow-inner">⚙️</span>
+            Quản Lý Trận Đấu
           </h1>
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setAdminAuthenticated(false)}
               className="bg-white/5 hover:bg-white/10 text-slate-400 text-xs font-bold px-6 py-3 rounded-xl transition-all border border-white/5 uppercase tracking-wider"
             >
               Thoát Admin
             </button>
-            <button 
+            <button
               onClick={() => {
                 setIsAdding(true);
                 setEditingMatch({
@@ -235,7 +235,7 @@ const AdminPage: React.FC = () => {
         {(isAdding || editingMatch?.id) && (
           <div className="bg-[#1e293b]/90 backdrop-blur-3xl border border-white/10 rounded-[40px] p-8 md:p-10 mb-12 shadow-2xl animate-in fade-in zoom-in-95 duration-300 ring-1 ring-white/10 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-indigo-500 to-rose-500" />
-            
+
             <h2 className="text-2xl font-black mb-10 flex items-center justify-center gap-4">
               <span className="w-12 h-1 bg-emerald-500 rounded-full" />
               {editingMatch?.id ? 'CHỈNH SỬA TRẬN ĐẤU' : 'THÊM TRẬN ĐẤU MỚI'}
@@ -246,35 +246,35 @@ const AdminPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 relative">
               {/* VS Divider */}
               <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-4 z-0 pointer-events-none opacity-20">
-                 <div className="w-[1px] h-64 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-                 <span className="text-4xl font-black text-white italic">VS</span>
-                 <div className="w-[1px] h-64 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+                <div className="w-[1px] h-64 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+                <span className="text-4xl font-black text-white italic">VS</span>
+                <div className="w-[1px] h-64 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
               </div>
 
               {/* TEAM A COLUMN */}
               <div className="space-y-6 relative z-10 bg-emerald-500/5 p-6 rounded-[32px] border border-emerald-500/10">
                 <div className="flex items-center gap-3 mb-2 underline decoration-emerald-500/30 underline-offset-8">
-                   <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                   <h3 className="text-sm font-black text-emerald-400 uppercase tracking-widest">Đội A (TRÊN)</h3>
+                  <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                  <h3 className="text-sm font-black text-emerald-400 uppercase tracking-widest">Đội A (TRÊN)</h3>
                 </div>
-                
+
                 <div>
                   <label className={labelCls}>Tên Đội</label>
-                  <input 
-                    className={inputCls} 
+                  <input
+                    className={inputCls}
                     placeholder="Nhập tên đội..."
-                    value={editingMatch?.team_a_name || ''} 
+                    value={editingMatch?.team_a_name || ''}
                     onChange={e => setEditingMatch(prev => ({ ...prev, team_a_name: e.target.value }))}
                   />
                 </div>
-                
+
                 <div className="flex gap-4">
                   <div className="flex-1">
                     <label className={labelCls}>Mã QG (Flag)</label>
-                    <input 
-                      className={inputCls} 
+                    <input
+                      className={inputCls}
                       placeholder="Mã ISO (mx, za...)"
-                      value={editingMatch?.team_a_code || ''} 
+                      value={editingMatch?.team_a_code || ''}
                       onChange={e => setEditingMatch(prev => ({ ...prev, team_a_code: e.target.value.toLowerCase() }))}
                     />
                   </div>
@@ -286,124 +286,124 @@ const AdminPage: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                   <div>
-                     <label className={labelCls}>Kèo Chấp (0 nếu chấp)</label>
-                     <input 
-                        className={inputCls} 
-                        type="number" 
-                        step="0.25"
-                        placeholder="0.0"
-                        value={editingMatch?.favorite_team === 'teamB' ? editingMatch?.handicap : 0} 
-                        onChange={e => {
-                           const val = parseFloat(e.target.value);
-                           if (val > 0) {
-                              setEditingMatch(prev => ({ ...prev, favorite_team: 'teamB', handicap: val }));
-                           } else {
-                              setEditingMatch(prev => ({ ...prev, favorite_team: 'teamA', handicap: 0 }));
-                           }
-                        }}
-                     />
-                   </div>
-                   <div>
-                     <label className={labelCls}>Tỉ số A</label>
-                     <input 
-                        className={inputCls} 
-                        type="number"
-                        value={editingMatch?.score_a ?? 0} 
-                        onChange={e => {
-                          const val = parseInt(e.target.value);
-                          setEditingMatch(prev => ({ ...prev, score_a: isNaN(val) ? 0 : val }));
-                        }}
-                     />
-                   </div>
-                 </div>
-
-                 <div>
-                    <label className={labelCls}>Tỷ lệ ăn A (%)</label>
-                    <input 
-                      className={inputCls} 
+                  <div>
+                    <label className={labelCls}>Kèo Chấp (0 nếu chấp)</label>
+                    <input
+                      className={inputCls}
                       type="number"
-                      value={editingMatch?.rate_a || 0} 
-                      onChange={e => setEditingMatch(prev => ({ ...prev, rate_a: parseInt(e.target.value) || 0 }))}
+                      step="0.25"
+                      placeholder="0.0"
+                      value={editingMatch?.favorite_team === 'teamB' ? editingMatch?.handicap : 0}
+                      onChange={e => {
+                        const val = parseFloat(e.target.value);
+                        if (val > 0) {
+                          setEditingMatch(prev => ({ ...prev, favorite_team: 'teamB', handicap: val }));
+                        } else {
+                          setEditingMatch(prev => ({ ...prev, favorite_team: 'teamA', handicap: 0 }));
+                        }
+                      }}
                     />
-                 </div>
-               </div>
-
-               {/* TEAM B COLUMN */}
-               <div className="space-y-6 relative z-10 bg-rose-500/5 p-6 rounded-[32px] border border-rose-500/10">
-                 <div className="flex items-center gap-3 mb-2 underline decoration-rose-500/30 underline-offset-8">
-                    <div className="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
-                    <h3 className="text-sm font-black text-rose-400 uppercase tracking-widest">Đội B (DƯỚI)</h3>
-                 </div>
-
-                 <div>
-                   <label className={labelCls}>Tên Đội</label>
-                   <input 
-                     className={inputCls} 
-                     placeholder="Nhập tên đội..."
-                     value={editingMatch?.team_b_name || ''} 
-                     onChange={e => setEditingMatch(prev => ({ ...prev, team_b_name: e.target.value }))}
-                   />
-                 </div>
-
-                 <div className="flex gap-4">
-                   <div className="flex-1">
-                     <label className={labelCls}>Mã QG (Flag)</label>
-                     <input 
-                       className={inputCls} 
-                       placeholder="Mã ISO (mx, za...)"
-                       value={editingMatch?.team_b_code || ''} 
-                       onChange={e => setEditingMatch(prev => ({ ...prev, team_b_code: e.target.value.toLowerCase() }))}
-                     />
-                   </div>
-                   <div className="w-14 h-11 mt-6 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center overflow-hidden">
-                     {editingMatch?.team_b_code ? (
-                       <img src={`https://flagcdn.com/w40/${editingMatch.team_b_code.toLowerCase()}.png`} alt="" className="w-full h-full object-cover" />
-                     ) : '🏁'}
-                   </div>
-                 </div>
-
-                 <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className={labelCls}>Kèo Chấp (0 nếu chấp)</label>
-                      <input 
-                         className={inputCls} 
-                         type="number" 
-                         step="0.25"
-                         placeholder="0.0"
-                         value={editingMatch?.favorite_team === 'teamA' ? editingMatch?.handicap : 0} 
-                         onChange={e => {
-                            const val = parseFloat(e.target.value);
-                            if (val > 0) {
-                               setEditingMatch(prev => ({ ...prev, favorite_team: 'teamA', handicap: val }));
-                            } else {
-                               setEditingMatch(prev => ({ ...prev, favorite_team: 'teamB', handicap: 0 }));
-                            }
-                         }}
-                      />
-                    </div>
-                    <div>
-                      <label className={labelCls}>Tỉ số B</label>
-                      <input 
-                         className={inputCls} 
-                         type="number"
-                         value={editingMatch?.score_b ?? 0} 
-                         onChange={e => {
-                           const val = parseInt(e.target.value);
-                           setEditingMatch(prev => ({ ...prev, score_b: isNaN(val) ? 0 : val }));
-                         }}
-                      />
-                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Tỉ số A</label>
+                    <input
+                      className={inputCls}
+                      type="number"
+                      value={editingMatch?.score_a ?? 0}
+                      onChange={e => {
+                        const val = parseInt(e.target.value);
+                        setEditingMatch(prev => ({ ...prev, score_a: isNaN(val) ? 0 : val }));
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <div>
-                   <label className={labelCls}>Tỷ lệ ăn B (%)</label>
-                   <input 
-                     className={inputCls} 
-                     type="number"
-                     value={editingMatch?.rate_b || 0} 
-                     onChange={e => setEditingMatch(prev => ({ ...prev, rate_b: parseInt(e.target.value) }))}
-                   />
+                  <label className={labelCls}>Tỷ lệ ăn A (%)</label>
+                  <input
+                    className={inputCls}
+                    type="number"
+                    value={editingMatch?.rate_a || 0}
+                    onChange={e => setEditingMatch(prev => ({ ...prev, rate_a: parseInt(e.target.value) || 0 }))}
+                  />
+                </div>
+              </div>
+
+              {/* TEAM B COLUMN */}
+              <div className="space-y-6 relative z-10 bg-rose-500/5 p-6 rounded-[32px] border border-rose-500/10">
+                <div className="flex items-center gap-3 mb-2 underline decoration-rose-500/30 underline-offset-8">
+                  <div className="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+                  <h3 className="text-sm font-black text-rose-400 uppercase tracking-widest">Đội B (DƯỚI)</h3>
+                </div>
+
+                <div>
+                  <label className={labelCls}>Tên Đội</label>
+                  <input
+                    className={inputCls}
+                    placeholder="Nhập tên đội..."
+                    value={editingMatch?.team_b_name || ''}
+                    onChange={e => setEditingMatch(prev => ({ ...prev, team_b_name: e.target.value }))}
+                  />
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className={labelCls}>Mã QG (Flag)</label>
+                    <input
+                      className={inputCls}
+                      placeholder="Mã ISO (mx, za...)"
+                      value={editingMatch?.team_b_code || ''}
+                      onChange={e => setEditingMatch(prev => ({ ...prev, team_b_code: e.target.value.toLowerCase() }))}
+                    />
+                  </div>
+                  <div className="w-14 h-11 mt-6 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center overflow-hidden">
+                    {editingMatch?.team_b_code ? (
+                      <img src={`https://flagcdn.com/w40/${editingMatch.team_b_code.toLowerCase()}.png`} alt="" className="w-full h-full object-cover" />
+                    ) : '🏁'}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelCls}>Kèo Chấp (0 nếu chấp)</label>
+                    <input
+                      className={inputCls}
+                      type="number"
+                      step="0.25"
+                      placeholder="0.0"
+                      value={editingMatch?.favorite_team === 'teamA' ? editingMatch?.handicap : 0}
+                      onChange={e => {
+                        const val = parseFloat(e.target.value);
+                        if (val > 0) {
+                          setEditingMatch(prev => ({ ...prev, favorite_team: 'teamA', handicap: val }));
+                        } else {
+                          setEditingMatch(prev => ({ ...prev, favorite_team: 'teamB', handicap: 0 }));
+                        }
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Tỉ số B</label>
+                    <input
+                      className={inputCls}
+                      type="number"
+                      value={editingMatch?.score_b ?? 0}
+                      onChange={e => {
+                        const val = parseInt(e.target.value);
+                        setEditingMatch(prev => ({ ...prev, score_b: isNaN(val) ? 0 : val }));
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelCls}>Tỷ lệ ăn B (%)</label>
+                  <input
+                    className={inputCls}
+                    type="number"
+                    value={editingMatch?.rate_b || 0}
+                    onChange={e => setEditingMatch(prev => ({ ...prev, rate_b: parseInt(e.target.value) }))}
+                  />
                 </div>
               </div>
             </div>
@@ -412,10 +412,10 @@ const AdminPage: React.FC = () => {
             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-white/5 pt-8">
               <div>
                 <label className={labelCls}>Thời gian bắt đầu</label>
-                <input 
-                  className={inputCls} 
+                <input
+                  className={inputCls}
                   type="datetime-local"
-                  value={editingMatch?.start_time ? new Date(editingMatch.start_time).toISOString().slice(0, 16) : ''} 
+                  value={editingMatch?.start_time ? new Date(editingMatch.start_time).toISOString().slice(0, 16) : ''}
                   onChange={e => setEditingMatch(prev => ({ ...prev, start_time: new Date(e.target.value).toISOString() }))}
                 />
               </div>
@@ -427,11 +427,10 @@ const AdminPage: React.FC = () => {
                     <button
                       key={s}
                       onClick={() => setEditingMatch(prev => ({ ...prev, status: s }))}
-                      className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                        editingMatch?.status === s 
-                        ? 'bg-indigo-600 text-white shadow-lg' 
+                      className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${editingMatch?.status === s
+                        ? 'bg-indigo-600 text-white shadow-lg'
                         : 'bg-white/5 text-slate-500 hover:bg-white/10'
-                      }`}
+                        }`}
                     >
                       {s === 'scheduled' ? 'Sắp đá' : s === 'live' ? 'Đang đá' : 'Kết thúc'}
                     </button>
@@ -441,14 +440,14 @@ const AdminPage: React.FC = () => {
             </div>
 
             <div className="flex gap-4 mt-12">
-              <button 
-                onClick={handleSaveMatch} 
+              <button
+                onClick={handleSaveMatch}
                 className="flex-[2] bg-gradient-to-r from-emerald-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white font-black py-5 rounded-3xl shadow-xl transition-all uppercase tracking-[0.2em] active:scale-95 text-sm"
               >
                 LƯU TRẬN ĐẤU
               </button>
-              <button 
-                onClick={() => { setEditingMatch(null); setIsAdding(false); }} 
+              <button
+                onClick={() => { setEditingMatch(null); setIsAdding(false); }}
                 className="flex-1 bg-white/5 hover:bg-white/10 text-slate-400 font-bold py-5 rounded-3xl transition-all active:scale-95 border border-white/5 uppercase tracking-widest text-xs"
               >
                 HỦY
@@ -459,28 +458,28 @@ const AdminPage: React.FC = () => {
 
         {/* List of matches */}
         <div className="space-y-6">
-          <div className="flex flex-col md:flex-row items-center gap-8 bg-white/5 backdrop-blur-md p-6 rounded-[32px] border border-white/10 mb-8">
+          <div className="flex flex-row items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-[32px] border border-white/10 mb-8 flex-wrap">
             {/* Filter Toggle */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setFilter('date')}
-                className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === 'date' ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-900/40' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                className={`px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filter === 'date' ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-900/40' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
               >
                 Theo Ngày
               </button>
               <button
                 onClick={() => setFilter('live')}
-                className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === 'live' ? 'bg-rose-600 text-white shadow-xl animate-pulse' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                className={`px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filter === 'live' ? 'bg-rose-600 text-white shadow-xl animate-pulse' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
               >
                 Đang Đá
               </button>
               <button
                 onClick={() => setFilter('all')}
-                className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === 'all' ? 'bg-slate-700 text-white shadow-xl' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                className={`px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filter === 'all' ? 'bg-slate-700 text-white shadow-xl' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
               >
                 Tất Cả
               </button>
-              <button 
+              <button
                 onClick={fetchMatches}
                 className="ml-2 w-10 h-10 flex items-center justify-center bg-white/5 rounded-xl text-slate-400 hover:text-white transition-colors"
                 title="Làm mới dữ liệu"
@@ -512,14 +511,13 @@ const AdminPage: React.FC = () => {
                       <button
                         key={date}
                         onClick={() => setSelectedDate(date)}
-                        className={`min-w-[70px] flex flex-col items-center py-3 rounded-2xl transition-all ${
-                          selectedDate === date
-                            ? 'bg-emerald-600 text-white ring-2 ring-emerald-400 ring-offset-2 ring-offset-[#111] shadow-2xl scale-105'
-                            : 'bg-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-300'
-                        }`}
+                        className={`flex flex-col items-center min-w-[56px] py-1.5 rounded-xl border transition-all ${selectedDate === date
+                          ? 'bg-emerald-500/20 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                          : 'bg-white/5 border-white/5 hover:bg-white/10 text-slate-400'
+                          }`}
                       >
-                        <span className="text-[9px] font-black uppercase tracking-tighter opacity-60 mb-1">{dayName}</span>
-                        <span className="text-lg font-black tracking-tighter leading-none">{d}</span>
+                        <span className={`text-[11px] font-black uppercase ${selectedDate === date ? 'text-emerald-400' : 'text-slate-500'}`}>{dayName}</span>
+                        <span className={`text-lg font-black leading-tight ${selectedDate === date ? 'text-white' : 'text-slate-300'}`}>{d}</span>
                       </button>
                     );
                   })}
@@ -552,36 +550,36 @@ const AdminPage: React.FC = () => {
                           ) : '🏁'}
                         </div>
                         <div className="flex flex-col items-center justify-center bg-slate-900/80 rounded-xl p-1 gap-1 border border-white/5">
-                          <input 
+                          <input
                             type="number"
                             className="w-8 h-6 bg-[#111] border border-white/5 rounded text-[11px] font-black text-center text-emerald-400 focus:border-emerald-500 outline-none"
                             placeholder="0"
                             value={localScores[m.id]?.a ?? (m.status === 'scheduled' ? '' : m.score_a)}
                             onChange={(e) => {
                               const val = parseInt(e.target.value);
-                              setLocalScores(prev => ({ 
-                                ...prev, 
-                                [m.id]: { 
-                                  a: isNaN(val) ? 0 : val, 
-                                  b: prev[m.id]?.b ?? m.score_b 
-                                } 
+                              setLocalScores(prev => ({
+                                ...prev,
+                                [m.id]: {
+                                  a: isNaN(val) ? 0 : val,
+                                  b: prev[m.id]?.b ?? m.score_b
+                                }
                               }));
                             }}
                           />
                           <div className="w-4 h-[1px] bg-slate-700/50" />
-                          <input 
+                          <input
                             type="number"
                             className="w-8 h-6 bg-[#111] border border-white/5 rounded text-[11px] font-black text-center text-emerald-400 focus:border-emerald-500 outline-none"
                             placeholder="0"
                             value={localScores[m.id]?.b ?? (m.status === 'scheduled' ? '' : m.score_b)}
                             onChange={(e) => {
                               const val = parseInt(e.target.value);
-                              setLocalScores(prev => ({ 
-                                ...prev, 
-                                [m.id]: { 
-                                  a: prev[m.id]?.a ?? m.score_a, 
-                                  b: isNaN(val) ? 0 : val 
-                                } 
+                              setLocalScores(prev => ({
+                                ...prev,
+                                [m.id]: {
+                                  a: prev[m.id]?.a ?? m.score_a,
+                                  b: isNaN(val) ? 0 : val
+                                }
                               }));
                             }}
                           />
@@ -600,9 +598,8 @@ const AdminPage: React.FC = () => {
                           <span className="text-[10px] font-black bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded uppercase tracking-tighter">
                             Kèo: {m.handicap}
                           </span>
-                          <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter ${
-                            m.status === 'live' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-500'
-                          }`}>
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter ${m.status === 'live' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-500'
+                            }`}>
                             {m.status}
                           </span>
                           <span className="text-[10px] font-black text-slate-500">
@@ -613,7 +610,7 @@ const AdminPage: React.FC = () => {
                     </div>
                     <div className="flex gap-3">
                       {localScores[m.id] && (
-                        <button 
+                        <button
                           onClick={() => handleQuickUpdateResult(m)}
                           className="w-11 h-11 flex items-center justify-center bg-emerald-500 text-black rounded-xl hover:bg-emerald-400 hover:scale-110 transition-all text-sm shadow-lg shadow-emerald-500/30"
                           title="Lưu tỷ số"
@@ -622,7 +619,7 @@ const AdminPage: React.FC = () => {
                         </button>
                       )}
                       {m.status === 'finished' && (
-                        <button 
+                        <button
                           onClick={() => handleResetMatch(m)}
                           className="w-11 h-11 flex items-center justify-center bg-amber-500/10 text-amber-500 rounded-xl hover:bg-amber-500/20 hover:scale-110 transition-all text-sm border border-amber-500/10"
                           title="Reset trận đấu"
@@ -630,14 +627,14 @@ const AdminPage: React.FC = () => {
                           🔄
                         </button>
                       )}
-                      <button 
+                      <button
                         onClick={() => setEditingMatch(m)}
                         className="w-11 h-11 flex items-center justify-center bg-white/5 rounded-xl hover:bg-white/10 hover:scale-110 transition-all text-sm border border-white/5"
                         title="Chỉnh sửa"
                       >
                         ✏️
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDeleteMatch(m.id)}
                         className="w-11 h-11 flex items-center justify-center bg-rose-500/10 text-rose-500 rounded-xl hover:bg-rose-500/20 hover:scale-110 transition-all text-sm border border-rose-500/10"
                         title="Xóa"

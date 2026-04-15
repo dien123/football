@@ -1,8 +1,9 @@
 import { createContext, useEffect, useContext, useState } from 'react';
-import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
 import MatchPage from './pages/MatchPage';
 import ResultsPage from './pages/ResultsPage';
+import StandingsPage from './pages/StandingsPage';
 import AdminPage from './pages/AdminPage';
 import AdminGuard from './components/AdminGuard';
 import RealTimeClock from './components/RealTimeClock';
@@ -21,8 +22,6 @@ export const AppContext = createContext<AppContextType | null>(null);
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 function NavBar() {
-  const location = useLocation();
-  const isAdminPage = location.pathname === '/admin';
   const ctx = useContext(AppContext);
   if (!ctx) return null;
   const { session, user, setAdminAuthenticated } = ctx;
@@ -55,6 +54,14 @@ function NavBar() {
             </>
           )}
         </NavLink>
+        <NavLink to="/standings" className={linkCls}>
+          {({ isActive }) => (
+            <>
+              <span className={`text-xl transition-transform ${isActive ? 'scale-110' : ''}`}>📈</span>
+              <span>Bảng Đấu</span>
+            </>
+          )}
+        </NavLink>
         <NavLink to="/admin" className={linkCls}>
           {({ isActive }) => (
             <>
@@ -66,23 +73,35 @@ function NavBar() {
       </div>
 
       {session && (
-        <div className="absolute -top-12 left-10 px-3 py-1.5 bg-white/5 backdrop-blur rounded-full border border-white/10 flex items-center gap-2">
+        <div className="absolute -top-16 left-10 px-3 py-1.5 bg-white/5 backdrop-blur rounded-full border border-white/10 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[12px] text-slate-300 font-bold truncate max-w-[120px]">
+          <span className="text-[14px] text-slate-300 font-bold truncate max-w-[120px]">
             Hi, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
           </span>
           <button
             onClick={handleLogout}
-            className="text-[12px] text-rose-400 hover:text-rose-300 font-black uppercase ml-1 border-l border-white/10 pl-2"
+            className="text-[13px] text-rose-400 hover:text-rose-300 font-black uppercase ml-1 border-l border-white/10 pl-2"
           >
             Thoát
           </button>
         </div>
       )}
 
-      {isAdminPage && (
-        <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-500" />
-      )}
+
+
+
+      <div className="absolute -top-16 right-10 px-3 py-1.5 pointer-events-none flex items-center">
+        <span className="text-[15px] text-amber-400 font-black uppercase tracking-widest drop-shadow-[0_0_8px_rgba(251,191,36,0.6)] animate-pulse">
+          Provided by Az Tv
+        </span>
+      </div>
+
+      {/* Scrolling Warning Banner */}
+      <div className="absolute top-2 -translate-y-full inset-x-0 h-8 bg-rose-900/60 border-t border-white/10 backdrop-blur-md overflow-hidden pointer-events-none shadow-[0_-5px_15px_rgba(0,0,0,0.5)]">
+        <div className="animate-marquee whitespace-nowrap text-base sm:text-sm text-rose-500 font-black uppercase tracking-[0.1em] h-full flex items-center drop-shadow-md">
+          TRANG WEB VỚI MỤC ĐÍCH GIẢI TRÍ, KHÔNG TUYÊN TRUYỀN CÁ ĐỘ BÓNG ĐÁ, CÁ ĐỘ LÀ VI PHẠM PHÁP LUẬT TẠI VIỆT NAM
+        </div>
+      </div>
     </nav>
   );
 }
@@ -125,9 +144,10 @@ function App() {
           <Routes>
             <Route path="/" element={<MatchPage />} />
             <Route path="/results" element={<ResultsPage />} />
+            <Route path="/standings" element={<StandingsPage />} />
             <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
           </Routes>
-          <div className="fixed top-14 left-10 z-50 pointer-events-none">
+          <div className="fixed top-14 left-10 z-40 pointer-events-none">
             <div className="pointer-events-auto">
               <RealTimeClock />
             </div>

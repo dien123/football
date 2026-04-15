@@ -33,9 +33,8 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin }) => {
   return (
     <div
       onClick={() => canEnter && onBet(match.id)}
-      className={`bg-white/5 backdrop-blur-md rounded-[24px] border border-white/10 p-5 shadow-2xl transition-all group ${
-        canEnter ? 'hover:border-indigo-500/50 hover:bg-white/10 cursor-pointer' : 'opacity-80'
-      }`}
+      className={`bg-white/5 backdrop-blur-md rounded-[24px] border border-white/10 p-5 shadow-2xl transition-all group ${canEnter ? 'hover:border-indigo-500/50 hover:bg-white/10 cursor-pointer' : 'opacity-80'
+        }`}
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex flex-col gap-1">
@@ -80,7 +79,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin }) => {
 
         <div className="flex flex-col items-center">
           <span className={`text-xl font-black transition-colors ${match.status === 'finished' ? 'text-emerald-400' : 'text-slate-600 group-hover:text-emerald-500'}`}>
-            {match.status === 'scheduled' ? 'VS' : `${match.score_a} : ${match.score_b}`}
+            {match.status === 'scheduled' ? '🏆' : `${match.score_a} : ${match.score_b}`}
           </span>
         </div>
 
@@ -107,7 +106,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin }) => {
         </div>
         {match.status !== 'finished' ? (
           <button
-            className="bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black py-1.5 px-4 rounded shadow-lg shadow-rose-900/20 transition-all uppercase"
+            className="relative bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black py-1.5 px-4 rounded shadow-lg shadow-rose-900/20 transition-all uppercase animate-pulse hover:animate-none ring-2 ring-rose-400/50 ring-offset-1 ring-offset-transparent"
           >
             Cược Ngay
           </button>

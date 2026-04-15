@@ -211,7 +211,7 @@ const MatchPage: React.FC = () => {
                 </div>
 
                 {/* Filters Section: Moved Below Title */}
-                <div className="flex flex-col md:flex-row items-center gap-8 bg-white/5 backdrop-blur-md p-6 rounded-[32px] border border-white/10">
+                <div className="flex flex-col md:flex-row items-center gap-8 bg-white/5 backdrop-blur-md p-3 rounded-[32px] border border-white/10">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setFilter('date')}
@@ -235,7 +235,7 @@ const MatchPage: React.FC = () => {
 
                   {/* Date Scroller */}
                   {filter === 'date' && (
-                    <div className="relative flex-1 w-full max-w-lg group px-10">
+                    <div className="relative flex-1 w-full max-w-3xl group px-10">
                       <button
                         onClick={scrollPrev}
                         className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 hover:bg-emerald-500/20 rounded-full text-white/50 hover:text-emerald-400 transition-all"
@@ -248,19 +248,22 @@ const MatchPage: React.FC = () => {
                         className="w-full overflow-x-auto no-scrollbar flex items-center gap-3 scroll-smooth"
                       >
                         {uniqueDates.map((date) => {
-                          const [day, month] = date.split('/');
+                          const [d, m, y] = date.split('/');
+                          const dateObj = new Date(Number(y), Number(m) - 1, Number(d));
+                          const daysOfWeek = ['CN', 'T.2', 'T.3', 'T.4', 'T.5', 'T.6', 'T.7'];
+                          const dayOfWeek = daysOfWeek[dateObj.getDay()];
                           const isActive = selectedDate === date;
                           return (
                             <button
                               key={date}
                               onClick={() => setSelectedDate(date)}
-                              className={`flex flex-col items-center min-w-[70px] py-3 rounded-2xl border transition-all ${isActive
+                              className={`flex flex-col items-center min-w-[64px] py-1.5 rounded-xl border transition-all ${isActive
                                 ? 'bg-emerald-500/20 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
                                 : 'bg-white/5 border-white/5 hover:bg-white/10 text-slate-400'
                                 }`}
                             >
-                              <span className={`text-[9px] font-black uppercase mb-0.5 ${isActive ? 'text-emerald-400' : 'text-slate-500'}`}>T.{month}</span>
-                              <span className={`text-xl font-black ${isActive ? 'text-white' : 'text-slate-300'}`}>{day}</span>
+                              <span className={`text-[11px] font-black uppercase ${isActive ? 'text-emerald-400' : 'text-slate-500'}`}>{dayOfWeek}</span>
+                              <span className={`text-lg font-black leading-tight ${isActive ? 'text-white' : 'text-slate-300'}`}>{d}</span>
                             </button>
                           );
                         })}

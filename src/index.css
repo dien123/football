@@ -3,6 +3,15 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  html::-webkit-scrollbar, body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+
   body {
     @apply text-slate-50 antialiased selection:bg-indigo-500/30;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -20,4 +29,13 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  animation: marquee 50s linear infinite;
 }
