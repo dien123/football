@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface MatchCardProps {
   match: {
@@ -21,10 +21,31 @@ interface MatchCardProps {
   isAdmin?: boolean;
 }
 
+const LOCK_MINUTES = 30; // lock betting N minutes before kick-off
+
+const isBettingLocked = (startTime: string): boolean => {
+  const now = new Date().getTime();
+  const kick = new Date(startTime).getTime();
+  const diffMinutes = (kick - now) / 60000;
+  // Lock if kick-off is within 30 min OR has already passed (but not yet marked live/finished)
+  return diffMinutes <= LOCK_MINUTES;
+};
+
 const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin }) => {
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
-  const canEnter = isAdmin || !isFinished;
+
+  // Real-time lock: re-evaluate every 30 seconds
+  const [locked, setLocked] = useState(() => isBettingLocked(match.start_time));
+
+  useEffect(() => {
+    const check = () => setLocked(isBettingLocked(match.start_time));
+    check();
+    const interval = setInterval(check, 30_000); // re-check every 30s
+    return () => clearInterval(interval);
+  }, [match.start_time]);
+
+  const canEnter = isAdmin || (!isFinished && !locked);
 
   const startTime = new Date(match.start_time);
   const timeStr = startTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
@@ -104,16 +125,20 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin }) => {
           </div>
           <span className="text-slate-500 text-[10px] font-bold uppercase">{match.commentator || 'Chưa có BLV'}</span>
         </div>
-        {match.status !== 'finished' ? (
+        {isFinished ? (
+          <span className="text-slate-300 text-[11px] font-black uppercase border-2 border-white/10 px-4 py-1.5 rounded-xl bg-white/10 shadow-xl backdrop-blur-sm">
+            Đã Kết Thúc
+          </span>
+        ) : locked ? (
+          <span className="flex items-center gap-1.5 text-amber-400 text-[11px] font-black uppercase border-2 border-amber-500/30 px-3 py-1.5 rounded-xl bg-amber-500/10 shadow-lg backdrop-blur-sm">
+            🔒 Khóa Cược
+          </span>
+        ) : (
           <button
             className="relative bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black py-1.5 px-4 rounded shadow-lg shadow-rose-900/20 transition-all uppercase animate-pulse hover:animate-none ring-2 ring-rose-400/50 ring-offset-1 ring-offset-transparent"
           >
             Cược Ngay
           </button>
-        ) : (
-          <span className="text-slate-300 text-[11px] font-black uppercase border-2 border-white/10 px-4 py-1.5 rounded-xl bg-white/10 shadow-xl backdrop-blur-sm">
-            Đã Kết Thúc
-          </span>
         )}
       </div>
     </div>

@@ -181,6 +181,16 @@ const AdminPage: React.FC = () => {
   const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-emerald-500 outline-none transition-all focus:bg-white/10";
   const labelCls = "block text-[10px] font-black text-slate-500 mb-1.5 uppercase tracking-wider";
 
+  // Convert UTC ISO string → local datetime-local input value (YYYY-MM-DDTHH:mm)
+  const toLocalDatetime = (isoStr: string) => {
+    const d = new Date(isoStr);
+    const offset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - offset).toISOString().slice(0, 16);
+  };
+
+  // Convert datetime-local input value → UTC ISO string
+  const toUTCIso = (localStr: string) => new Date(localStr).toISOString();
+
   return (
     <div className="min-h-screen relative overflow-hidden text-white pb-24 px-6 pt-12">
       {/* Immersive Background */}
@@ -415,8 +425,8 @@ const AdminPage: React.FC = () => {
                 <input
                   className={inputCls}
                   type="datetime-local"
-                  value={editingMatch?.start_time ? new Date(editingMatch.start_time).toISOString().slice(0, 16) : ''}
-                  onChange={e => setEditingMatch(prev => ({ ...prev, start_time: new Date(e.target.value).toISOString() }))}
+                  value={editingMatch?.start_time ? toLocalDatetime(editingMatch.start_time) : ''}
+                  onChange={e => setEditingMatch(prev => ({ ...prev, start_time: toUTCIso(e.target.value) }))}
                 />
               </div>
 
