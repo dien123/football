@@ -34,10 +34,10 @@ const RealTimeClock: React.FC = () => {
       <div className="flex items-center gap-1.5">
         {[hours, minutes, seconds].map((part, i) => (
           <React.Fragment key={i}>
-            <div className="relative">
-              <div className="absolute -inset-1 bg-emerald-500 rounded-lg blur-[2px] opacity-20 animate-pulse"></div>
-              <div className="relative px-2 py-1 bg-black/40 backdrop-blur-xl rounded-lg border border-white/10 shadow-2xl min-w-[45px] text-center">
-                <span className="text-2xl md:text-3xl font-black tabular-nums tracking-tighter text-white drop-shadow-lg">
+            <div className="relative group">
+              <div className="absolute -inset-[1px] bg-emerald-500/50 rounded-lg blur-[1px] opacity-100"></div>
+              <div className="relative px-3 py-1.5 bg-[#0a0a0a] rounded-lg border border-emerald-500/30 shadow-2xl min-w-[54px] text-center transition-all group-hover:border-emerald-500/60">
+                <span className="text-2xl md:text-4xl font-black tabular-nums tracking-tighter text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
                   {part}
                 </span>
               </div>
@@ -46,8 +46,8 @@ const RealTimeClock: React.FC = () => {
           </React.Fragment>
         ))}
       </div>
-      <div className="flex items-center gap-2 px-1">
-        <span className="text-[12px] md:text-sm font-black uppercase tracking-wider text-emerald-400 drop-shadow-md">
+      <div className="flex items-center gap-2 px-1 mt-1">
+        <span className="text-[11px] md:text-[13px] font-black uppercase tracking-[0.2em] text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">
           {formatDate(time)}
         </span>
       </div>

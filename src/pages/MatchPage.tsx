@@ -165,7 +165,7 @@ const MatchPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen relative overflow-hidden text-white pb-32">
+    <div className="min-h-screen relative overflow-hidden text-white pb-12">
       {/* Background */}
       <div
         className="fixed inset-0 z-0 opacity-40 blur-sm pointer-events-none"
@@ -184,7 +184,7 @@ const MatchPage: React.FC = () => {
                 {/* Header Top: Title and Login */}
                 <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
                   <div className="flex flex-col items-center flex-1">
-                    <div className="flex items-center gap-3 text-emerald-400 text-2xl font-black mb-3 uppercase tracking-[0.3em] drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                    <div className="flex items-center gap-3 text-emerald-500 text-2xl md:text-3xl font-black mb-3 uppercase tracking-[0.5em] drop-shadow-[0_0_20px_rgba(16,185,129,0.5)]">
                       <span className="hidden md:block">🏆</span>
                       FIFA WORLD CUP 2026
                     </div>

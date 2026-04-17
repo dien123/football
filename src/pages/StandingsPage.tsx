@@ -149,7 +149,7 @@ const StandingsPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen relative overflow-hidden text-white pb-32">
+    <div className="min-h-screen relative overflow-hidden text-white pb-12">
       {/* Background */}
       <div
         className="fixed inset-0 z-0 opacity-40 blur-sm pointer-events-none"
