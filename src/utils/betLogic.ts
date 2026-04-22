@@ -15,20 +15,25 @@ export const calculateBetResult = (
   amount: number,
   scoreA: number,
   scoreB: number,
-  odds: {
+  matchData: {
     handicap: number;
     rateA: number;
     rateB: number;
+    teamAName?: string;
+    teamBName?: string;
   }
 ): CalculationResult => {
-  const { handicap, rateA, rateB } = odds;
+  const { handicap, rateA, rateB, teamAName, teamBName } = matchData;
   const diff = scoreA - scoreB;
   const effectiveScore = diff - handicap;
 
   let outcome: BetOutcome = 'PUSH';
-  const rate = option === 'teamA' ? rateA : rateB;
+  
+  // Backward compatibility: match team name OR the legacy 'teamA' label
+  const isBetOnTeamA = option === 'teamA' || (teamAName && option === teamAName);
+  const rate = isBetOnTeamA ? rateA : rateB;
 
-  if (option === 'teamA') {
+  if (isBetOnTeamA) {
     if (effectiveScore >= 0.5) outcome = 'WIN_FULL';
     else if (effectiveScore === 0.25) outcome = 'WIN_HALF';
     else if (effectiveScore === 0) outcome = 'PUSH';

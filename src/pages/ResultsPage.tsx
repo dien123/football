@@ -22,10 +22,12 @@ const ResultsPage: React.FC = () => {
       .order('start_time', { ascending: false });
 
     if (!matchesError && matchesData) {
-      setMatches(matchesData);
+      // Isolation: Filter for World Cup matches (exclude TIP Futsal)
+      const wcMatches = matchesData.filter(m => m.league !== 'TIP Futsal league');
+      setMatches(wcMatches);
 
-      // Fetch ALL bets for ALL finished matches
-      const matchIds = matchesData.map(m => m.id);
+      // Fetch ALL bets for ALL finished matches in World Cup
+      const matchIds = wcMatches.map(m => m.id);
       if (matchIds.length > 0) {
         const { data: betsData, error: betsError } = await supabase
           .from('bets')
@@ -70,21 +72,23 @@ const ResultsPage: React.FC = () => {
       const match = matches.find(m => m.id === bet.match_id);
       if (!match) return null;
 
-      const sanitizedOption = (bet.option === 'teamA' || bet.option === match.team_a_name) ? 'teamA' : 'teamB';
       const res = calculateBetResult(
-        sanitizedOption as any,
+        bet.option,
         bet.amount,
         match.score_a,
         match.score_b,
         {
           handicap: match.handicap,
           rateA: match.rate_a,
-          rateB: match.rate_b
-        } as any
+          rateB: match.rate_b,
+          teamAName: match.team_a_name,
+          teamBName: match.team_b_name
+        }
       );
 
-      const selectedTeamName = sanitizedOption === 'teamA' ? match.team_a_name : match.team_b_name;
-      const selectedTeamCode = sanitizedOption === 'teamA' ? match.team_a_code : match.team_b_code;
+      const isTeamA = bet.option === 'teamA' || bet.option === match.team_a_name;
+      const selectedTeamName = isTeamA ? match.team_a_name : match.team_b_name;
+      const selectedTeamCode = isTeamA ? match.team_a_code : match.team_b_code;
 
       // Determine match winner based on handicap
       const diff = (match.score_a - match.handicap) - match.score_b;
@@ -125,17 +129,18 @@ const ResultsPage: React.FC = () => {
       const match = matches.find(m => m.id === bet.match_id);
       if (!match) return;
 
-      const sanitizedOption = (bet.option === 'teamA' || bet.option === match.team_a_name) ? 'teamA' : 'teamB';
       const res = calculateBetResult(
-        sanitizedOption as any,
+        bet.option,
         bet.amount,
         match.score_a,
         match.score_b,
         {
           handicap: match.handicap,
           rateA: match.rate_a,
-          rateB: match.rate_b
-        } as any
+          rateB: match.rate_b,
+          teamAName: match.team_a_name,
+          teamBName: match.team_b_name
+        }
       );
 
       if (!userStats[bet.user_name]) {

@@ -2,6 +2,7 @@ import { createContext, useEffect, useContext, useState } from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
 import MatchPage from './pages/MatchPage';
+import FutsalLeaguePage from './pages/FutsalLeaguePage';
 import ResultsPage from './pages/ResultsPage';
 import StandingsPage from './pages/StandingsPage';
 import AdminPage from './pages/AdminPage';
@@ -33,9 +34,15 @@ function NavBar() {
   };
 
   const linkCls = ({ isActive }: { isActive: boolean }) =>
-    `relative text-sm font-black uppercase tracking-widest px-6 py-2 rounded-xl transition-all whitespace-nowrap ${isActive
-      ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-900/40'
-      : 'text-slate-300 hover:text-white hover:bg-white/10'
+    `px-5 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all ${isActive
+      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/40'
+      : 'text-slate-400 hover:text-white hover:bg-white/5'
+    }`;
+
+  const futsalCls = ({ isActive }: { isActive: boolean }) =>
+    `px-5 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
+      ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]'
+      : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
     }`;
 
   return (
@@ -58,6 +65,13 @@ function NavBar() {
           <NavLink to="/" className={linkCls} end>Đặt Cược</NavLink>
           <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
           <NavLink to="/results" className={linkCls}>Kết Quả Bóng Đá</NavLink>
+          <NavLink to="/futsal" className={futsalCls}>
+            TIP Futsal 2026
+            <span className="absolute -top-2 -right-2 flex h-4 w-8">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-8 bg-rose-500 text-[8px] items-center justify-center text-white font-black">HOT</span>
+            </span>
+          </NavLink>
           <NavLink to="/admin" className={linkCls}>Admin</NavLink>
         </div>
 
@@ -121,6 +135,7 @@ function App() {
           <div className="h-[108px]" />
           <Routes>
             <Route path="/" element={<MatchPage />} />
+            <Route path="/futsal" element={<FutsalLeaguePage />} />
             <Route path="/results" element={<ResultsPage />} />
             <Route path="/standings" element={<StandingsPage />} />
             <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />

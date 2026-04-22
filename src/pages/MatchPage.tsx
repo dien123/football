@@ -51,8 +51,19 @@ const MatchPage: React.FC = () => {
     if (!error && data) {
       setMatches(data);
       if (data.length > 0 && !selectedDate) {
-        const uniqueDates = [...new Set(data.map(m => new Date(m.start_time).toLocaleDateString('vi-VN')))].sort();
-        const startingDate = uniqueDates.find(d => d.startsWith('12/06')) || uniqueDates[0];
+        const wcMatches = data.filter(m => m.league !== 'TIP Futsal league');
+        const wcDates = [...new Set(wcMatches.map(m => new Date(m.start_time).toLocaleDateString('vi-VN')))].sort((a, b) => {
+          const [da, ma, ya] = a.split('/').map(Number);
+          const [db, mb, yb] = b.split('/').map(Number);
+          return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime();
+        });
+        
+        // Robust June 12 finding: check D=12 and M=6 instead of exact string start
+        const startingDate = wcDates.find(d => {
+          const [day, month] = d.split('/').map(Number);
+          return day === 12 && month === 6;
+        }) || wcDates[0];
+        
         setSelectedDate(startingDate);
       }
       if (selectedMatch) {
@@ -104,6 +115,9 @@ const MatchPage: React.FC = () => {
         alert('Cập nhật thành công!');
       }
     } else {
+      // Conversion: Store actual team name instead of placeholders
+      const finalOption = option === 'teamA' ? selectedMatch.team_a_name : selectedMatch.team_b_name;
+
       // Insert new bet
       const { error } = await supabase
         .from('bets')
@@ -111,7 +125,7 @@ const MatchPage: React.FC = () => {
           match_id: selectedMatch.id,
           user_name: userName,
           amount: amount,
-          option: option,
+          option: finalOption,
           user_id: user.id
         });
 
@@ -140,13 +154,20 @@ const MatchPage: React.FC = () => {
     scrollerRef.current?.scrollBy({ left: 250, behavior: 'smooth' });
   };
 
-  const uniqueDates = [...new Set(matches.map(m => new Date(m.start_time).toLocaleDateString('vi-VN')))].sort((a, b) => {
+  const uniqueDates = [...new Set(matches
+    .filter(m => m.league !== 'TIP Futsal league')
+    .map(m => new Date(m.start_time).toLocaleDateString('vi-VN'))
+  )].sort((a, b) => {
     const [da, ma, ya] = a.split('/').map(Number);
     const [db, mb, yb] = b.split('/').map(Number);
     return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime();
   });
 
   const filteredMatches = matches.filter(m => {
+    // Isolation: Exclude TIP Futsal league
+    const isWC = m.league !== 'TIP Futsal league';
+    if (!isWC) return false;
+    
     if (filter === 'live') return m.status === 'live';
     if (filter === 'date' && selectedDate) {
       return new Date(m.start_time).toLocaleDateString('vi-VN') === selectedDate;

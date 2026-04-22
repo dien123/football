@@ -1,4 +1,4 @@
-export type BetOption = 'teamA' | 'teamB';
+export type BetOption = string;
 
 export interface Match {
   id: string;

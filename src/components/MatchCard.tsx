@@ -19,6 +19,7 @@ interface MatchCardProps {
   };
   onBet: (matchId: string) => void;
   isAdmin?: boolean;
+  customClass?: string;
 }
 
 const LOCK_MINUTES = 30; // lock betting N minutes before kick-off
@@ -31,7 +32,7 @@ const isBettingLocked = (startTime: string): boolean => {
   return diffMinutes <= LOCK_MINUTES;
 };
 
-const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin }) => {
+const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin, customClass }) => {
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
 
@@ -54,8 +55,10 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin }) => {
   return (
     <div
       onClick={() => canEnter && onBet(match.id)}
-      className={`bg-white/5 backdrop-blur-md rounded-[24px] border border-white/10 p-5 shadow-2xl transition-all group ${canEnter ? 'hover:border-indigo-500/50 hover:bg-white/10 cursor-pointer' : 'opacity-80'
-        }`}
+      className={`backdrop-blur-md rounded-[24px] p-5 shadow-2xl transition-all group ${
+        customClass || 'bg-white/5 border border-white/10'
+      } ${canEnter ? 'hover:border-indigo-500/50 hover:bg-white/10 cursor-pointer' : 'opacity-80'
+      }`}
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex flex-col gap-1">
