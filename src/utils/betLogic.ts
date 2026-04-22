@@ -23,7 +23,7 @@ export const calculateBetResult = (
     teamBName?: string;
   }
 ): CalculationResult => {
-  const { handicap, rateA, rateB, teamAName, teamBName } = matchData;
+  const { handicap, rateA, rateB, teamAName } = matchData;
   const diff = scoreA - scoreB;
   const effectiveScore = diff - handicap;
 
