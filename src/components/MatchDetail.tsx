@@ -187,7 +187,8 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
         {/* Betting Options Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           {/* Option A */}
-          <div className="space-y-4">
+          <div className="space-y-4 relative">
+            <div className="absolute -left-14 top-1/3 -translate-y-1/2 text-4xl animate-bounce hidden xl:block pointer-events-none">👉</div>
             <button
               onClick={() => (isAdmin || match.status !== 'finished') && onBet('teamA')}
               disabled={!isAdmin && match.status === 'finished'}
@@ -252,7 +253,8 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
           </div>
 
           {/* Option B */}
-          <div className="space-y-4">
+          <div className="space-y-4 relative">
+            <div className="absolute -right-14 top-1/3 -translate-y-1/2 text-4xl animate-bounce hidden xl:block pointer-events-none">👈</div>
             <button
               onClick={() => (isAdmin || match.status !== 'finished') && onBet('teamB')}
               disabled={!isAdmin && match.status === 'finished'}

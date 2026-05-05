@@ -192,7 +192,7 @@ const AdminPage: React.FC = () => {
   const toUTCIso = (localStr: string) => new Date(localStr).toISOString();
 
   return (
-    <div className="min-h-screen relative overflow-hidden text-white pb-12 px-6">
+    <div className="min-h-screen relative overflow-hidden text-white pb-12 px-6 pt-6">
       {/* Immersive Background */}
       <div
         className="fixed inset-0 z-0 opacity-40 blur-sm pointer-events-none"

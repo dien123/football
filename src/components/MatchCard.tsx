@@ -140,7 +140,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin, customClas
           <button
             className="relative bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black py-1.5 px-4 rounded shadow-lg shadow-rose-900/20 transition-all uppercase animate-pulse hover:animate-none ring-2 ring-rose-400/50 ring-offset-1 ring-offset-transparent"
           >
-            Cược Ngay
+            Cược Ngay 👈
           </button>
         )}
       </div>

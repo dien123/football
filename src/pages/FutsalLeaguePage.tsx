@@ -171,7 +171,7 @@ const FutsalLeaguePage: React.FC = () => {
         {view === 'grid' ? (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {activeTab === 'matches' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
                 {matches.map(m => (
                   <MatchCard
                     key={m.id}
@@ -251,19 +251,19 @@ const FutsalLeaguePage: React.FC = () => {
             />
           )
         )}
-
-        {selectedMatch && (
-          <BetModal
-            isOpen={modalOpen}
-            onClose={() => setModalOpen(false)}
-            match={selectedMatch}
-            option={selectedOption}
-            onSave={handleSaveBet}
-            initialUserName={user?.user_metadata?.full_name}
-          />
-        )}
-        <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} onSuccess={() => setAuthModalOpen(false)} />
       </div>
+
+      {selectedMatch && (
+        <BetModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          match={selectedMatch}
+          option={selectedOption}
+          onSave={handleSaveBet}
+          initialUserName={user?.user_metadata?.full_name}
+        />
+      )}
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} onSuccess={() => setAuthModalOpen(false)} />
     </div>
   );
 };

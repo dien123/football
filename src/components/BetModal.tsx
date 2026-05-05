@@ -28,9 +28,20 @@ const BetModal: React.FC<BetModalProps> = ({
   const [amountRaw, setAmountRaw] = useState(initialAmount?.toString() || '');
   const [amountDisplay, setAmountDisplay] = useState(initialAmount ? initialAmount.toLocaleString('vi-VN') : '');
   const [errors, setErrors] = useState<{ userName?: string; amount?: string }>({});
-  
+
   const nameInputRef = useRef<HTMLInputElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -39,7 +50,7 @@ const BetModal: React.FC<BetModalProps> = ({
       setAmountRaw(initialAmount?.toString() || '');
       setAmountDisplay(initialAmount ? initialAmount.toLocaleString('vi-VN') : '');
       setErrors({});
-      
+
       if (!initialUserName) {
         setTimeout(() => nameInputRef.current?.focus(), 50);
       } else {
@@ -52,8 +63,8 @@ const BetModal: React.FC<BetModalProps> = ({
     const newErrors: { userName?: string; amount?: string } = {};
     if (!userName.trim()) newErrors.userName = 'Vui lòng nhập tên người dùng.';
     const amount = parseVND(amountRaw);
-    if (!amountRaw || isNaN(amount) || amount < 10000) {
-      newErrors.amount = 'Số tiền phải là số nguyên tối thiểu 10.000đ.';
+    if (!amountRaw || isNaN(amount) || amount < 50000) {
+      newErrors.amount = 'Số tiền phải là số nguyên tối thiểu 50.000đ.';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -81,15 +92,15 @@ const BetModal: React.FC<BetModalProps> = ({
   const isTeamA = currentOption === 'teamA';
   const rate = isTeamA ? match.rate_a : match.rate_b;
   const handicapVal = match.handicap;
-  
-  const handicapDisplay = isTeamA 
-    ? (match.favorite_team === 'teamA' ? `-${handicapVal}` : `+${handicapVal}`)
-    : (match.favorite_team === 'teamB' ? `-${handicapVal}` : `+${handicapVal}`);
+
+  const handicapDisplay = isTeamA
+    ? (match.favorite_team === 'teamA' ? '0' : `+${handicapVal}`)
+    : (match.favorite_team === 'teamB' ? '0' : `+${handicapVal}`);
 
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       onKeyDown={handleKeyDown}
@@ -129,11 +140,10 @@ const BetModal: React.FC<BetModalProps> = ({
                 <button
                   key={opt.id}
                   onClick={() => setCurrentOption(opt.id)}
-                  className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-                    currentOption === opt.id 
-                    ? 'bg-emerald-600 text-white shadow-lg' 
-                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
-                  }`}
+                  className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${currentOption === opt.id
+                      ? 'bg-emerald-600 text-white shadow-lg'
+                      : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                    }`}
                 >
                   {opt.label}
                 </button>
@@ -179,7 +189,7 @@ const BetModal: React.FC<BetModalProps> = ({
               type="text"
               value={amountDisplay}
               onChange={handleAmountChange}
-              placeholder="Tối thiểu 10.000đ"
+              placeholder="Tối thiểu 50.000đ"
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none transition-colors"
             />
             {errors.amount && <p className="text-rose-400 text-[10px] font-bold mt-2">⚠️ {errors.amount}</p>}
