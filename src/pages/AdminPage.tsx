@@ -11,6 +11,7 @@ const AdminPage: React.FC = () => {
   const [filter, setFilter] = useState<'date' | 'live' | 'all'>('date');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [localScores, setLocalScores] = useState<Record<string, { a: number, b: number }>>({});
+  const [uploading, setUploading] = useState<{ a: boolean, b: boolean }>({ a: false, b: false });
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const ctx = useContext(AppContext);
@@ -93,6 +94,46 @@ const AdminPage: React.FC = () => {
     } else {
       console.error('Supabase Save Error:', error);
       alert(`Lỗi (${error.code}): ${error.message}`);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, team: 'a' | 'b') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (e.g., < 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File quá lớn! Vui lòng chọn file dưới 2MB.');
+      return;
+    }
+
+    setUploading(prev => ({ ...prev, [team]: true }));
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `logos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('match-icons') // Expecting a bucket named 'match-icons'
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('match-icons')
+        .getPublicUrl(filePath);
+
+      if (team === 'a') {
+        setEditingMatch(prev => ({ ...prev, team_a_icon: publicUrl }));
+      } else {
+        setEditingMatch(prev => ({ ...prev, team_b_icon: publicUrl }));
+      }
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      alert(`Lỗi upload: ${error.message}. Hãy đảm bảo bạn đã tạo bucket 'match-icons' với quyền Public.`);
+    } finally {
+      setUploading(prev => ({ ...prev, [team]: false }));
     }
   };
 
@@ -288,10 +329,31 @@ const AdminPage: React.FC = () => {
                       onChange={e => setEditingMatch(prev => ({ ...prev, team_a_code: e.target.value.toLowerCase() }))}
                     />
                   </div>
+                  <div className="flex-1">
+                    <label className={labelCls}>Icon / Logo URL {uploading.a && <span className="animate-pulse text-emerald-400">(Đang upload...)</span>}</label>
+                    <div className="flex gap-2">
+                      <input
+                        className={inputCls}
+                        placeholder="Emoji hoặc URL logo..."
+                        value={editingMatch?.team_a_icon || ''}
+                        onChange={e => setEditingMatch(prev => ({ ...prev, team_a_icon: e.target.value }))}
+                      />
+                      <label className="flex-shrink-0 cursor-pointer bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 flex items-center justify-center transition-all">
+                        <span className="text-xl">📁</span>
+                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'a')} />
+                      </label>
+                    </div>
+                  </div>
                   <div className="w-14 h-11 mt-6 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center overflow-hidden">
-                    {editingMatch?.team_a_code ? (
+                    {uploading.a ? (
+                      <div className="w-5 h-5 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                    ) : editingMatch?.team_a_code && editingMatch.team_a_code.length > 0 ? (
                       <img src={`https://flagcdn.com/w40/${editingMatch.team_a_code.toLowerCase()}.png`} alt="" className="w-full h-full object-cover" />
-                    ) : '🏁'}
+                    ) : editingMatch?.team_a_icon?.startsWith('http') ? (
+                      <img src={editingMatch.team_a_icon} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">{editingMatch?.team_a_icon || '🏁'}</div>
+                    )}
                   </div>
                 </div>
 
@@ -366,10 +428,31 @@ const AdminPage: React.FC = () => {
                       onChange={e => setEditingMatch(prev => ({ ...prev, team_b_code: e.target.value.toLowerCase() }))}
                     />
                   </div>
+                  <div className="flex-1">
+                    <label className={labelCls}>Icon / Logo URL {uploading.b && <span className="animate-pulse text-rose-400">(Đang upload...)</span>}</label>
+                    <div className="flex gap-2">
+                      <input
+                        className={inputCls}
+                        placeholder="Emoji hoặc URL logo..."
+                        value={editingMatch?.team_b_icon || ''}
+                        onChange={e => setEditingMatch(prev => ({ ...prev, team_b_icon: e.target.value }))}
+                      />
+                      <label className="flex-shrink-0 cursor-pointer bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 flex items-center justify-center transition-all">
+                        <span className="text-xl">📁</span>
+                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'b')} />
+                      </label>
+                    </div>
+                  </div>
                   <div className="w-14 h-11 mt-6 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center overflow-hidden">
-                    {editingMatch?.team_b_code ? (
+                    {uploading.b ? (
+                      <div className="w-5 h-5 border-2 border-rose-500/20 border-t-rose-500 rounded-full animate-spin" />
+                    ) : editingMatch?.team_b_code && editingMatch.team_b_code.length > 0 ? (
                       <img src={`https://flagcdn.com/w40/${editingMatch.team_b_code.toLowerCase()}.png`} alt="" className="w-full h-full object-cover" />
-                    ) : '🏁'}
+                    ) : editingMatch?.team_b_icon?.startsWith('http') ? (
+                      <img src={editingMatch.team_b_icon} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">{editingMatch?.team_b_icon || '🏁'}</div>
+                    )}
                   </div>
                 </div>
 
@@ -421,6 +504,36 @@ const AdminPage: React.FC = () => {
             {/* SHARED FIELDS */}
             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-white/5 pt-8">
               <div>
+                <label className={labelCls}>Giải Đấu</label>
+                <input
+                  className={inputCls}
+                  placeholder="Vòng chung kết C1, V-League..."
+                  value={editingMatch?.league || ''}
+                  onChange={e => setEditingMatch(prev => ({ ...prev, league: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <label className={labelCls}>Sân Vận Động</label>
+                <input
+                  className={inputCls}
+                  placeholder="Wembley, Stade de France..."
+                  value={editingMatch?.stadium || ''}
+                  onChange={e => setEditingMatch(prev => ({ ...prev, stadium: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <label className={labelCls}>Người Bình Luận (BLV)</label>
+                <input
+                  className={inputCls}
+                  placeholder="Quang Huy, Anh Quân..."
+                  value={editingMatch?.commentator || ''}
+                  onChange={e => setEditingMatch(prev => ({ ...prev, commentator: e.target.value }))}
+                />
+              </div>
+
+              <div>
                 <label className={labelCls}>Thời gian bắt đầu</label>
                 <input
                   className={inputCls}
@@ -430,7 +543,7 @@ const AdminPage: React.FC = () => {
                 />
               </div>
 
-              <div>
+              <div className="md:col-span-2">
                 <label className={labelCls}>Trạng thái</label>
                 <div className="flex gap-2">
                   {['scheduled', 'live', 'finished'].map(s => (
@@ -555,9 +668,13 @@ const AdminPage: React.FC = () => {
                     <div className="flex items-center gap-6">
                       <div className="flex items-center gap-2">
                         <div className="w-12 h-12 bg-slate-900 rounded-xl overflow-hidden border border-white/5">
-                          {m.team_a_code ? (
+                          {m.team_a_code && m.team_a_code.length > 0 ? (
                             <img src={`https://flagcdn.com/w80/${m.team_a_code.toLowerCase()}.png`} alt="" className="w-full h-full object-cover" />
-                          ) : '🏁'}
+                          ) : m.team_a_icon?.startsWith('http') ? (
+                            <img src={m.team_a_icon} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">{m.team_a_icon || '🏁'}</div>
+                          )}
                         </div>
                         <div className="flex flex-col items-center justify-center bg-slate-900/80 rounded-xl p-1 gap-1 border border-white/5">
                           <input
@@ -595,9 +712,13 @@ const AdminPage: React.FC = () => {
                           />
                         </div>
                         <div className="w-12 h-12 bg-slate-900 rounded-xl overflow-hidden border border-white/5">
-                          {m.team_b_code ? (
+                          {m.team_b_code && m.team_b_code.length > 0 ? (
                             <img src={`https://flagcdn.com/w80/${m.team_b_code.toLowerCase()}.png`} alt="" className="w-full h-full object-cover" />
-                          ) : '🏁'}
+                          ) : m.team_b_icon?.startsWith('http') ? (
+                            <img src={m.team_b_icon} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">{m.team_b_icon || '🏁'}</div>
+                          )}
                         </div>
                       </div>
                       <div>

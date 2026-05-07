@@ -130,8 +130,10 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
           <div className="flex items-center justify-between gap-4 md:gap-12">
             <div className="flex flex-col items-center gap-4 flex-1">
               <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-slate-900/50 p-0 border border-white/5 shadow-inner flex items-center justify-center overflow-hidden">
-                {match.team_a_code && match.team_a_code !== 'unknown' ? (
+                {match.team_a_code && match.team_a_code !== 'unknown' && match.team_a_code.length > 0 ? (
                   <img src={`https://flagcdn.com/w160/${match.team_a_code.toLowerCase()}.png`} alt={match.team_a_name} className="w-full h-full object-cover" />
+                ) : match.team_a_icon?.startsWith('http') ? (
+                  <img src={match.team_a_icon} alt={match.team_a_name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="text-6xl md:text-7xl">{match.team_a_icon || '⚽'}</div>
                 )}
@@ -145,8 +147,10 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
 
             <div className="flex flex-col items-center gap-4 flex-1">
               <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-slate-900/50 p-0 border border-white/5 shadow-inner flex items-center justify-center overflow-hidden">
-                {match.team_b_code && match.team_b_code !== 'unknown' ? (
+                {match.team_b_code && match.team_b_code !== 'unknown' && match.team_b_code.length > 0 ? (
                   <img src={`https://flagcdn.com/w160/${match.team_b_code.toLowerCase()}.png`} alt={match.team_b_name} className="w-full h-full object-cover" />
+                ) : match.team_b_icon?.startsWith('http') ? (
+                  <img src={match.team_b_icon} alt={match.team_b_name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="text-6xl md:text-7xl">{match.team_b_icon || '⚽'}</div>
                 )}
@@ -167,7 +171,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
             </div>
 
             <div className="flex items-center justify-center w-full gap-3 md:gap-6 text-lg md:text-3xl font-black text-amber-100 uppercase tracking-wide">
-              <div className="flex-1 text-right">
+              <div className="flex-1 text-center">
                 {match.favorite_team === 'teamA'
                   ? `${match.team_a_name} 0`
                   : `${match.team_a_name} +${formatHandicap(match.handicap)}`}
@@ -175,7 +179,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
 
               <div className="text-3xl md:text-4xl flex-shrink-0 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]">🏆</div>
 
-              <div className="flex-1 text-left">
+              <div className="flex-1 text-center">
                 {match.favorite_team === 'teamA'
                   ? `+${formatHandicap(match.handicap)} ${match.team_b_name}`
                   : `0 ${match.team_b_name} `}
@@ -197,8 +201,10 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
             >
               <div className="flex flex-col items-center">
                 <div className="w-16 h-10 mb-4 rounded-lg overflow-hidden shadow-lg border border-white/10 group-hover:scale-110 transition-transform">
-                  {match.team_a_code && match.team_a_code !== 'unknown' ? (
+                  {match.team_a_code && match.team_a_code !== 'unknown' && match.team_a_code.length > 0 ? (
                     <img src={`https://flagcdn.com/w80/${match.team_a_code.toLowerCase()}.png`} alt="" className="w-full h-full object-cover" />
+                  ) : match.team_a_icon?.startsWith('http') ? (
+                    <img src={match.team_a_icon} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="text-2xl pt-1">{match.team_a_icon || '⚽'}</div>
                   )}
@@ -263,8 +269,10 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
             >
               <div className="flex flex-col items-center">
                 <div className="w-16 h-10 mb-4 rounded-lg overflow-hidden shadow-lg border border-white/10 group-hover:scale-110 transition-transform">
-                  {match.team_b_code && match.team_b_code !== 'unknown' ? (
+                  {match.team_b_code && match.team_b_code !== 'unknown' && match.team_b_code.length > 0 ? (
                     <img src={`https://flagcdn.com/w80/${match.team_b_code.toLowerCase()}.png`} alt="" className="w-full h-full object-cover" />
+                  ) : match.team_b_icon?.startsWith('http') ? (
+                    <img src={match.team_b_icon} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="text-2xl pt-1">{match.team_b_icon || '⚽'}</div>
                   )}

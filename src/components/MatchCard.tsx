@@ -90,8 +90,10 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin, customClas
       <div className="flex items-center justify-between gap-4 mb-6 px-2">
         <div className="flex flex-col items-center gap-2 flex-1">
           <div className="w-12 h-12 rounded-full bg-slate-800/50 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform overflow-hidden border border-white/5">
-            {match.team_a_code && match.team_a_code !== 'unknown' ? (
+            {match.team_a_code && match.team_a_code !== 'unknown' && match.team_a_code.length > 0 ? (
               <img src={`https://flagcdn.com/w80/${match.team_a_code.toLowerCase()}.png`} alt={match.team_a_name} className="w-full h-full object-cover" />
+            ) : match.team_a_icon?.startsWith('http') ? (
+              <img src={match.team_a_icon} alt={match.team_a_name} className="w-full h-full object-cover" />
             ) : (
               match.team_a_icon || '⚽'
             )}
@@ -109,8 +111,10 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin, customClas
 
         <div className="flex flex-col items-center gap-2 flex-1">
           <div className="w-12 h-12 rounded-full bg-slate-800/50 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform overflow-hidden border border-white/5">
-            {match.team_b_code && match.team_b_code !== 'unknown' ? (
+            {match.team_b_code && match.team_b_code !== 'unknown' && match.team_b_code.length > 0 ? (
               <img src={`https://flagcdn.com/w80/${match.team_b_code.toLowerCase()}.png`} alt={match.team_b_name} className="w-full h-full object-cover" />
+            ) : match.team_b_icon?.startsWith('http') ? (
+              <img src={match.team_b_icon} alt={match.team_b_name} className="w-full h-full object-cover" />
             ) : (
               match.team_b_icon || '⚽'
             )}
