@@ -36,3 +36,20 @@ export interface AppState {
   bets: Bet[];
   is_loading: boolean;
 }
+
+export interface OutrightOption {
+  id: string;
+  tournament: string;
+  team_name: string;
+  team_code?: string;
+  team_icon: string;
+  is_winner?: boolean;
+}
+
+export interface OutrightBet {
+  id: string;
+  outright_id: string;
+  user_name: string;
+  amount: number;
+  created_at: string;
+}

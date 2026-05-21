@@ -7,23 +7,36 @@ const AdminPage: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [editingMatch, setEditingMatch] = useState<Partial<Match> | null>(null);
   const [isAdding, setIsAdding] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'date' | 'live' | 'all'>('date');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [localScores, setLocalScores] = useState<Record<string, { a: number, b: number }>>({});
-  const [uploading, setUploading] = useState<{ a: boolean, b: boolean }>({ a: false, b: false });
+  const [activeTab, setActiveTab] = useState<'matches' | 'outright'>('matches');
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const ctx = useContext(AppContext);
   if (!ctx) return null;
   const { setAdminAuthenticated } = ctx;
 
+  const ALL_TEAMS = [
+    'Mexico', 'Nam Phi', 'Hàn Quốc', 'Cộng hòa Séc',
+    'Canada', 'Bosnia & HZ', 'Qatar', 'Thụy Sĩ',
+    'Brazil', 'Maroc', 'Haiti', 'Scotland',
+    'Hoa Kỳ', 'Paraguay', 'Úc', 'Thổ Nhĩ Kỳ',
+    'Đức', 'Curaçao', 'Bờ Biển Ngà', 'Ecuador',
+    'Hà Lan', 'Nhật Bản', 'Thụy Điển', 'Tunisia',
+    'Bỉ', 'Ai Cập', 'Iran', 'New Zealand',
+    'Tây Ban Nha', 'Cape Verde', 'Ả Rập Xê Út', 'Uruguay',
+    'Pháp', 'Senegal', 'Iraq', 'Na Uy',
+    'Argentina', 'Algeria', 'Áo', 'Jordan',
+    'Bồ Đào Nha', 'CHDC Congo', 'Uzbekistan', 'Colombia',
+    'Anh', 'Croatia', 'Ghana', 'Panama'
+  ].sort();
+
   useEffect(() => {
     fetchMatches();
   }, []);
 
   const fetchMatches = async () => {
-    setLoading(true);
     const { data, error } = await supabase
       .from('matches')
       .select('*')
@@ -43,158 +56,80 @@ const AdminPage: React.FC = () => {
         setSelectedDate(startingDate);
       }
     }
-    setLoading(false);
   };
 
   const handleSaveMatch = async () => {
     if (!editingMatch) return;
-
-    // Extract ONLY the fields that should go to the DB
-    const payload = {
-      team_a_name: editingMatch.team_a_name,
-      team_b_name: editingMatch.team_b_name,
-      team_a_icon: editingMatch.team_a_icon || '⚽',
-      team_b_icon: editingMatch.team_b_icon || '⚽',
-      team_a_code: editingMatch.team_a_code,
-      team_b_code: editingMatch.team_b_code,
-      stadium: editingMatch.stadium,
-      league: editingMatch.league,
-      start_time: editingMatch.start_time,
-      commentator: editingMatch.commentator,
-      status: editingMatch.status,
-      handicap: editingMatch.handicap,
-      rate_a: editingMatch.rate_a,
-      rate_b: editingMatch.rate_b,
-      score_a: editingMatch.score_a,
-      score_b: editingMatch.score_b,
-      favorite_team: editingMatch.favorite_team
-    };
-
-    const id = editingMatch.id;
+    const { id, ...payload } = editingMatch;
     let error;
-
     if (id) {
-      const { error: err } = await supabase
-        .from('matches')
-        .update(payload)
-        .eq('id', id);
+      const { error: err } = await supabase.from('matches').update(payload).eq('id', id);
       error = err;
     } else {
-      const { error: err } = await supabase
-        .from('matches')
-        .insert([payload]);
+      const { error: err } = await supabase.from('matches').insert([payload]);
       error = err;
     }
-
     if (!error) {
       setEditingMatch(null);
       setIsAdding(false);
       fetchMatches();
       alert('Đã lưu thành công!');
-    } else {
-      console.error('Supabase Save Error:', error);
-      alert(`Lỗi (${error.code}): ${error.message}`);
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, team: 'a' | 'b') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Check file size (e.g., < 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('File quá lớn! Vui lòng chọn file dưới 2MB.');
-      return;
-    }
-
-    setUploading(prev => ({ ...prev, [team]: true }));
-
+  const handleSetWinner = async (teamName: string) => {
+    if (!window.confirm(`Xác nhận đội ${teamName} là nhà vô địch?`)) return;
+    
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = `logos/${fileName}`;
+      const { error } = await supabase
+        .from('outright_winner')
+        .upsert({ 
+          id: 1, 
+          team_name: teamName, 
+          updated_at: new Date().toISOString() 
+        }, { onConflict: 'id' });
 
-      const { error: uploadError } = await supabase.storage
-        .from('match-icons') // Expecting a bucket named 'match-icons'
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('match-icons')
-        .getPublicUrl(filePath);
-
-      if (team === 'a') {
-        setEditingMatch(prev => ({ ...prev, team_a_icon: publicUrl }));
-      } else {
-        setEditingMatch(prev => ({ ...prev, team_b_icon: publicUrl }));
+      if (error) {
+        throw error;
       }
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      alert(`Lỗi upload: ${error.message}. Hãy đảm bảo bạn đã tạo bucket 'match-icons' với quyền Public.`);
-    } finally {
-      setUploading(prev => ({ ...prev, [team]: false }));
+
+      alert(`Đã đặt ${teamName} là nhà vô địch thành công!`);
+    } catch (err: any) {
+      console.error('Lỗi khi set đội vô địch:', err);
+      alert(`LỖI: ${err.message || 'Không thể lưu dữ liệu. Hãy kiểm tra lại bảng outright_winner trong Supabase.'}`);
+    }
+  };
+
+  const handleDeleteWinner = async () => {
+    if (!window.confirm('Xóa dữ liệu đội vô địch và reset giải đấu?')) return;
+    const { error } = await supabase.from('outright_winner').delete().gt('id', -1);
+    if (!error) {
+      alert('Đã xóa dữ liệu vô địch thành công!');
+    } else {
+      alert(`Lỗi: ${error.message}`);
     }
   };
 
   const handleQuickUpdateResult = async (match: Match) => {
     const scores = localScores[match.id];
     if (!scores) return;
-
-    const { error } = await supabase
-      .from('matches')
-      .update({
-        score_a: scores.a,
-        score_b: scores.b,
-        status: 'finished'
-      })
-      .eq('id', match.id);
-
-    if (!error) {
-      alert(`Đã cập nhật tỷ số trận ${match.team_a_name} - ${match.team_b_name}`);
-      // Clear local buffer to let DB values take over
-      setLocalScores(prev => {
-        const next = { ...prev };
-        delete next[match.id];
-        return next;
-      });
-      fetchMatches();
-    } else {
-      console.error('Quick Update Error:', error);
-      alert(`Lỗi (${error.code}): ${error.message}`);
-    }
-  };
-
-  const handleResetMatch = async (match: Match) => {
-    if (!window.confirm(`Bạn có chắc muốn đưa trận ${match.team_a_name} - ${match.team_b_name} về trạng thái chờ? (Tỷ số sẽ bị xóa)`)) return;
-
-    const { error } = await supabase
-      .from('matches')
-      .update({
-        score_a: 0,
-        score_b: 0,
-        status: 'scheduled'
-      })
-      .eq('id', match.id);
-
-    if (!error) {
-      fetchMatches();
-    } else {
-      console.error('Reset Match Error:', error);
-      alert(`Lỗi (${error.code}): ${error.message}`);
-    }
+    await supabase.from('matches').update({ score_a: scores.a, score_b: scores.b, status: 'finished' }).eq('id', match.id);
+    setLocalScores(prev => { const next = { ...prev }; delete next[match.id]; return next; });
+    fetchMatches();
   };
 
   const handleDeleteMatch = async (id: string) => {
-    if (!window.confirm('Bạn có chắc muốn xóa trận đấu này?')) return;
-    const { error } = await supabase.from('matches').delete().eq('id', id);
-    if (!error) {
-      fetchMatches();
-    } else {
-      console.error('Delete Match Error:', error);
-      alert(`Lỗi (${error.code}): ${error.message}`);
-    }
+    if (!window.confirm('Xóa trận đấu?')) return;
+    await supabase.from('matches').delete().eq('id', id);
+    fetchMatches();
   };
+
+  const filteredMatches = matches.filter(m => {
+    if (m.id === 'WORLD_CUP_2026_WINNER_REF') return false;
+    if (filter === 'live') return m.status === 'live';
+    if (filter === 'date' && selectedDate) return new Date(m.start_time).toLocaleDateString('vi-VN') === selectedDate;
+    return true;
+  });
 
   const uniqueDates = [...new Set(matches.map(m => new Date(m.start_time).toLocaleDateString('vi-VN')))].sort((a, b) => {
     const [da, ma, ya] = a.split('/').map(Number);
@@ -202,588 +137,152 @@ const AdminPage: React.FC = () => {
     return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime();
   });
 
-  const filteredMatches = matches.filter(m => {
-    if (filter === 'live') return m.status === 'live';
-    if (filter === 'date' && selectedDate) {
-      return new Date(m.start_time).toLocaleDateString('vi-VN') === selectedDate;
-    }
-    if (filter === 'all') return true;
-    return true;
-  });
-
-  const scrollPrev = () => {
-    scrollerRef.current?.scrollBy({ left: -200, behavior: 'smooth' });
+  const getWeekday = (dateStr: string) => {
+    const [d, m, y] = dateStr.split('/').map(Number);
+    const date = new Date(y, m - 1, d);
+    const days = ['CH', 'THỨ 2', 'THỨ 3', 'THỨ 4', 'THỨ 5', 'THỨ 6', 'THỨ 7'];
+    return days[date.getDay()];
   };
 
-  const scrollNext = () => {
-    scrollerRef.current?.scrollBy({ left: 200, behavior: 'smooth' });
-  };
-
-  const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-emerald-500 outline-none transition-all focus:bg-white/10";
-  const labelCls = "block text-[10px] font-black text-slate-500 mb-1.5 uppercase tracking-wider";
-
-  // Convert UTC ISO string → local datetime-local input value (YYYY-MM-DDTHH:mm)
-  const toLocalDatetime = (isoStr: string) => {
-    const d = new Date(isoStr);
-    const offset = d.getTimezoneOffset() * 60000;
-    return new Date(d.getTime() - offset).toISOString().slice(0, 16);
-  };
-
-  // Convert datetime-local input value → UTC ISO string
-  const toUTCIso = (localStr: string) => new Date(localStr).toISOString();
+  const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-emerald-500 outline-none";
+  const labelCls = "block text-[10px] font-black text-slate-500 mb-1 uppercase";
 
   return (
-    <div className="min-h-screen relative overflow-hidden text-white pb-12 px-6 pt-6">
-      {/* Immersive Background */}
-      <div
-        className="fixed inset-0 z-0 opacity-40 blur-sm pointer-events-none"
-        style={{
-          backgroundImage: 'url("/world_cup_bg.png")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      />
+    <div className="min-h-screen bg-[#080808] relative overflow-hidden text-white font-sans">
+      {/* BACKGROUND STADIUM */}
+      <div className="fixed inset-0 z-0 bg-cover bg-center opacity-40 blur-sm pointer-events-none" style={{ backgroundImage: 'url("/world_cup_bg.png")' }} />
+      <div className="fixed inset-0 z-0 bg-gradient-to-b from-black/40 via-black/20 to-black/80" />
 
-      <div className="max-w-4xl mx-auto relative z-10">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-black uppercase tracking-widest text-emerald-400 drop-shadow-lg flex items-center gap-3">
-            <span className="p-2 bg-emerald-500/20 rounded-xl shadow-inner">⚙️</span>
-            Quản Lý Trận Đấu
-          </h1>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setAdminAuthenticated(false)}
-              className="bg-white/5 hover:bg-white/10 text-slate-400 text-xs font-bold px-6 py-3 rounded-xl transition-all border border-white/5 uppercase tracking-wider"
-            >
-              Thoát Admin
-            </button>
-            <button
-              onClick={() => {
-                setIsAdding(true);
-                setEditingMatch({
-                  team_a_name: '',
-                  team_b_name: '',
-                  team_a_code: '',
-                  team_b_code: '',
-                  status: 'scheduled',
-                  handicap: 0,
-                  rate_a: 90,
-                  rate_b: 90,
-                  score_a: 0,
-                  score_b: 0,
-                  start_time: new Date().toISOString(),
-                  favorite_team: 'teamA'
-                });
-              }}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black px-6 py-3 rounded-xl transition-all shadow-lg shadow-emerald-900/40 active:scale-95 uppercase tracking-wider"
-            >
-              + Thêm Trận Mới
-            </button>
+      <div className="relative z-10 max-w-5xl mx-auto px-6 py-10">
+        
+        {/* HEADER BAR */}
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-xl border border-white/20">⚙️</div>
+            <h1 className="text-2xl font-black uppercase tracking-tighter italic">QUẢN LÝ <span className="text-emerald-500">TRẬN ĐẤU</span></h1>
+          </div>
+          
+          <div className="flex items-center gap-4">
+             <div className="flex bg-black/40 backdrop-blur-xl p-1 rounded-full border border-white/10">
+                <button onClick={() => setActiveTab('matches')} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase transition-all ${activeTab === 'matches' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>Trận Đấu</button>
+                <button onClick={() => setActiveTab('outright')} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase transition-all ${activeTab === 'outright' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>Vô Địch</button>
+             </div>
+             <button onClick={() => setAdminAuthenticated(false)} className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest transition-all">THOÁT ADMIN</button>
+             <button onClick={() => setIsAdding(true)} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-900/40">+ THÊM TRẬN MỚI</button>
           </div>
         </div>
 
-        {/* Modal-ish Form */}
-        {(isAdding || editingMatch?.id) && (
-          <div className="bg-[#1e293b]/90 backdrop-blur-3xl border border-white/10 rounded-[40px] p-8 md:p-10 mb-12 shadow-2xl animate-in fade-in zoom-in-95 duration-300 ring-1 ring-white/10 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-indigo-500 to-rose-500" />
+        {activeTab === 'matches' ? (
+          <div className="space-y-8">
+            {/* DATE SCROLLER BAR */}
+            <div className="bg-white/5 backdrop-blur-2xl rounded-[40px] border border-white/10 p-4 flex items-center gap-4">
+               <div className="flex p-1 bg-black/40 rounded-full border border-white/5">
+                  <button onClick={() => setFilter('date')} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase ${filter === 'date' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}>THEO NGÀY</button>
+                  <button onClick={() => setFilter('live')} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase ${filter === 'live' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}>ĐANG ĐÁ</button>
+                  <button onClick={() => setFilter('all')} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase ${filter === 'all' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}>TẤT CẢ</button>
+               </div>
+               
+               <button onClick={fetchMatches} className="w-8 h-8 flex items-center justify-center bg-indigo-500/20 text-indigo-400 rounded-lg border border-indigo-500/20 text-xs">🔄</button>
 
-            <h2 className="text-2xl font-black mb-10 flex items-center justify-center gap-4">
-              <span className="w-12 h-1 bg-emerald-500 rounded-full" />
-              {editingMatch?.id ? 'CHỈNH SỬA TRẬN ĐẤU' : 'THÊM TRẬN ĐẤU MỚI'}
-              <span className="w-12 h-1 bg-rose-500 rounded-full" />
-            </h2>
-
-            {/* Battle Layout - 2 Columns */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 relative">
-              {/* VS Divider */}
-              <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-4 z-0 pointer-events-none opacity-20">
-                <div className="w-[1px] h-64 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-                <span className="text-4xl font-black text-white italic">VS</span>
-                <div className="w-[1px] h-64 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-              </div>
-
-              {/* TEAM A COLUMN */}
-              <div className="space-y-6 relative z-10 bg-emerald-500/5 p-6 rounded-[32px] border border-emerald-500/10">
-                <div className="flex items-center gap-3 mb-2 underline decoration-emerald-500/30 underline-offset-8">
-                  <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                  <h3 className="text-sm font-black text-emerald-400 uppercase tracking-widest">Đội A (TRÊN)</h3>
-                </div>
-
-                <div>
-                  <label className={labelCls}>Tên Đội</label>
-                  <input
-                    className={inputCls}
-                    placeholder="Nhập tên đội..."
-                    value={editingMatch?.team_a_name || ''}
-                    onChange={e => setEditingMatch(prev => ({ ...prev, team_a_name: e.target.value }))}
-                  />
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className={labelCls}>Mã QG (Flag)</label>
-                    <input
-                      className={inputCls}
-                      placeholder="Mã ISO (mx, za...)"
-                      value={editingMatch?.team_a_code || ''}
-                      onChange={e => setEditingMatch(prev => ({ ...prev, team_a_code: e.target.value.toLowerCase() }))}
-                    />
+               <div className="flex-1 flex items-center gap-3 relative overflow-hidden group">
+                  <button onClick={() => scrollerRef.current?.scrollBy({left: -150, behavior: 'smooth'})} className="p-1 opacity-40 hover:opacity-100 transition-opacity">◀</button>
+                  <div ref={scrollerRef} className="flex gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-1">
+                     {uniqueDates.map(d => (
+                        <button key={d} onClick={() => { setSelectedDate(d); setFilter('date'); }} className={`min-w-[65px] h-14 rounded-2xl flex flex-col items-center justify-center transition-all border ${selectedDate === d && filter === 'date' ? 'bg-emerald-600 border-emerald-500 shadow-lg shadow-emerald-900/40' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
+                           <span className="text-[7px] font-black opacity-60 uppercase mb-1">{getWeekday(d)}</span>
+                           <span className="text-sm font-black">{d.split('/')[0]}</span>
+                        </button>
+                     ))}
                   </div>
-                  <div className="flex-1">
-                    <label className={labelCls}>Icon / Logo URL {uploading.a && <span className="animate-pulse text-emerald-400">(Đang upload...)</span>}</label>
-                    <div className="flex gap-2">
-                      <input
-                        className={inputCls}
-                        placeholder="Emoji hoặc URL logo..."
-                        value={editingMatch?.team_a_icon || ''}
-                        onChange={e => setEditingMatch(prev => ({ ...prev, team_a_icon: e.target.value }))}
-                      />
-                      <label className="flex-shrink-0 cursor-pointer bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 flex items-center justify-center transition-all">
-                        <span className="text-xl">📁</span>
-                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'a')} />
-                      </label>
+                  <button onClick={() => scrollerRef.current?.scrollBy({left: 150, behavior: 'smooth'})} className="p-1 opacity-40 hover:opacity-100 transition-opacity">▶</button>
+               </div>
+            </div>
+
+            {/* ADD/EDIT FORM */}
+            {(isAdding || editingMatch?.id) && (
+              <div className="bg-[#111]/90 backdrop-blur-3xl border border-white/10 rounded-[40px] p-10 animate-in fade-in zoom-in-95">
+                 <h2 className="text-xl font-black mb-8 uppercase text-center italic">{editingMatch?.id ? 'CHỈNH SỬA TRẬN ĐẤU' : 'THÊM TRẬN ĐẤU MỚI'}</h2>
+                 <div className="grid grid-cols-2 gap-10">
+                    <div className="space-y-4">
+                       <p className="text-[10px] font-black text-emerald-500 italic">ĐÔI A</p>
+                       <input className={inputCls} placeholder="Tên Đội A" value={editingMatch?.team_a_name || ''} onChange={e => setEditingMatch({...editingMatch, team_a_name: e.target.value})} />
+                       <input className={inputCls} placeholder="Mã Cờ (vd: br, ar, vn)" value={editingMatch?.team_a_code || ''} onChange={e => setEditingMatch({...editingMatch, team_a_code: e.target.value.toLowerCase()})} />
+                    </div>
+                    <div className="space-y-4">
+                       <p className="text-[10px] font-black text-rose-500 italic">ĐỘI B</p>
+                       <input className={inputCls} placeholder="Tên Đội B" value={editingMatch?.team_b_name || ''} onChange={e => setEditingMatch({...editingMatch, team_b_name: e.target.value})} />
+                       <input className={inputCls} placeholder="Mã Cờ (vd: fr, de, en)" value={editingMatch?.team_b_code || ''} onChange={e => setEditingMatch({...editingMatch, team_b_code: e.target.value.toLowerCase()})} />
+                    </div>
+                 </div>
+                 <div className="grid grid-cols-3 gap-6 mt-8">
+                    <div><label className={labelCls}>Kèo</label><input type="number" step="0.25" className={inputCls} value={editingMatch?.handicap || 0} onChange={e => setEditingMatch({...editingMatch, handicap: parseFloat(e.target.value)})} /></div>
+                    <div><label className={labelCls}>Ăn A</label><input type="number" step="0.01" className={inputCls} value={editingMatch?.rate_a || 1} onChange={e => setEditingMatch({...editingMatch, rate_a: parseFloat(e.target.value)})} /></div>
+                    <div><label className={labelCls}>Ăn B</label><input type="number" step="0.01" className={inputCls} value={editingMatch?.rate_b || 1} onChange={e => setEditingMatch({...editingMatch, rate_b: parseFloat(e.target.value)})} /></div>
+                 </div>
+                 <div className="mt-8 flex gap-4">
+                    <button onClick={handleSaveMatch} className="flex-1 bg-emerald-600 py-5 rounded-2xl font-black uppercase text-sm">LƯU TRẬN ĐẤU</button>
+                    <button onClick={() => { setIsAdding(false); setEditingMatch(null); }} className="px-10 bg-white/5 py-5 rounded-2xl font-black uppercase text-sm">HỦY</button>
+                 </div>
+              </div>
+            )}
+
+            {/* MATCH LIST */}
+            <div className="grid grid-cols-1 gap-4">
+              {filteredMatches.map(m => (
+                <div key={m.id} className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-[35px] p-6 flex items-center justify-between gap-8 group hover:bg-white/[0.08] transition-all">
+                  <div className="flex items-center gap-5">
+                    {/* FLAGS & SCORE VERTICAL */}
+                    <div className="flex items-center gap-3">
+                       <div className="w-14 h-14 bg-black/40 rounded-2xl overflow-hidden border border-white/10 group-hover:scale-105 transition-transform"><img src={`https://flagcdn.com/w160/${m.team_a_code?.toLowerCase()}.png`} className="w-full h-full object-cover" /></div>
+                       <div className="flex flex-col gap-1 items-center bg-black/60 p-1.5 rounded-xl border border-white/10 min-w-[32px]">
+                          <input type="number" className="w-8 h-6 bg-transparent text-[11px] font-black text-emerald-400 text-center outline-none" value={localScores[m.id]?.a ?? m.score_a} onChange={e => setLocalScores({...localScores, [m.id]: {a: parseInt(e.target.value), b: localScores[m.id]?.b ?? m.score_b}})} />
+                          <div className="w-4 h-[1px] bg-white/10" />
+                          <input type="number" className="w-8 h-6 bg-transparent text-[11px] font-black text-emerald-400 text-center outline-none" value={localScores[m.id]?.b ?? m.score_b} onChange={e => setLocalScores({...localScores, [m.id]: {a: localScores[m.id]?.a ?? m.score_a, b: parseInt(e.target.value)}})} />
+                       </div>
+                       <div className="w-14 h-14 bg-black/40 rounded-2xl overflow-hidden border border-white/10 group-hover:scale-105 transition-transform"><img src={`https://flagcdn.com/w160/${m.team_b_code?.toLowerCase()}.png`} className="w-full h-full object-cover" /></div>
+                    </div>
+                    {/* TEAM INFO */}
+                    <div>
+                       <h3 className="text-base font-black text-white group-hover:text-emerald-400 transition-colors uppercase italic tracking-tight">{m.team_a_name} <span className="text-[10px] opacity-40 mx-1">vs</span> {m.team_b_name}</h3>
+                       <div className="flex items-center gap-4 mt-1.5">
+                          <span className="text-[9px] font-black text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20 uppercase tracking-widest">KÈO: {m.handicap}</span>
+                          <span className={`text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${m.status === 'live' ? 'bg-rose-500 text-white animate-pulse' : 'bg-slate-800 text-slate-500'}`}>{m.status}</span>
+                          <span className="text-[9px] font-black text-slate-500 italic tracking-widest opacity-60 underline underline-offset-4">{new Date(m.start_time).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}</span>
+                       </div>
                     </div>
                   </div>
-                  <div className="w-14 h-11 mt-6 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center overflow-hidden">
-                    {uploading.a ? (
-                      <div className="w-5 h-5 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-                    ) : editingMatch?.team_a_code && editingMatch.team_a_code.length > 0 ? (
-                      <img src={`https://flagcdn.com/w40/${editingMatch.team_a_code.toLowerCase()}.png`} alt="" className="w-full h-full object-cover" />
-                    ) : editingMatch?.team_a_icon?.startsWith('http') ? (
-                      <img src={editingMatch.team_a_icon} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">{editingMatch?.team_a_icon || '🏁'}</div>
-                    )}
+                  {/* ACTIONS */}
+                  <div className="flex gap-3">
+                    {localScores[m.id] && <button onClick={() => handleQuickUpdateResult(m)} className="w-11 h-11 flex items-center justify-center bg-emerald-500 text-black rounded-full shadow-lg shadow-emerald-500/20 hover:scale-110 active:scale-95 transition-all text-xs">✅</button>}
+                    <button onClick={() => setEditingMatch(m)} className="w-11 h-11 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full border border-white/10 transition-all text-xs">✏️</button>
+                    <button onClick={() => handleDeleteMatch(m.id)} className="w-11 h-11 flex items-center justify-center bg-white/10 hover:bg-rose-500 hover:text-white rounded-full border border-white/10 transition-all text-xs">🗑️</button>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelCls}>Kèo Chấp (0 nếu chấp)</label>
-                    <input
-                      className={inputCls}
-                      type="number"
-                      step="0.25"
-                      placeholder="0.0"
-                      value={editingMatch?.favorite_team === 'teamB' ? editingMatch?.handicap : 0}
-                      onChange={e => {
-                        const val = parseFloat(e.target.value);
-                        if (val > 0) {
-                          setEditingMatch(prev => ({ ...prev, favorite_team: 'teamB', handicap: val }));
-                        } else {
-                          setEditingMatch(prev => ({ ...prev, favorite_team: 'teamA', handicap: 0 }));
-                        }
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Tỉ số A</label>
-                    <input
-                      className={inputCls}
-                      type="number"
-                      value={editingMatch?.score_a ?? 0}
-                      onChange={e => {
-                        const val = parseInt(e.target.value);
-                        setEditingMatch(prev => ({ ...prev, score_a: isNaN(val) ? 0 : val }));
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className={labelCls}>Tỷ lệ ăn A (%)</label>
-                  <input
-                    className={inputCls}
-                    type="number"
-                    value={editingMatch?.rate_a || 0}
-                    onChange={e => setEditingMatch(prev => ({ ...prev, rate_a: parseInt(e.target.value) || 0 }))}
-                  />
-                </div>
-              </div>
-
-              {/* TEAM B COLUMN */}
-              <div className="space-y-6 relative z-10 bg-rose-500/5 p-6 rounded-[32px] border border-rose-500/10">
-                <div className="flex items-center gap-3 mb-2 underline decoration-rose-500/30 underline-offset-8">
-                  <div className="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
-                  <h3 className="text-sm font-black text-rose-400 uppercase tracking-widest">Đội B (DƯỚI)</h3>
-                </div>
-
-                <div>
-                  <label className={labelCls}>Tên Đội</label>
-                  <input
-                    className={inputCls}
-                    placeholder="Nhập tên đội..."
-                    value={editingMatch?.team_b_name || ''}
-                    onChange={e => setEditingMatch(prev => ({ ...prev, team_b_name: e.target.value }))}
-                  />
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className={labelCls}>Mã QG (Flag)</label>
-                    <input
-                      className={inputCls}
-                      placeholder="Mã ISO (mx, za...)"
-                      value={editingMatch?.team_b_code || ''}
-                      onChange={e => setEditingMatch(prev => ({ ...prev, team_b_code: e.target.value.toLowerCase() }))}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className={labelCls}>Icon / Logo URL {uploading.b && <span className="animate-pulse text-rose-400">(Đang upload...)</span>}</label>
-                    <div className="flex gap-2">
-                      <input
-                        className={inputCls}
-                        placeholder="Emoji hoặc URL logo..."
-                        value={editingMatch?.team_b_icon || ''}
-                        onChange={e => setEditingMatch(prev => ({ ...prev, team_b_icon: e.target.value }))}
-                      />
-                      <label className="flex-shrink-0 cursor-pointer bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 flex items-center justify-center transition-all">
-                        <span className="text-xl">📁</span>
-                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'b')} />
-                      </label>
-                    </div>
-                  </div>
-                  <div className="w-14 h-11 mt-6 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center overflow-hidden">
-                    {uploading.b ? (
-                      <div className="w-5 h-5 border-2 border-rose-500/20 border-t-rose-500 rounded-full animate-spin" />
-                    ) : editingMatch?.team_b_code && editingMatch.team_b_code.length > 0 ? (
-                      <img src={`https://flagcdn.com/w40/${editingMatch.team_b_code.toLowerCase()}.png`} alt="" className="w-full h-full object-cover" />
-                    ) : editingMatch?.team_b_icon?.startsWith('http') ? (
-                      <img src={editingMatch.team_b_icon} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">{editingMatch?.team_b_icon || '🏁'}</div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelCls}>Kèo Chấp (0 nếu chấp)</label>
-                    <input
-                      className={inputCls}
-                      type="number"
-                      step="0.25"
-                      placeholder="0.0"
-                      value={editingMatch?.favorite_team === 'teamA' ? editingMatch?.handicap : 0}
-                      onChange={e => {
-                        const val = parseFloat(e.target.value);
-                        if (val > 0) {
-                          setEditingMatch(prev => ({ ...prev, favorite_team: 'teamA', handicap: val }));
-                        } else {
-                          setEditingMatch(prev => ({ ...prev, favorite_team: 'teamB', handicap: 0 }));
-                        }
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Tỉ số B</label>
-                    <input
-                      className={inputCls}
-                      type="number"
-                      value={editingMatch?.score_b ?? 0}
-                      onChange={e => {
-                        const val = parseInt(e.target.value);
-                        setEditingMatch(prev => ({ ...prev, score_b: isNaN(val) ? 0 : val }));
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className={labelCls}>Tỷ lệ ăn B (%)</label>
-                  <input
-                    className={inputCls}
-                    type="number"
-                    value={editingMatch?.rate_b || 0}
-                    onChange={e => setEditingMatch(prev => ({ ...prev, rate_b: parseInt(e.target.value) }))}
-                  />
-                </div>
-              </div>
+              ))}
             </div>
-
-            {/* SHARED FIELDS */}
-            <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-white/5 pt-8">
-              <div>
-                <label className={labelCls}>Giải Đấu</label>
-                <input
-                  className={inputCls}
-                  placeholder="Vòng chung kết C1, V-League..."
-                  value={editingMatch?.league || ''}
-                  onChange={e => setEditingMatch(prev => ({ ...prev, league: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <label className={labelCls}>Sân Vận Động</label>
-                <input
-                  className={inputCls}
-                  placeholder="Wembley, Stade de France..."
-                  value={editingMatch?.stadium || ''}
-                  onChange={e => setEditingMatch(prev => ({ ...prev, stadium: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <label className={labelCls}>Người Bình Luận (BLV)</label>
-                <input
-                  className={inputCls}
-                  placeholder="Quang Huy, Anh Quân..."
-                  value={editingMatch?.commentator || ''}
-                  onChange={e => setEditingMatch(prev => ({ ...prev, commentator: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <label className={labelCls}>Thời gian bắt đầu</label>
-                <input
-                  className={inputCls}
-                  type="datetime-local"
-                  value={editingMatch?.start_time ? toLocalDatetime(editingMatch.start_time) : ''}
-                  onChange={e => setEditingMatch(prev => ({ ...prev, start_time: toUTCIso(e.target.value) }))}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className={labelCls}>Trạng thái</label>
-                <div className="flex gap-2">
-                  {['scheduled', 'live', 'finished'].map(s => (
-                    <button
-                      key={s}
-                      onClick={() => setEditingMatch(prev => ({ ...prev, status: s }))}
-                      className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${editingMatch?.status === s
-                        ? 'bg-indigo-600 text-white shadow-lg'
-                        : 'bg-white/5 text-slate-500 hover:bg-white/10'
-                        }`}
-                    >
-                      {s === 'scheduled' ? 'Sắp đá' : s === 'live' ? 'Đang đá' : 'Kết thúc'}
-                    </button>
-                  ))}
+          </div>
+        ) : (
+          /* OUTRIGHT WINNER TAB */
+          <div className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[40px] p-10 animate-in fade-in">
+             <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-6 border-b border-white/5 pb-6">
+                <div className="flex items-center gap-3">
+                   <div className="w-1 h-6 bg-emerald-500 rounded-full" />
+                   <h2 className="text-xl font-black uppercase tracking-widest text-emerald-500 italic">CÀI ĐẶT NHÀ VÔ ĐỊCH</h2>
                 </div>
-              </div>
-            </div>
-
-            <div className="flex gap-4 mt-12">
-              <button
-                onClick={handleSaveMatch}
-                className="flex-[2] bg-gradient-to-r from-emerald-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white font-black py-5 rounded-3xl shadow-xl transition-all uppercase tracking-[0.2em] active:scale-95 text-sm"
-              >
-                LƯU TRẬN ĐẤU
-              </button>
-              <button
-                onClick={() => { setEditingMatch(null); setIsAdding(false); }}
-                className="flex-1 bg-white/5 hover:bg-white/10 text-slate-400 font-bold py-5 rounded-3xl transition-all active:scale-95 border border-white/5 uppercase tracking-widest text-xs"
-              >
-                HỦY
-              </button>
-            </div>
+                <button onClick={handleDeleteWinner} className="px-6 py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-full text-[10px] font-black uppercase transition-all shadow-lg hover:shadow-rose-900/40">
+                   {/* Sync icon if possible, else text */}
+                   ⚠️ HỦY ĐỘI VÔ ĐỊCH (RESET)
+                </button>
+             </div>
+             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {ALL_TEAMS.map(team => (
+                  <button key={team} onClick={() => handleSetWinner(team)} className="bg-white/5 border border-white/5 py-4 px-2 rounded-2xl text-[9px] font-black uppercase hover:bg-emerald-600 transition-all truncate text-slate-400 hover:text-white">
+                    {team}
+                  </button>
+                ))}
+             </div>
           </div>
         )}
-
-        {/* List of matches */}
-        <div className="space-y-6">
-          <div className="flex flex-row items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-[32px] border border-white/10 mb-8 flex-wrap">
-            {/* Filter Toggle */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setFilter('date')}
-                className={`px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filter === 'date' ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-900/40' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
-              >
-                Theo Ngày
-              </button>
-              <button
-                onClick={() => setFilter('live')}
-                className={`px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filter === 'live' ? 'bg-rose-600 text-white shadow-xl animate-pulse' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
-              >
-                Đang Đá
-              </button>
-              <button
-                onClick={() => setFilter('all')}
-                className={`px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filter === 'all' ? 'bg-slate-700 text-white shadow-xl' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
-              >
-                Tất Cả
-              </button>
-              <button
-                onClick={fetchMatches}
-                className="ml-2 w-10 h-10 flex items-center justify-center bg-white/5 rounded-xl text-slate-400 hover:text-white transition-colors"
-                title="Làm mới dữ liệu"
-              >
-                <span className={loading ? 'animate-spin' : ''}>🔄</span>
-              </button>
-            </div>
-
-            {/* Date Scroller */}
-            {filter === 'date' && (
-              <div className="relative flex-1 w-full max-w-lg group px-10">
-                <button
-                  onClick={scrollPrev}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 hover:bg-emerald-500/20 rounded-full text-white/50 hover:text-emerald-400 transition-all opacity-0 group-hover:opacity-100"
-                >
-                  ◀
-                </button>
-
-                <div
-                  ref={scrollerRef}
-                  className="w-full overflow-x-auto no-scrollbar flex items-center gap-3 scroll-smooth py-1"
-                >
-                  {uniqueDates.map((date) => {
-                    const [d, m] = date.split('/');
-                    const dateObj = new Date(2024, parseInt(m) - 1, parseInt(d));
-                    const dayName = dateObj.toLocaleDateString('vi-VN', { weekday: 'short' });
-
-                    return (
-                      <button
-                        key={date}
-                        onClick={() => setSelectedDate(date)}
-                        className={`flex flex-col items-center min-w-[56px] py-1.5 rounded-xl border transition-all ${selectedDate === date
-                          ? 'bg-emerald-500/20 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
-                          : 'bg-white/5 border-white/5 hover:bg-white/10 text-slate-400'
-                          }`}
-                      >
-                        <span className={`text-[11px] font-black uppercase ${selectedDate === date ? 'text-emerald-400' : 'text-slate-500'}`}>{dayName}</span>
-                        <span className={`text-lg font-black leading-tight ${selectedDate === date ? 'text-white' : 'text-slate-300'}`}>{d}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  onClick={scrollNext}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 hover:bg-emerald-500/20 rounded-full text-white/50 hover:text-emerald-400 transition-all opacity-0 group-hover:opacity-100"
-                >
-                  ▶
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            {loading && matches.length === 0 ? (
-              <div className="flex justify-center py-20">
-                <div className="w-8 h-8 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-              </div>
-            ) : (
-              <>
-                {filteredMatches.map(m => (
-                  <div key={m.id} className="bg-white/5 backdrop-blur-2xl border border-white/5 rounded-[28px] p-6 flex items-center justify-between hover:bg-white/10 transition-all group ring-1 ring-white/5">
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-2">
-                        <div className="w-12 h-12 bg-slate-900 rounded-xl overflow-hidden border border-white/5">
-                          {m.team_a_code && m.team_a_code.length > 0 ? (
-                            <img src={`https://flagcdn.com/w80/${m.team_a_code.toLowerCase()}.png`} alt="" className="w-full h-full object-cover" />
-                          ) : m.team_a_icon?.startsWith('http') ? (
-                            <img src={m.team_a_icon} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">{m.team_a_icon || '🏁'}</div>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-center justify-center bg-slate-900/80 rounded-xl p-1 gap-1 border border-white/5">
-                          <input
-                            type="number"
-                            className="w-8 h-6 bg-[#111] border border-white/5 rounded text-[11px] font-black text-center text-emerald-400 focus:border-emerald-500 outline-none"
-                            placeholder="0"
-                            value={localScores[m.id]?.a ?? (m.status === 'scheduled' ? '' : m.score_a)}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value);
-                              setLocalScores(prev => ({
-                                ...prev,
-                                [m.id]: {
-                                  a: isNaN(val) ? 0 : val,
-                                  b: prev[m.id]?.b ?? m.score_b
-                                }
-                              }));
-                            }}
-                          />
-                          <div className="w-4 h-[1px] bg-slate-700/50" />
-                          <input
-                            type="number"
-                            className="w-8 h-6 bg-[#111] border border-white/5 rounded text-[11px] font-black text-center text-emerald-400 focus:border-emerald-500 outline-none"
-                            placeholder="0"
-                            value={localScores[m.id]?.b ?? (m.status === 'scheduled' ? '' : m.score_b)}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value);
-                              setLocalScores(prev => ({
-                                ...prev,
-                                [m.id]: {
-                                  a: prev[m.id]?.a ?? m.score_a,
-                                  b: isNaN(val) ? 0 : val
-                                }
-                              }));
-                            }}
-                          />
-                        </div>
-                        <div className="w-12 h-12 bg-slate-900 rounded-xl overflow-hidden border border-white/5">
-                          {m.team_b_code && m.team_b_code.length > 0 ? (
-                            <img src={`https://flagcdn.com/w80/${m.team_b_code.toLowerCase()}.png`} alt="" className="w-full h-full object-cover" />
-                          ) : m.team_b_icon?.startsWith('http') ? (
-                            <img src={m.team_b_icon} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">{m.team_b_icon || '🏁'}</div>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="font-black text-base text-slate-100 mb-1 group-hover:text-emerald-400 transition-colors">
-                          {m.team_a_name} <span className="text-slate-600 font-medium px-1">vs</span> {m.team_b_name}
-                        </h3>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] font-black bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded uppercase tracking-tighter">
-                            Kèo: {m.handicap}
-                          </span>
-                          <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter ${m.status === 'live' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-500'
-                            }`}>
-                            {m.status}
-                          </span>
-                          <span className="text-[10px] font-black text-slate-500">
-                            {new Date(m.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      {localScores[m.id] && (
-                        <button
-                          onClick={() => handleQuickUpdateResult(m)}
-                          className="w-11 h-11 flex items-center justify-center bg-emerald-500 text-black rounded-xl hover:bg-emerald-400 hover:scale-110 transition-all text-sm shadow-lg shadow-emerald-500/30"
-                          title="Lưu tỷ số"
-                        >
-                          ✅
-                        </button>
-                      )}
-                      {m.status === 'finished' && (
-                        <button
-                          onClick={() => handleResetMatch(m)}
-                          className="w-11 h-11 flex items-center justify-center bg-amber-500/10 text-amber-500 rounded-xl hover:bg-amber-500/20 hover:scale-110 transition-all text-sm border border-amber-500/10"
-                          title="Reset trận đấu"
-                        >
-                          🔄
-                        </button>
-                      )}
-                      <button
-                        onClick={() => setEditingMatch(m)}
-                        className="w-11 h-11 flex items-center justify-center bg-white/5 rounded-xl hover:bg-white/10 hover:scale-110 transition-all text-sm border border-white/5"
-                        title="Chỉnh sửa"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        onClick={() => handleDeleteMatch(m.id)}
-                        className="w-11 h-11 flex items-center justify-center bg-rose-500/10 text-rose-500 rounded-xl hover:bg-rose-500/20 hover:scale-110 transition-all text-sm border border-rose-500/10"
-                        title="Xóa"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {filteredMatches.length === 0 && (
-                  <div className="text-center py-20 bg-white/5 rounded-[32px] border border-dashed border-white/10">
-                    <p className="text-slate-600 text-sm font-bold uppercase tracking-widest">Không có trận đấu nào trong ngày này</p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );

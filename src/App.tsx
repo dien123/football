@@ -5,6 +5,7 @@ import MatchPage from './pages/MatchPage';
 import FutsalLeaguePage from './pages/FutsalLeaguePage';
 import ResultsPage from './pages/ResultsPage';
 import StandingsPage from './pages/StandingsPage';
+import OutrightPage from './pages/OutrightPage';
 import AdminPage from './pages/AdminPage';
 import AdminGuard from './components/AdminGuard';
 import RealTimeClock from './components/RealTimeClock';
@@ -39,32 +40,45 @@ function NavBar() {
       : 'text-slate-400 hover:text-white hover:bg-white/5'
     }`;
 
-  const futsalCls = ({ isActive }: { isActive: boolean }) =>
-    `px-5 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
-      ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]'
-      : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
-    }`;
+    const outrightCls = ({ isActive }: { isActive: boolean }) =>
+      `px-5 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
+        ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.6)]'
+        : 'text-amber-400 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
+      }`;
 
-  return (
-    <nav className="fixed top-0 inset-x-0 z-50 bg-[#050505]/95 backdrop-blur-xl">
-      {/* Warning Banner */}
-      <div className="w-full h-9 bg-rose-950/90 border-b border-rose-900/30 overflow-hidden">
-        <div className="animate-marquee whitespace-nowrap text-[14px] text-rose-400 font-bold uppercase tracking-[0.2em] h-full flex items-center">
-          ⚠️ &nbsp; TRANG WEB VỚI MỤC ĐÍCH GIẢI TRÍ — KHÔNG TUYÊN TRUYỀN CÁ ĐỘ BÓNG ĐÁ — CÁ ĐỘ LÀ HÀNH VI VI PHẠM PHÁP LUẬT TẠI VIỆT NAM &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    const futsalCls = ({ isActive }: { isActive: boolean }) =>
+      `px-5 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
+        ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]'
+        : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+      }`;
+
+    return (
+      <nav className="fixed top-0 inset-x-0 z-50 bg-[#050505]/95 backdrop-blur-xl">
+        {/* Warning Banner */}
+        <div className="w-full h-9 bg-rose-950/90 border-b border-rose-900/30 overflow-hidden">
+          <div className="animate-marquee whitespace-nowrap text-[14px] text-rose-400 font-bold uppercase tracking-[0.2em] h-full flex items-center">
+            ⚠️ &nbsp; TRANG WEB VỚI MỤC ĐÍCH GIẢI TRÍ — KHÔNG TUYÊN TRUYỀN CÁ ĐỘ BÓNG ĐÁ — CÁ ĐỘ LÀ HÀNH VI VI PHẠM PHÁP LUẬT TẠI VIỆT NAM &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          </div>
         </div>
-      </div>
-
-      {/* Main nav row */}
-      <div className="max-w-[1400px] mx-auto px-6 flex items-center gap-8 h-20">
-        <div className="flex items-center gap-2">
-          {/* Logo removed from here and moved to bottom-right per user request */}
-        </div>
-
-        {/* Nav links */}
-        <div className="flex items-center gap-2 flex-1">
-          <NavLink to="/" className={linkCls} end>Đặt Cược</NavLink>
-          <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
-          <NavLink to="/results" className={linkCls}>Kết Quả Bóng Đá</NavLink>
+  
+        {/* Main nav row */}
+        <div className="max-w-[1400px] mx-auto px-6 flex items-center gap-8 h-20">
+          <div className="flex items-center gap-2">
+            {/* Logo removed from here and moved to bottom-right per user request */}
+          </div>
+  
+          {/* Nav links */}
+          <div className="flex items-center gap-2 flex-1">
+            <NavLink to="/" className={linkCls} end>Đặt Cược</NavLink>
+            <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
+            <NavLink to="/results" className={linkCls}>Kết Quả Bóng Đá</NavLink>
+            <NavLink to="/outright" className={outrightCls}>
+              Dự đoán Vô Địch
+              <span className="absolute -top-2 -right-2 flex h-4 w-10">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-10 bg-amber-500 text-[7px] items-center justify-center text-black font-black">WINNER</span>
+              </span>
+            </NavLink>
           <NavLink to="/futsal" className={futsalCls}>
             TIP Futsal 2026
             <span className="absolute -top-2 -right-2 flex h-4 w-8">
@@ -138,6 +152,7 @@ function App() {
             <Route path="/futsal" element={<FutsalLeaguePage />} />
             <Route path="/results" element={<ResultsPage />} />
             <Route path="/standings" element={<StandingsPage />} />
+            <Route path="/outright" element={<OutrightPage />} />
             <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
           </Routes>
           <div className="fixed top-[120px] left-4 z-40 pointer-events-none">
