@@ -12,18 +12,17 @@ const TIERS = [
       { name: "Brazil", code: "br" },
       { name: "Tây Ban Nha", code: "es" },
       { name: "Anh", code: "gb-eng" },
+      { name: "Đức", code: "de" },
+      { name: "Hà Lan", code: "nl" },
     ],
   },
   {
     name: "Tier A",
     teams: [
       { name: "Bồ Đào Nha", code: "pt" },
-      { name: "Đức", code: "de" },
-      { name: "Hà Lan", code: "nl" },
       { name: "Uruguay", code: "uy" },
       { name: "Bỉ", code: "be" },
       { name: "Croatia", code: "hr" },
-      { name: "Maroc", code: "ma" },
       { name: "Colombia", code: "co" },
       { name: "Nhật Bản", code: "jp" },
     ],
@@ -31,6 +30,7 @@ const TIERS = [
   {
     name: "Tier B",
     teams: [
+      { name: "Maroc", code: "ma" },
       { name: "Thụy Sĩ", code: "ch" },
       { name: "Mexico", code: "mx" },
       { name: "Hoa Kỳ", code: "us" },
@@ -45,6 +45,7 @@ const TIERS = [
       { name: "Đan Mạch", code: "dk" },
       { name: "Iran", code: "ir" },
       { name: "Ai Cập", code: "eg" },
+      { name: "Canada", code: "ca" },
     ],
   },
   {
@@ -71,7 +72,6 @@ const TIERS = [
     teams: [
       { name: "Jordan", code: "jo" },
       { name: "Uzbekistan", code: "uz" },
-      { name: "Canada", code: "ca" },
       { name: "Cape Verde", code: "cv" },
       { name: "New Zealand", code: "nz" },
       { name: "Haiti", code: "ht" },
@@ -80,7 +80,18 @@ const TIERS = [
   },
 ];
 
-const ALL_TEAMS = TIERS.flatMap((t) => t.teams);
+const TIER_ODDS: Record<string, number> = {
+  "Tier S": 2.5,
+  "Tier A": 3.5,
+  "Tier B": 5.0,
+  "Tier C": 8.0,
+  "Tier D": 15.0,
+};
+
+const getTeamOdds = (teamName: string): number => {
+  const tier = TIERS.find(t => t.teams.some(team => team.name === teamName));
+  return tier ? TIER_ODDS[tier.name] || 1.0 : 1.0;
+};
 
 export default function OutrightPage() {
   const [bets, setBets] = useState<any[]>([]);
@@ -155,32 +166,19 @@ export default function OutrightPage() {
     }
   };
 
-  const filteredOptions = ALL_TEAMS.filter(o => o.name.toLowerCase().includes(search.toLowerCase()));
   const totalPool = bets.reduce((sum, b) => sum + b.amount, 0);
-
-  // Fee nhà cái: 5%
-  const FEE_RATE = 0.05;
-  const prizePool = totalPool * (1 - FEE_RATE);
+  const winnerOdds = winner ? getTeamOdds(winner) : 1.0;
 
   const getEstPrize = (teamName: string, betAmount: number | '') => {
     const numAmount = Number(betAmount) || 0;
-    const teamTotal = bets.filter(b => b.team_name === teamName).reduce((sum, b) => sum + b.amount, 0);
     const myExistingBet = bets
       .filter(b => b.team_name === teamName && b.user_id === ctx?.session?.user?.id)
       .reduce((sum, b) => sum + b.amount, 0);
 
     const totalInvestment = myExistingBet + numAmount;
-    const currentTotalPool = bets.reduce((sum, b) => sum + b.amount, 0);
-    const hypotheticalTotalPool = currentTotalPool + numAmount;
-    const hypotheticalTeamTotal = teamTotal + numAmount;
+    const odds = getTeamOdds(teamName);
 
-    if (hypotheticalTeamTotal === 0) return 0;
-
-    // Công thức mới: Payout = Bet * (T * (1 - f) / W)
-    // Trong đó T là tổng pool, f là fee (15%), W là tổng cược vào đội đó
-    const hypotheticalPrizePool = hypotheticalTotalPool * (1 - FEE_RATE);
-
-    return totalInvestment * (hypotheticalPrizePool / hypotheticalTeamTotal);
+    return totalInvestment * odds;
   };
 
   const openBetPopup = (team: any) => {
@@ -215,8 +213,8 @@ export default function OutrightPage() {
             </div>
             <div className="w-[1px] h-10 bg-white/10" />
             <div className="text-center">
-              <p className="text-[14px] font-black text-slate-500 uppercase mb-1">Tổng giải thưởng (95%)</p>
-              <p className="text-5xl font-black text-indigo-400 font-mono">{prizePool.toLocaleString('vi-VN')}đ</p>
+              <p className="text-[14px] font-black text-slate-500 uppercase mb-1">Tổng lượt dự đoán</p>
+              <p className="text-5xl font-black text-indigo-400 font-mono">{bets.length.toLocaleString('vi-VN')} lượt</p>
             </div>
           </div>
         </div>
@@ -231,46 +229,90 @@ export default function OutrightPage() {
           >
             <div className="flex items-center gap-3">
               <div className="w-1 h-5 bg-indigo-500 rounded-full" />
-              <h2 className="text-lg font-black uppercase tracking-wider italic">THỂ LỆ & CÁCH TÍNH THƯỞNG</h2>
+              <h2 className="text-lg font-black uppercase tracking-wider italic">THỂ LỆ & CÁCH TÍNH THƯỞNG CHI TIẾT</h2>
             </div>
             <div className={`w-7 h-7 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xs transition-transform duration-300 ${showRules ? 'rotate-180' : ''}`}>
               ▼
             </div>
           </button>
 
-          <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showRules ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
-            <div className="px-10 pb-10">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="space-y-6">
-                  <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0 text-indigo-400 font-black text-xs">01</div>
-                    <div>
-                      <h4 className="font-black text-slate-100 uppercase text-sm mb-2">Quỹ giải thưởng (Prize Pool)</h4>
-                      <p className="text-slate-400 text-[14px] leading-relaxed">Tổng cộng 95% số tiền cược từ tất cả người chơi sẽ được đưa vào quỹ giải thưởng chung. 5% còn lại được sử dụng để duy trì và vận hành hệ thống.</p>
-                    </div>
+          <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showRules ? 'max-h-[1500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="px-6 md:px-10 pb-10">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                {/* COLUMN 1: FIXED ODDS MODEL */}
+                <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 md:p-8 space-y-6">
+                  <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+                    <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-black text-sm">🎯</div>
+                    <h3 className="font-black text-slate-100 uppercase tracking-wider text-base">Cơ chế Tỷ lệ cược Cố định</h3>
                   </div>
 
-                  <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0 text-indigo-400 font-black text-xs">02</div>
-                    <div>
-                      <h4 className="font-black text-slate-100 uppercase text-sm mb-2">Odds thực tế của đội thắng</h4>
-                      <div className="bg-black/40 p-3 rounded-xl font-mono text-[14px] text-indigo-400 border border-indigo-500/20 mt-1">
-                        Odds = [Tổng cược toàn giải x (1 - 0.05)] / Tổng cược đội thắng
+                  <div className="space-y-6 text-sm text-slate-300 leading-relaxed font-medium">
+                    <p>
+                      Để mang lại sự minh bạch tối đa và giúp người tham gia dễ dàng tính toán chính xác phần thưởng của mình, hệ thống áp dụng cơ chế <span className="text-indigo-400 font-black">Tỷ lệ cược Cố định (Fixed Odds)</span> theo phân hạng sức mạnh (Tier) của từng đội tuyển.
+                    </p>
+
+                    <div className="bg-black/30 p-5 rounded-2xl border border-white/5 space-y-3">
+                      <p className="font-black text-indigo-400 uppercase tracking-widest text-xs">Ưu điểm của cơ chế này:</p>
+                      <ul className="list-disc pl-5 space-y-2 text-slate-400 text-xs">
+                        <li><span className="text-slate-200 font-bold">Không bị pha loãng:</span> Tiền thưởng của bạn không bị giảm khi có nhiều người cược cùng một đội.</li>
+                        <li><span className="text-slate-200 font-bold">Biết trước kết quả:</span> Tỷ lệ Odds được chốt ngay tại thời điểm đặt cược và giữ nguyên cho đến hết giải đấu.</li>
+                        <li><span className="text-slate-200 font-bold">Tính toán cực kỳ dễ dàng:</span> Số tiền nhận về = Tiền cược &times; Odds của Tier tương ứng.</li>
+                      </ul>
+                    </div>
+
+                    <div className="pt-4 border-t border-white/5">
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Bảng quy đổi tỷ lệ cược (Odds) theo Tier:</p>
+                      <div className="grid grid-cols-5 gap-3 text-center">
+                        {Object.entries(TIER_ODDS).map(([tier, odds]) => (
+                          <div key={tier} className="bg-black/40 border border-white/5 p-3 rounded-2xl flex flex-col justify-center items-center">
+                            <span className="text-[11px] font-black text-slate-400">{tier}</span>
+                            <span className="text-lg font-black text-emerald-400 mt-1">x{odds.toFixed(1)}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white/5 rounded-3xl p-4 border border-white/5">
-                  <h4 className="font-black text-indigo-400 uppercase text-[14px] tracking-widest mb-4">Cách tính thưởng thực tế</h4>
-                  <div className="bg-black/40 p-4 rounded-xl font-mono text-[14px] text-emerald-400 border border-emerald-500/20 mb-4">
-                    Tiền nhận được = Tiền bạn cược x Odds
+                {/* COLUMN 2: PRACTICAL EXAMPLES */}
+                <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 md:p-8 space-y-6 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 border-b border-white/5 pb-4 mb-5">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-black text-sm">🏆</div>
+                      <h3 className="font-black text-slate-100 uppercase tracking-wider text-base">Ví dụ thực tế chi tiết</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-xs text-slate-400 font-bold">Giả sử bạn đưa ra dự đoán với số tiền <span className="text-white font-black font-mono">100.000đ</span>:</p>
+
+                      <div className="space-y-3 font-mono text-xs">
+                        {Object.entries(TIER_ODDS).map(([tierName, odds]) => {
+                          const badgeConfig: Record<string, { color: string; animate: string }> = {
+                            "Tier S": { color: "bg-rose-600 shadow-[0_0_8px_rgba(225,29,72,0.4)]", animate: "animate-pulse" },
+                            "Tier A": { color: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]", animate: "" },
+                            "Tier B": { color: "bg-indigo-600 shadow-[0_0_8px_rgba(79,70,229,0.4)]", animate: "" },
+                            "Tier C": { color: "bg-emerald-600 shadow-[0_0_8px_rgba(5,150,105,0.4)]", animate: "" },
+                            "Tier D": { color: "bg-slate-600 shadow-[0_0_8px_rgba(71,85,105,0.4)]", animate: "" }
+                          };
+                          const currentConfig = badgeConfig[tierName] || { color: "bg-slate-600", animate: "" };
+                          const estReturn = 100000 * odds;
+
+                          return (
+                            <div key={tierName} className="bg-black/30 border border-white/5 p-3.5 rounded-2xl flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <span className={`w-2.5 h-2.5 rounded-full ${currentConfig.color} ${currentConfig.animate}`} />
+                                <span className="font-black text-white">{tierName} (Odds {odds.toFixed(1)})</span>
+                              </div>
+                              <span className="text-emerald-400 font-black text-[13px]">Nhận về: {Math.round(estReturn).toLocaleString('vi-VN')} đ</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-slate-300 text-[14px] italic leading-relaxed">
-                    * Ví dụ: Tổng cược giải 100tr, fee 5% {"->"} Quỹ thưởng 95tr. Đội Brazil có tổng cược 30tr {"->"} Odds = 95/30 = 3.17. Bạn cược 100k sẽ nhận: 100k x 3.17 = 317k.
-                  </p>
-                  <div className="mt-6 pt-6 border-t border-white/5">
-                    <p className="text-[11px] font-bold text-slate-400 uppercase">Lưu ý: Mọi kết quả dựa trên xác nhận cuối cùng của Admin dựa theo thực tế giải đấu.</p>
+
+                  <div className="mt-6 pt-4 border-t border-white/5 text-[11px] font-bold text-slate-400 uppercase leading-relaxed text-center">
+                    💡 Lưu ý: Hệ thống chỉ ghi nhận kết quả cuối cùng dựa trên xác nhận chính thức của ban quản trị khi giải đấu khép lại.
                   </div>
                 </div>
               </div>
@@ -497,13 +539,9 @@ export default function OutrightPage() {
                   <tbody className="divide-y divide-white/5">
                     {(() => {
                       const winnerBets = bets.filter(b => b.team_name === winner);
-                      const teamTotal = winnerBets.reduce((sum, b) => sum + b.amount, 0);
-                      const totalCược = bets.reduce((sum, b) => sum + b.amount, 0);
-                      const currentPrizePool = totalCược * (1 - FEE_RATE);
-                      const currentOdds = teamTotal > 0 ? (currentPrizePool / teamTotal) : 0;
 
                       return winnerBets.sort((a, b) => b.amount - a.amount).map((b, i) => {
-                        const prize = b.amount * currentOdds;
+                        const prize = b.amount * winnerOdds;
                         return (
                           <tr key={i} className="group hover:bg-white/[0.02] transition-all">
                             <td className="py-5">
@@ -525,9 +563,35 @@ export default function OutrightPage() {
                 )}
               </div>
 
-              <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center px-2">
-                <span className="text-[10px] font-black text-slate-500 uppercase">Tổng quỹ thưởng được chia (95%):</span>
-                <span className="text-xl font-black text-yellow-500 font-mono">{(bets.reduce((sum, b) => sum + b.amount, 0) * (1 - FEE_RATE)).toLocaleString('vi-VN')}₫</span>
+              <div className="mt-8 pt-6 border-t border-white/5 space-y-3 px-2">
+                <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase font-mono">
+                  <span>Tổng tiền cược đội thắng (W):</span>
+                  <span className="text-slate-200 font-bold">
+                    {(() => {
+                      const winnerBets = bets.filter(b => b.team_name === winner);
+                      const teamTotal = winnerBets.reduce((sum, b) => sum + b.amount, 0);
+                      return teamTotal.toLocaleString('vi-VN');
+                    })()}₫
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-[10px] font-black text-indigo-400 uppercase font-mono">
+                  <span>Tỷ lệ Odds cố định của Tier ({winner ? TIERS.find(t => t.teams.some(team => team.name === winner))?.name : 'N/A'}):</span>
+                  <span className="text-indigo-300 font-bold font-mono">
+                    x{winnerOdds.toFixed(1)}
+                  </span>
+                </div>
+                <div className="h-[1px] bg-white/5 my-1" />
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-black text-emerald-400 uppercase font-mono">Tổng tiền trả thưởng thực tế:</span>
+                  <span className="text-xl font-black text-yellow-500 font-mono">
+                    {(() => {
+                      const winnerBets = bets.filter(b => b.team_name === winner);
+                      const teamTotal = winnerBets.reduce((sum, b) => sum + b.amount, 0);
+                      const totalPayout = teamTotal * winnerOdds;
+                      return totalPayout.toLocaleString('vi-VN');
+                    })()}₫
+                  </span>
+                </div>
               </div>
             </div>
           </div>
