@@ -83,7 +83,7 @@ const TIERS = [
 const TIER_ODDS: Record<string, number> = {
   "Tier S": 2.5,
   "Tier A": 3.5,
-  "Tier B": 5.5,
+  "Tier B": 5.0,
   "Tier C": 8.0,
   "Tier D": 15.0,
 };
@@ -119,10 +119,13 @@ export default function OutrightPage() {
     const ratio = teamTotal / totalPool;
 
     if (tier.name === "Tier S") {
-      if (ratio > 0.6) return 1.8;
-      if (ratio > 0.4) return 2.0;
+      if (ratio > 0.50) return 1.8;
+      if (ratio > 0.35) return 2.0;
     } else if (tier.name === "Tier A") {
-      if (ratio > 0.4) return 3.0;
+      if (ratio > 0.50) return 2.5;
+      if (ratio > 0.35) return 3.0;
+    } else if (tier.name === "Tier B") {
+      if (ratio > 0.40) return 4.0;
     }
 
     return baseOdds;
@@ -195,7 +198,7 @@ export default function OutrightPage() {
         .from('outright_bets')
         .delete()
         .eq('id', betId);
-      
+
       if (error) throw error;
       alert('Đã xóa lượt dự đoán thành công!');
       fetchOutrightData();
@@ -217,7 +220,7 @@ export default function OutrightPage() {
         .from('outright_bets')
         .update({ amount: betVal })
         .eq('id', editingBet.id);
-      
+
       if (error) throw error;
       alert('Cập nhật lượt dự đoán thành công!');
       setEditingBet(null);
@@ -348,8 +351,9 @@ export default function OutrightPage() {
                         Để cân bằng tính thanh khoản khi lượng cược dồn quá nhiều vào một đội cửa trên, Odds gốc sẽ tự động giảm dựa trên tỷ trọng của đội đó trên tổng quỹ cược:
                       </p>
                       <ul className="list-disc pl-5 space-y-2 text-slate-400 text-xs">
-                        <li><span className="text-slate-200 font-bold">Tier S (Gốc 2.5):</span> Vượt 40% tổng quỹ cược giảm còn <span className="text-rose-400 font-bold font-mono">2.0</span>; Vượt 60% giảm còn <span className="text-rose-400 font-bold font-mono">1.8</span>.</li>
-                        <li><span className="text-slate-200 font-bold">Tier A (Gốc 3.5):</span> Vượt 40% tổng quỹ cược giảm còn <span className="text-rose-400 font-bold font-mono">3.0</span>.</li>
+                        <li><span className="text-slate-200 font-bold">Tier S (Gốc 2.5):</span> Vượt 35% tổng cược giảm còn <span className="text-rose-400 font-bold font-mono">2.0</span>; Vượt 50% giảm còn <span className="text-rose-400 font-bold font-mono">1.8</span>.</li>
+                        <li><span className="text-slate-200 font-bold">Tier A (Gốc 3.5):</span> Vượt 35% tổng cược giảm còn <span className="text-rose-400 font-bold font-mono">3.0</span>; Vượt 50% giảm còn <span className="text-rose-400 font-bold font-mono">2.5</span>.</li>
+                        <li><span className="text-slate-200 font-bold">Tier B (Gốc 5.0):</span> Vượt 40% tổng cược giảm còn <span className="text-rose-400 font-bold font-mono">4.0</span>.</li>
                       </ul>
                     </div>
 
@@ -494,10 +498,26 @@ export default function OutrightPage() {
                               const currentOdds = getTeamOdds(opt.name);
                               const baseOdds = TIER_ODDS[tier.name] || 1.0;
                               const isOddsAdjusted = currentOdds < baseOdds;
+
+                              let adjustReason = "";
+                              if (isOddsAdjusted) {
+                                if (tier.name === "Tier S") {
+                                  adjustReason = currentOdds === 1.8
+                                    ? `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x1.8 do vượt 50% tổng cược`
+                                    : `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x2.0 do vượt 35% tổng cược`;
+                                } else if (tier.name === "Tier A") {
+                                  adjustReason = currentOdds === 2.5
+                                    ? `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x2.5 do vượt 50% tổng cược`
+                                    : `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x3.0 do vượt 35% tổng cược`;
+                                } else if (tier.name === "Tier B") {
+                                  adjustReason = `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x4.0 do vượt 40% tổng cược`;
+                                }
+                              }
+
                               return (
                                 <div className="flex justify-between items-center mt-1 text-[13px] font-bold uppercase">
                                   <span className="text-slate-600">{teamBets.length} lượt</span>
-                                  <span className={`font-black font-mono ${isOddsAdjusted ? 'text-rose-400 shadow-[0_0_8px_rgba(225,29,72,0.2)]' : 'text-indigo-400'}`} title={isOddsAdjusted ? `Đã hạ Odds từ x${baseOdds.toFixed(1)} do vượt 40% cược` : undefined}>
+                                  <span className={`font-black font-mono ${isOddsAdjusted ? 'text-rose-400 shadow-[0_0_8px_rgba(225,29,72,0.2)]' : 'text-indigo-400'}`} title={isOddsAdjusted ? adjustReason : undefined}>
                                     x{currentOdds.toFixed(1)}{isOddsAdjusted && ' 📉'}
                                   </span>
                                 </div>
@@ -769,7 +789,7 @@ export default function OutrightPage() {
           <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setEditingBet(null)} />
           <div className="relative bg-[#111] border border-white/10 rounded-[50px] w-full max-w-xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500" />
-            
+
             <div className="p-8 md:p-12 overflow-y-auto">
               <div className="text-center mb-8">
                 {getTeamFlagAndTier(editingBet.team_name).code && (
@@ -794,21 +814,21 @@ export default function OutrightPage() {
                       Cũ: {editingBet.amount.toLocaleString('vi-VN')}đ
                     </span>
                   </div>
-                  <input 
+                  <input
                     type="number"
                     value={editAmount}
                     onChange={(e) => setEditAmount(e.target.value === '' ? '' : Number(e.target.value))}
                     placeholder="Nhập số tiền (tối thiểu 20.000đ)..."
-                    className="w-full bg-black border border-white/10 rounded-3xl px-8 py-5 text-xl font-black text-center text-white focus:border-amber-500 transition-all font-mono" 
+                    className="w-full bg-black border border-white/10 rounded-3xl px-8 py-5 text-xl font-black text-center text-white focus:border-amber-500 transition-all font-mono"
                   />
                   {editAmount !== '' && Number(editAmount) > 0 && Number(editAmount) < 20000 && (
                     <p className="text-rose-400 text-[11px] font-bold mt-2 text-center">⚠ Mức cược tối thiểu là 20.000đ</p>
                   )}
                   <div className="grid grid-cols-5 gap-3 mt-4">
                     {[20000, 50000, 100000, 200000, 500000].map(val => (
-                      <button 
-                        key={val} 
-                        onClick={() => setEditAmount(val)} 
+                      <button
+                        key={val}
+                        onClick={() => setEditAmount(val)}
                         className={`py-3 rounded-2xl text-[11px] font-black transition-all border ${editAmount === val ? 'bg-amber-600 border-amber-500 text-white' : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'}`}
                       >
                         {val / 1000}K
@@ -838,8 +858,8 @@ export default function OutrightPage() {
                   >
                     {submitting ? 'ĐANG CẬP NHẬT...' : 'XÁC NHẬN CẬP NHẬT'}
                   </button>
-                  <button 
-                    onClick={() => setEditingBet(null)} 
+                  <button
+                    onClick={() => setEditingBet(null)}
                     className="flex-1 bg-white/5 text-slate-400 font-bold py-5 rounded-[30px] uppercase border border-white/5 text-xs hover:bg-white/10"
                   >
                     HỦY
