@@ -3,20 +3,84 @@ import { supabase } from '../lib/supabase';
 import { AppContext } from '../App';
 import AuthModal from '../components/AuthModal';
 
-const ALL_TEAMS = [
-  { name: 'Mexico', code: 'mx' }, { name: 'Nam Phi', code: 'za' }, { name: 'Hàn Quốc', code: 'kr' }, { name: 'Cộng hòa Séc', code: 'cz' },
-  { name: 'Canada', code: 'ca' }, { name: 'Bosnia & HZ', code: 'ba' }, { name: 'Qatar', code: 'qa' }, { name: 'Thụy Sĩ', code: 'ch' },
-  { name: 'Brazil', code: 'br' }, { name: 'Maroc', code: 'ma' }, { name: 'Haiti', code: 'ht' }, { name: 'Scotland', code: 'gb-sct' },
-  { name: 'Hoa Kỳ', code: 'us' }, { name: 'Paraguay', code: 'py' }, { name: 'Úc', code: 'au' }, { name: 'Thổ Nhĩ Kỳ', code: 'tr' },
-  { name: 'Đức', code: 'de' }, { name: 'Curaçao', code: 'cw' }, { name: 'Bờ Biển Ngà', code: 'ci' }, { name: 'Ecuador', code: 'ec' },
-  { name: 'Hà Lan', code: 'nl' }, { name: 'Nhật Bản', code: 'jp' }, { name: 'Thụy Điển', code: 'se' }, { name: 'Tunisia', code: 'tn' },
-  { name: 'Bỉ', code: 'be' }, { name: 'Ai Cập', code: 'eg' }, { name: 'Iran', code: 'ir' }, { name: 'New Zealand', code: 'nz' },
-  { name: 'Tây Ban Nha', code: 'es' }, { name: 'Cape Verde', code: 'cv' }, { name: 'Ả Rập Xê Út', code: 'sa' }, { name: 'Uruguay', code: 'uy' },
-  { name: 'Pháp', code: 'fr' }, { name: 'Senegal', code: 'sn' }, { name: 'Iraq', code: 'iq' }, { name: 'Na Uy', code: 'no' },
-  { name: 'Argentina', code: 'ar' }, { name: 'Algeria', code: 'dz' }, { name: 'Áo', code: 'at' }, { name: 'Jordan', code: 'jo' },
-  { name: 'Bồ Đào Nha', code: 'pt' }, { name: 'CHDC Congo', code: 'cd' }, { name: 'Uzbekistan', code: 'uz' }, { name: 'Colombia', code: 'co' },
-  { name: 'Anh', code: 'gb-eng' }, { name: 'Croatia', code: 'hr' }, { name: 'Ghana', code: 'gh' }, { name: 'Panama', code: 'pa' }
+const TIERS = [
+  {
+    name: "Tier S",
+    teams: [
+      { name: "Argentina", code: "ar" },
+      { name: "Pháp", code: "fr" },
+      { name: "Brazil", code: "br" },
+      { name: "Tây Ban Nha", code: "es" },
+      { name: "Anh", code: "gb-eng" },
+    ],
+  },
+  {
+    name: "Tier A",
+    teams: [
+      { name: "Bồ Đào Nha", code: "pt" },
+      { name: "Đức", code: "de" },
+      { name: "Hà Lan", code: "nl" },
+      { name: "Uruguay", code: "uy" },
+      { name: "Bỉ", code: "be" },
+      { name: "Croatia", code: "hr" },
+      { name: "Maroc", code: "ma" },
+      { name: "Colombia", code: "co" },
+      { name: "Nhật Bản", code: "jp" },
+    ],
+  },
+  {
+    name: "Tier B",
+    teams: [
+      { name: "Thụy Sĩ", code: "ch" },
+      { name: "Mexico", code: "mx" },
+      { name: "Hoa Kỳ", code: "us" },
+      { name: "Hàn Quốc", code: "kr" },
+      { name: "Senegal", code: "sn" },
+      { name: "Áo", code: "at" },
+      { name: "Thụy Điển", code: "se" },
+      { name: "Na Uy", code: "no" },
+      { name: "Thổ Nhĩ Kỳ", code: "tr" },
+      { name: "Paraguay", code: "py" },
+      { name: "Ecuador", code: "ec" },
+      { name: "Đan Mạch", code: "dk" },
+      { name: "Iran", code: "ir" },
+      { name: "Ai Cập", code: "eg" },
+    ],
+  },
+  {
+    name: "Tier C",
+    teams: [
+      { name: "Úc", code: "au" },
+      { name: "Tunisia", code: "tn" },
+      { name: "Algeria", code: "dz" },
+      { name: "Ghana", code: "gh" },
+      { name: "Bờ Biển Ngà", code: "ci" },
+      { name: "Cộng hòa Séc", code: "cz" },
+      { name: "Scotland", code: "gb-sct" },
+      { name: "Ả Rập Xê Út", code: "sa" },
+      { name: "Qatar", code: "qa" },
+      { name: "Nam Phi", code: "za" },
+      { name: "Bosnia & HZ", code: "ba" },
+      { name: "CHDC Congo", code: "cd" },
+      { name: "Panama", code: "pa" },
+      { name: "Iraq", code: "iq" },
+    ],
+  },
+  {
+    name: "Tier D",
+    teams: [
+      { name: "Jordan", code: "jo" },
+      { name: "Uzbekistan", code: "uz" },
+      { name: "Canada", code: "ca" },
+      { name: "Cape Verde", code: "cv" },
+      { name: "New Zealand", code: "nz" },
+      { name: "Haiti", code: "ht" },
+      { name: "Curaçao", code: "cw" },
+    ],
+  },
 ];
+
+const ALL_TEAMS = TIERS.flatMap((t) => t.teams);
 
 export default function OutrightPage() {
   const [bets, setBets] = useState<any[]>([]);
@@ -67,8 +131,8 @@ export default function OutrightPage() {
       return;
     }
     const betVal = Number(amount);
-    if (!betVal || betVal < 10000) {
-      alert('Số tiền tối thiểu là 10.000đ');
+    if (!betVal || betVal < 20000) {
+      alert('Số tiền tối thiểu là 20.000đ');
       return;
     }
     setSubmitting(true);
@@ -93,29 +157,30 @@ export default function OutrightPage() {
 
   const filteredOptions = ALL_TEAMS.filter(o => o.name.toLowerCase().includes(search.toLowerCase()));
   const totalPool = bets.reduce((sum, b) => sum + b.amount, 0);
-  const prizePool = totalPool * 0.9;
+
+  // Fee nhà cái: 5%
+  const FEE_RATE = 0.05;
+  const prizePool = totalPool * (1 - FEE_RATE);
 
   const getEstPrize = (teamName: string, betAmount: number | '') => {
     const numAmount = Number(betAmount) || 0;
-    // Current state of the world
     const teamTotal = bets.filter(b => b.team_name === teamName).reduce((sum, b) => sum + b.amount, 0);
     const myExistingBet = bets
       .filter(b => b.team_name === teamName && b.user_id === ctx?.session?.user?.id)
       .reduce((sum, b) => sum + b.amount, 0);
 
-    // If user is just looking (betAmount is 0), show prize for their EXISTING bet
-    // If user is betting more, calculate for (Existing + New)
     const totalInvestment = myExistingBet + numAmount;
-
-    // The pool only grows if the betAmount is > 0
     const currentTotalPool = bets.reduce((sum, b) => sum + b.amount, 0);
     const hypotheticalTotalPool = currentTotalPool + numAmount;
-    const hypotheticalPrizePool = hypotheticalTotalPool * 0.9;
     const hypotheticalTeamTotal = teamTotal + numAmount;
 
     if (hypotheticalTeamTotal === 0) return 0;
 
-    return (totalInvestment / hypotheticalTeamTotal) * hypotheticalPrizePool;
+    // Công thức mới: Payout = Bet * (T * (1 - f) / W)
+    // Trong đó T là tổng pool, f là fee (15%), W là tổng cược vào đội đó
+    const hypotheticalPrizePool = hypotheticalTotalPool * (1 - FEE_RATE);
+
+    return totalInvestment * (hypotheticalPrizePool / hypotheticalTeamTotal);
   };
 
   const openBetPopup = (team: any) => {
@@ -150,7 +215,7 @@ export default function OutrightPage() {
             </div>
             <div className="w-[1px] h-10 bg-white/10" />
             <div className="text-center">
-              <p className="text-[14px] font-black text-slate-500 uppercase mb-1">Tổng giải thưởng (90%)</p>
+              <p className="text-[14px] font-black text-slate-500 uppercase mb-1">Tổng giải thưởng (95%)</p>
               <p className="text-5xl font-black text-indigo-400 font-mono">{prizePool.toLocaleString('vi-VN')}đ</p>
             </div>
           </div>
@@ -181,26 +246,28 @@ export default function OutrightPage() {
                     <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0 text-indigo-400 font-black text-xs">01</div>
                     <div>
                       <h4 className="font-black text-slate-100 uppercase text-sm mb-2">Quỹ giải thưởng (Prize Pool)</h4>
-                      <p className="text-slate-400 text-[13px] leading-relaxed">Tổng cộng 90% số tiền cược từ tất cả người chơi sẽ được đưa vào quỹ giải thưởng chung. 10% còn lại được sử dụng để duy trì và vận hành hệ thống.</p>
+                      <p className="text-slate-400 text-[14px] leading-relaxed">Tổng cộng 95% số tiền cược từ tất cả người chơi sẽ được đưa vào quỹ giải thưởng chung. 5% còn lại được sử dụng để duy trì và vận hành hệ thống.</p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
                     <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0 text-indigo-400 font-black text-xs">02</div>
                     <div>
-                      <h4 className="font-black text-slate-100 uppercase text-sm mb-2">Điều kiện thắng cuộc</h4>
-                      <p className="text-slate-400 text-[13px] leading-relaxed">Chỉ những thành viên dự đoán chính xác đội giành chức vô địch World Cup 2026 mới đủ điều kiện nhận thưởng từ quỹ giải thưởng.</p>
+                      <h4 className="font-black text-slate-100 uppercase text-sm mb-2">Odds thực tế của đội thắng</h4>
+                      <div className="bg-black/40 p-3 rounded-xl font-mono text-[14px] text-indigo-400 border border-indigo-500/20 mt-1">
+                        Odds = [Tổng cược toàn giải x (1 - 0.05)] / Tổng cược đội thắng
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-white/5 rounded-3xl p-4 border border-white/5">
-                  <h4 className="font-black text-indigo-400 uppercase text-[10px] tracking-widest mb-4">Công thức tính thưởng</h4>
-                  <div className="bg-black/40 p-4 rounded-xl font-mono text-[13px] text-emerald-400 border border-emerald-500/20 mb-4">
-                    Tiền nhận được = (Tiền bạn cược / Tổng tiền cược đội đó) x Tổng quỹ thưởng
+                  <h4 className="font-black text-indigo-400 uppercase text-[14px] tracking-widest mb-4">Cách tính thưởng thực tế</h4>
+                  <div className="bg-black/40 p-4 rounded-xl font-mono text-[14px] text-emerald-400 border border-emerald-500/20 mb-4">
+                    Tiền nhận được = Tiền bạn cược x Odds
                   </div>
-                  <p className="text-slate-300 text-[12px] italic leading-relaxed">
-                    * Ví dụ: Đội Mexico có tổng cược là 100k, bạn cược 50k (chiếm 50%). Nếu Mexico vô địch và tổng quỹ thưởng là 1 triệu, bạn sẽ nhận được 500k.
+                  <p className="text-slate-300 text-[14px] italic leading-relaxed">
+                    * Ví dụ: Tổng cược giải 100tr, fee 5% {"->"} Quỹ thưởng 95tr. Đội Brazil có tổng cược 30tr {"->"} Odds = 95/30 = 3.17. Bạn cược 100k sẽ nhận: 100k x 3.17 = 317k.
                   </p>
                   <div className="mt-6 pt-6 border-t border-white/5">
                     <p className="text-[11px] font-bold text-slate-400 uppercase">Lưu ý: Mọi kết quả dựa trên xác nhận cuối cùng của Admin dựa theo thực tế giải đấu.</p>
@@ -231,22 +298,70 @@ export default function OutrightPage() {
             <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-            {filteredOptions.map(opt => {
-              const teamBets = bets.filter(b => b.team_name === opt.name);
-              const teamTotal = teamBets.reduce((sum, b) => sum + b.amount, 0);
-              const isWinner = winner === opt.name;
+          <div className="space-y-16">
+            {TIERS.map((tier) => {
+              const tierFilteredTeams = tier.teams.filter((opt) =>
+                opt.name.toLowerCase().includes(search.toLowerCase())
+              );
+
+              if (tierFilteredTeams.length === 0) return null;
+
               return (
-                <div key={opt.name} onClick={() => openBetPopup(opt)}
-                  className={`group relative bg-[#111]/60 border ${isWinner ? 'border-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.2)]' : 'border-white/5'} rounded-[32px] p-5 hover:bg-indigo-600/10 hover:border-indigo-500/30 transition-all cursor-pointer overflow-hidden flex flex-col items-center shadow-lg`}>
-                  <div className="w-16 h-16 bg-slate-900 rounded-2xl overflow-hidden border border-white/10 mb-4 scale-100 group-hover:scale-110 transition-transform relative">
-                    <img src={`https://flagcdn.com/w160/${opt.code.toLowerCase()}.png`} className="w-full h-full object-cover" />
-                    {isWinner && <div className="absolute inset-0 bg-yellow-500/20 flex items-center justify-center"><span className="text-2xl animate-bounce">🏆</span></div>}
+                <div key={tier.name} className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className={`px-6 py-2 rounded-2xl text-sm font-black uppercase tracking-widest shadow-lg ${tier.name === 'Tier S' ? 'bg-rose-600 text-white shadow-rose-900/40' :
+                      tier.name === 'Tier A' ? 'bg-amber-500 text-black shadow-amber-900/40' :
+                        tier.name === 'Tier B' ? 'bg-indigo-600 text-white shadow-indigo-900/40' :
+                          tier.name === 'Tier C' ? 'bg-emerald-600 text-white shadow-emerald-900/40' :
+                            'bg-slate-700 text-slate-300'
+                      }`}>
+                      {tier.name}
+                    </div>
+                    <div className="h-[1px] flex-1 bg-gradient-to-r from-white/10 to-transparent" />
                   </div>
-                  <h3 className={`font-black text-[13px] ${isWinner ? 'text-yellow-400' : 'text-slate-100'} mb-1 truncate w-full text-center uppercase`}>{opt.name}</h3>
-                  <div className="mt-2 pt-2 border-t border-white/5 w-full text-center">
-                    <p className="text-[14px] font-black text-emerald-500">{teamTotal.toLocaleString('vi-VN')}đ</p>
-                    <p className="text-[12px] font-bold text-slate-600 uppercase">{teamBets.length} lượt</p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                    {tierFilteredTeams.map((opt) => {
+                      const teamBets = bets.filter((b) => b.team_name === opt.name);
+                      const teamTotal = teamBets.reduce((sum, b) => sum + b.amount, 0);
+                      const isWinner = winner === opt.name;
+                      return (
+                        <div
+                          key={opt.name}
+                          onClick={() => openBetPopup(opt)}
+                          className={`group relative bg-[#111]/60 border ${isWinner
+                            ? "border-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.2)]"
+                            : "border-white/5"
+                            } rounded-[32px] p-5 hover:bg-indigo-600/10 hover:border-indigo-500/30 transition-all cursor-pointer overflow-hidden flex flex-col items-center shadow-lg`}
+                        >
+                          <div className="w-16 h-16 bg-slate-900 rounded-2xl overflow-hidden border border-white/10 mb-4 scale-100 group-hover:scale-110 transition-transform relative">
+                            <img
+                              src={`https://flagcdn.com/w160/${opt.code.toLowerCase()}.png`}
+                              className="w-full h-full object-cover"
+                            />
+                            {isWinner && (
+                              <div className="absolute inset-0 bg-yellow-500/20 flex items-center justify-center">
+                                <span className="text-2xl animate-bounce">🏆</span>
+                              </div>
+                            )}
+                          </div>
+                          <h3
+                            className={`font-black text-[13px] ${isWinner ? "text-yellow-400" : "text-slate-100"
+                              } mb-1 truncate w-full text-center uppercase`}
+                          >
+                            {opt.name}
+                          </h3>
+                          <div className="mt-2 pt-2 border-t border-white/5 w-full text-center">
+                            <p className="text-[14px] font-black text-emerald-400">
+                              {teamTotal.toLocaleString("vi-VN")}đ
+                            </p>
+                            <p className="text-[12px] font-bold text-slate-600 uppercase">
+                              {teamBets.length} lượt
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -383,10 +498,12 @@ export default function OutrightPage() {
                     {(() => {
                       const winnerBets = bets.filter(b => b.team_name === winner);
                       const teamTotal = winnerBets.reduce((sum, b) => sum + b.amount, 0);
-                      const prizePool = bets.reduce((sum, b) => sum + b.amount, 0) * 0.9;
+                      const totalCược = bets.reduce((sum, b) => sum + b.amount, 0);
+                      const currentPrizePool = totalCược * (1 - FEE_RATE);
+                      const currentOdds = teamTotal > 0 ? (currentPrizePool / teamTotal) : 0;
 
                       return winnerBets.sort((a, b) => b.amount - a.amount).map((b, i) => {
-                        const prize = (b.amount / teamTotal) * prizePool;
+                        const prize = b.amount * currentOdds;
                         return (
                           <tr key={i} className="group hover:bg-white/[0.02] transition-all">
                             <td className="py-5">
@@ -409,8 +526,8 @@ export default function OutrightPage() {
               </div>
 
               <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center px-2">
-                <span className="text-[10px] font-black text-slate-500 uppercase">Tổng quỹ thưởng được chia:</span>
-                <span className="text-xl font-black text-yellow-500 font-mono">{(bets.reduce((sum, b) => sum + b.amount, 0) * 0.9).toLocaleString('vi-VN')}₫</span>
+                <span className="text-[10px] font-black text-slate-500 uppercase">Tổng quỹ thưởng được chia (95%):</span>
+                <span className="text-xl font-black text-yellow-500 font-mono">{(bets.reduce((sum, b) => sum + b.amount, 0) * (1 - FEE_RATE)).toLocaleString('vi-VN')}₫</span>
               </div>
             </div>
           </div>
