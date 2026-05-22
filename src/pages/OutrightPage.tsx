@@ -100,6 +100,8 @@ export default function OutrightPage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [showWinners, setShowWinners] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [editingBet, setEditingBet] = useState<any | null>(null);
+  const [editAmount, setEditAmount] = useState<number | ''>('');
   const ctx = useContext(AppContext);
 
   const getTeamOdds = (teamName: string): number => {
@@ -181,6 +183,47 @@ export default function OutrightPage() {
       fetchOutrightData();
     } catch (err: any) {
       alert('Lỗi: ' + err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteOutrightBet = async (betId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa lượt dự đoán này?')) return;
+    try {
+      const { error } = await supabase
+        .from('outright_bets')
+        .delete()
+        .eq('id', betId);
+      
+      if (error) throw error;
+      alert('Đã xóa lượt dự đoán thành công!');
+      fetchOutrightData();
+    } catch (err: any) {
+      alert('Lỗi khi xóa lượt dự đoán: ' + err.message);
+    }
+  };
+
+  const handleUpdateOutrightBet = async () => {
+    if (!editingBet) return;
+    const betVal = Number(editAmount);
+    if (!betVal || betVal < 20000) {
+      alert('Số tiền tối thiểu là 20.000đ');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('outright_bets')
+        .update({ amount: betVal })
+        .eq('id', editingBet.id);
+      
+      if (error) throw error;
+      alert('Cập nhật lượt dự đoán thành công!');
+      setEditingBet(null);
+      fetchOutrightData();
+    } catch (err: any) {
+      alert('Lỗi khi sửa lượt dự đoán: ' + err.message);
     } finally {
       setSubmitting(false);
     }
@@ -532,9 +575,36 @@ export default function OutrightPage() {
                         return (
                           <tr key={i} className="group hover:bg-white/[0.01] transition-all">
                             <td className="py-4 pl-4">
-                              <span className="font-black text-slate-200 group-hover:text-indigo-400 transition-colors uppercase">
-                                {b.user_name}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                {(() => {
+                                  const isAdmin = ctx?.isAdminAuthenticated || false;
+                                  const isOwner = ctx?.session?.user && b.user_id === ctx?.session?.user?.id;
+                                  return (isAdmin || isOwner) && (
+                                    <div className="flex items-center gap-1.5 mr-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <button
+                                        onClick={() => {
+                                          setEditingBet(b);
+                                          setEditAmount(b.amount);
+                                        }}
+                                        className="text-amber-500 hover:text-amber-400 p-1 bg-amber-500/10 rounded transition-colors text-[10px] cursor-pointer"
+                                        title="Sửa lượt dự đoán"
+                                      >
+                                        ✏️
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteOutrightBet(b.id)}
+                                        className="text-rose-500 hover:text-rose-400 p-1 bg-rose-500/10 rounded transition-colors text-[10px] cursor-pointer"
+                                        title="Xóa lượt dự đoán"
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                  );
+                                })()}
+                                <span className="font-black text-slate-200 group-hover:text-indigo-400 transition-colors uppercase">
+                                  {b.user_name}
+                                </span>
+                              </div>
                             </td>
                             <td className="py-4">
                               <div className="flex items-center gap-2">
@@ -692,6 +762,94 @@ export default function OutrightPage() {
           fetchOutrightData();
         }}
       />
+
+      {/* EDIT MODAL */}
+      {editingBet && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setEditingBet(null)} />
+          <div className="relative bg-[#111] border border-white/10 rounded-[50px] w-full max-w-xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500" />
+            
+            <div className="p-8 md:p-12 overflow-y-auto">
+              <div className="text-center mb-8">
+                {getTeamFlagAndTier(editingBet.team_name).code && (
+                  <div className="w-24 h-24 mx-auto bg-slate-900 rounded-[28px] overflow-hidden border border-white/10 mb-6 shadow-2xl flex items-center justify-center">
+                    <img src={`https://flagcdn.com/w160/${getTeamFlagAndTier(editingBet.team_name).code.toLowerCase()}.png`} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <h2 className="text-3xl font-black mb-2 uppercase tracking-tighter">SỬA LƯỢT DỰ ĐOÁN</h2>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">
+                  Đội tuyển: <span className="text-indigo-400">{editingBet.team_name}</span> ({getTeamFlagAndTier(editingBet.team_name).tierName})
+                </p>
+                <p className="text-slate-500 text-[11px] font-bold uppercase tracking-wider mt-1">
+                  Người chơi: <span className="text-amber-400">{editingBet.user_name}</span>
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <div className="flex justify-between mb-3">
+                    <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest">Số tiền cược mới (đ)</label>
+                    <span className="text-[11px] font-bold text-slate-400">
+                      Cũ: {editingBet.amount.toLocaleString('vi-VN')}đ
+                    </span>
+                  </div>
+                  <input 
+                    type="number"
+                    value={editAmount}
+                    onChange={(e) => setEditAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="Nhập số tiền (tối thiểu 20.000đ)..."
+                    className="w-full bg-black border border-white/10 rounded-3xl px-8 py-5 text-xl font-black text-center text-white focus:border-amber-500 transition-all font-mono" 
+                  />
+                  {editAmount !== '' && Number(editAmount) > 0 && Number(editAmount) < 20000 && (
+                    <p className="text-rose-400 text-[11px] font-bold mt-2 text-center">⚠ Mức cược tối thiểu là 20.000đ</p>
+                  )}
+                  <div className="grid grid-cols-5 gap-3 mt-4">
+                    {[20000, 50000, 100000, 200000, 500000].map(val => (
+                      <button 
+                        key={val} 
+                        onClick={() => setEditAmount(val)} 
+                        className={`py-3 rounded-2xl text-[11px] font-black transition-all border ${editAmount === val ? 'bg-amber-600 border-amber-500 text-white' : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'}`}
+                      >
+                        {val / 1000}K
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 rounded-[40px] p-6 text-center relative overflow-hidden">
+                  <p className="text-[13px] font-black text-amber-300 uppercase mb-2">Tiền thưởng ước tính mới nếu vô địch</p>
+                  <div className="text-[13px] font-black text-slate-500 uppercase mb-4">
+                    Tỷ lệ Odds áp dụng: <span className="text-amber-400 font-mono">x{getTeamOdds(editingBet.team_name).toFixed(1)}</span>
+                  </div>
+                  <div className="flex items-baseline gap-3 justify-center mb-2">
+                    <span className="text-4xl font-black text-emerald-400 font-mono">
+                      {Math.round((Number(editAmount) || 0) * getTeamOdds(editingBet.team_name)).toLocaleString('vi-VN')}
+                    </span>
+                    <span className="text-xl text-emerald-600/50 font-black">đ</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    disabled={submitting || !editAmount || Number(editAmount) < 20000}
+                    onClick={handleUpdateOutrightBet}
+                    className="flex-[2] bg-amber-600 hover:bg-amber-500 text-white font-black py-5 rounded-[30px] transition-all uppercase tracking-widest active:scale-95 text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? 'ĐANG CẬP NHẬT...' : 'XÁC NHẬN CẬP NHẬT'}
+                  </button>
+                  <button 
+                    onClick={() => setEditingBet(null)} 
+                    className="flex-1 bg-white/5 text-slate-400 font-bold py-5 rounded-[30px] uppercase border border-white/5 text-xs hover:bg-white/10"
+                  >
+                    HỦY
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* WINNERS MODAL */}
       {showWinners && winner && (
