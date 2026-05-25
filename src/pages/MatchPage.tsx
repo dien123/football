@@ -96,12 +96,15 @@ const MatchPage: React.FC = () => {
     if (!selectedMatch || !user) return;
 
     if (editingBet) {
+      // Conversion: Store actual team name instead of placeholders
+      const finalOption = option === 'teamA' ? selectedMatch.team_a_name : selectedMatch.team_b_name;
+
       // Update existing bet
       const { error } = await supabase
         .from('bets')
         .update({
           amount: amount,
-          option: option,
+          option: finalOption,
           user_name: userName // In case they changed it, though UI might hide it
         })
         .eq('id', editingBet.id);
