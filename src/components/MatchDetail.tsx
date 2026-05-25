@@ -82,6 +82,10 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
   const betsA = bets.filter(b => b.option === 'teamA' || b.option === match.team_a_name);
   const betsB = bets.filter(b => b.option === 'teamB' || b.option === match.team_b_name);
 
+  const totalA = betsA.reduce((sum, b) => sum + b.amount, 0);
+  const totalB = betsB.reduce((sum, b) => sum + b.amount, 0);
+  const totalPool = totalA + totalB;
+
   const startTime = new Date(match.start_time);
   const timeStr = startTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   const dateStr = startTime.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -323,6 +327,59 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
                 })}
                 {betsB.length === 0 && <p className="text-[10px] text-slate-500 italic text-center py-4">Chưa có cược nào...</p>}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Match Betting Statistics */}
+        <div className="bg-[#1e293b]/60 backdrop-blur-md border border-white/10 rounded-[32px] p-6 mb-8 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-indigo-500 via-emerald-500 to-rose-500" />
+          
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📊</span>
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-200">
+                  Thống kê lượng cược trận đấu
+                </h3>
+                <p className="text-[11px] text-slate-500 font-bold uppercase mt-0.5">Cập nhật thời gian thực</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-8 font-mono">
+              <div className="text-center md:text-right">
+                <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Tổng tiền cược</p>
+                <p className="text-2xl font-black text-emerald-400">
+                  {formatVND(totalPool)}
+                </p>
+              </div>
+              <div className="w-[1px] h-8 bg-white/10" />
+              <div className="text-center md:text-left">
+                <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Tổng lượt cược</p>
+                <p className="text-2xl font-black text-indigo-400">{bets.length} lượt</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Distribution Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-[11px] font-black uppercase tracking-wider">
+              <span className="text-indigo-400">
+                {match.team_a_name}: {formatVND(totalA)} ({totalPool > 0 ? Math.round((totalA / totalPool) * 100) : 0}%)
+              </span>
+              <span className="text-rose-400">
+                {match.team_b_name}: {formatVND(totalB)} ({totalPool > 0 ? Math.round((totalB / totalPool) * 100) : 0}%)
+              </span>
+            </div>
+            <div className="h-3 w-full bg-slate-950/80 rounded-full overflow-hidden flex p-0.5 border border-white/5">
+              <div 
+                className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-l-full transition-all duration-500" 
+                style={{ width: `${totalPool > 0 ? (totalA / totalPool) * 100 : 50}%` }}
+              />
+              <div 
+                className="h-full bg-gradient-to-r from-rose-400 to-rose-600 rounded-r-full transition-all duration-500" 
+                style={{ width: `${totalPool > 0 ? (totalB / totalPool) * 100 : 50}%` }}
+              />
             </div>
           </div>
         </div>
