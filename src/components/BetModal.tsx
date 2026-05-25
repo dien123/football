@@ -141,8 +141,8 @@ const BetModal: React.FC<BetModalProps> = ({
                   key={opt.id}
                   onClick={() => setCurrentOption(opt.id)}
                   className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${currentOption === opt.id
-                      ? 'bg-emerald-600 text-white shadow-lg'
-                      : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                    ? 'bg-emerald-600 text-white shadow-lg'
+                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
                     }`}
                 >
                   {opt.label}
@@ -160,6 +160,16 @@ const BetModal: React.FC<BetModalProps> = ({
               <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Tỉ lệ ăn</span>
               <span className="text-sm font-bold text-emerald-400">Ăn {rate}%</span>
             </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 space-y-2">
+            <div className="flex items-center gap-2 text-indigo-400 font-black text-[12px] uppercase tracking-widest">
+              <span>📌 Quy định & Điều khoản</span>
+            </div>
+            <ul className="text-[12px] text-slate-400 space-y-1 list-disc pl-4 font-semibold leading-relaxed">
+              <li>Đóng nhận cược trước giờ thi đấu <strong className="text-indigo-300">30 phút</strong>.</li>
+              <li>Chỉ tính trong <strong className="text-indigo-300">thời gian thi đấu chính thức</strong> (không gồm hiệp phụ/luân lưu).</li>
+            </ul>
           </div>
 
           {!initialUserName && (

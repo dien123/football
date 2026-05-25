@@ -326,6 +326,36 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Rules & Regulations Banner */}
+        <div className="mt-8 bg-indigo-950/20 backdrop-blur-md border border-indigo-500/20 rounded-3xl p-5 md:p-6 shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] pointer-events-none" />
+          
+          <div className="flex items-center gap-2.5 mb-3 border-b border-indigo-500/10 pb-2.5">
+            <span className="text-xl">🛡️</span>
+            <h3 className="text-xs font-black uppercase tracking-wider text-indigo-300">
+              Quy định & Thể lệ đặt cược trận đấu
+            </h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold leading-relaxed">
+            <div className="flex items-start gap-3 bg-black/20 p-3.5 rounded-2xl border border-white/5">
+              <span className="text-lg shrink-0 mt-0.5">🔒</span>
+              <div>
+                <h4 className="font-bold text-slate-200 mb-1">Đóng nhận cược tự động</h4>
+                <p className="text-slate-400 font-medium">Hệ thống tự động khóa và dừng nhận cược trước thời gian trận đấu diễn ra <strong className="text-indigo-300">30 phút</strong>.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 bg-black/20 p-3.5 rounded-2xl border border-white/5">
+              <span className="text-lg shrink-0 mt-0.5">⏱️</span>
+              <div>
+                <h4 className="font-bold text-slate-200 mb-1">Thời gian thi đấu tính thưởng</h4>
+                <p className="text-slate-400 font-medium">Kết quả được tính trong <strong className="text-indigo-300">thời gian thi đấu chính thức</strong> (90 phút + bù giờ). Không tính hiệp phụ & loạt sút luân lưu.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
