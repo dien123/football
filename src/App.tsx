@@ -24,7 +24,30 @@ interface AppContextType {
 export const AppContext = createContext<AppContextType | null>(null);
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
-function NavBar() {
+const mobileLinkCls = ({ isActive }: { isActive: boolean }) =>
+  `w-full text-center py-4 rounded-2xl text-[15px] font-black uppercase tracking-widest transition-all ${isActive
+    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/40'
+    : 'text-slate-400 hover:text-white hover:bg-white/5'
+  }`;
+
+const mobileOutrightCls = ({ isActive }: { isActive: boolean }) =>
+  `w-full text-center py-4 rounded-2xl text-[15px] font-black uppercase tracking-widest transition-all relative ${isActive
+    ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.6)]'
+    : 'text-amber-400 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/10'
+  }`;
+
+const mobileFutsalCls = ({ isActive }: { isActive: boolean }) =>
+  `w-full text-center py-4 rounded-2xl text-[15px] font-black uppercase tracking-widest transition-all relative ${isActive
+    ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]'
+    : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10'
+  }`;
+
+interface NavBarProps {
+  mobileOpen: boolean;
+  setMobileOpen: (val: boolean) => void;
+}
+
+function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
   const ctx = useContext(AppContext);
   if (!ctx) return null;
   const { session, user, setAdminAuthenticated } = ctx;
@@ -32,6 +55,7 @@ function NavBar() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setAdminAuthenticated(false);
+    setMobileOpen(false);
   };
 
   const linkCls = ({ isActive }: { isActive: boolean }) =>
@@ -40,45 +64,47 @@ function NavBar() {
       : 'text-slate-400 hover:text-white hover:bg-white/5'
     }`;
 
-    const outrightCls = ({ isActive }: { isActive: boolean }) =>
-      `px-5 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
-        ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.6)]'
-        : 'text-amber-400 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
-      }`;
+  const outrightCls = ({ isActive }: { isActive: boolean }) =>
+    `px-5 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
+      ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.6)]'
+      : 'text-amber-400 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
+    }`;
 
-    const futsalCls = ({ isActive }: { isActive: boolean }) =>
-      `px-5 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
-        ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]'
-        : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
-      }`;
+  const futsalCls = ({ isActive }: { isActive: boolean }) =>
+    `px-5 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
+      ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]'
+      : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+    }`;
 
-    return (
-      <nav className="fixed top-0 inset-x-0 z-50 bg-[#050505]/95 backdrop-blur-xl">
-        {/* Warning Banner */}
-        <div className="w-full h-9 bg-rose-950/90 border-b border-rose-900/30 overflow-hidden">
-          <div className="animate-marquee whitespace-nowrap text-[14px] text-rose-400 font-bold uppercase tracking-[0.2em] h-full flex items-center">
-            ⚠️ &nbsp; TRANG WEB VỚI MỤC ĐÍCH GIẢI TRÍ — KHÔNG TUYÊN TRUYỀN CÁ ĐỘ BÓNG ĐÁ — CÁ ĐỘ LÀ HÀNH VI VI PHẠM PHÁP LUẬT TẠI VIỆT NAM &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          </div>
+  return (
+    <nav className="fixed top-0 inset-x-0 z-50 bg-[#050505]/95 backdrop-blur-xl">
+      {/* Warning Banner */}
+      <div className="w-full h-9 bg-rose-950/90 border-b border-rose-900/30 overflow-hidden">
+        <div className="animate-marquee whitespace-nowrap text-[14px] text-rose-400 font-bold uppercase tracking-[0.2em] h-full flex items-center">
+          ⚠️ &nbsp; TRANG WEB VỚI MỤC ĐÍCH GIẢI TRÍ — KHÔNG TUYÊN TRUYỀN CÁ ĐỘ BÓNG ĐÁ — CÁ ĐỘ LÀ HÀNH VI VI PHẠM PHÁP LUẬT TẠI VIỆT NAM &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         </div>
-  
-        {/* Main nav row */}
-        <div className="max-w-[1400px] mx-auto px-6 flex items-center gap-8 h-20">
-          <div className="flex items-center gap-2">
-            {/* Logo removed from here and moved to bottom-right per user request */}
-          </div>
-  
-          {/* Nav links */}
-          <div className="flex items-center gap-2 flex-1">
-            <NavLink to="/" className={linkCls} end>Đặt Cược</NavLink>
-            <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
-            <NavLink to="/results" className={linkCls}>Kết Quả Bóng Đá</NavLink>
-            <NavLink to="/outright" className={outrightCls}>
-              Dự đoán Vô Địch
-              <span className="absolute -top-2 -right-2 flex h-4 w-10">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-4 w-10 bg-amber-500 text-[7px] items-center justify-center text-black font-black">WINNER</span>
-              </span>
-            </NavLink>
+      </div>
+
+      {/* Main nav row */}
+      <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between h-20">
+        {/* Brand / Logo */}
+        <NavLink to="/" className="flex items-center gap-2 text-emerald-400 font-black tracking-widest text-base shrink-0" onClick={() => setMobileOpen(false)}>
+          <span>⚽</span>
+          <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">TIP BET</span>
+        </NavLink>
+
+        {/* Desktop Nav Links */}
+        <div className="hidden lg:flex items-center gap-2 flex-1 justify-center px-8">
+          <NavLink to="/" className={linkCls} end>Đặt Cược</NavLink>
+          <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
+          <NavLink to="/results" className={linkCls}>Kết Quả Bóng Đá</NavLink>
+          <NavLink to="/outright" className={outrightCls}>
+            Dự đoán Vô Địch
+            <span className="absolute -top-2 -right-2 flex h-4 w-10">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-10 bg-amber-500 text-[7px] items-center justify-center text-black font-black">WINNER</span>
+            </span>
+          </NavLink>
           <NavLink to="/futsal" className={futsalCls}>
             TIP Futsal 2026
             <span className="absolute -top-2 -right-2 flex h-4 w-8">
@@ -89,8 +115,8 @@ function NavBar() {
           <NavLink to="/admin" className={linkCls}>Admin</NavLink>
         </div>
 
-        {/* Right side */}
-        <div className="flex items-center gap-4 flex-shrink-0">
+        {/* Desktop Right side (session) */}
+        <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
           {session && (
             <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-2xl border border-white/5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
@@ -106,6 +132,31 @@ function NavBar() {
             </div>
           )}
         </div>
+
+        {/* Mobile Controls (Profile & Hamburger) */}
+        <div className="flex lg:hidden items-center gap-3">
+          {session && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-xl border border-white/5 max-w-[120px]">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
+              <span className="text-[11px] text-slate-300 font-black truncate">
+                {user?.user_metadata?.full_name?.split(' ').pop() || user?.email?.split('@')[0]}
+              </span>
+            </div>
+          )}
+
+          {/* Hamburger button */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white"
+            aria-label="Toggle Menu"
+          >
+            {mobileOpen ? (
+              <span className="text-xl font-black">✕</span>
+            ) : (
+              <span className="text-xl font-black">☰</span>
+            )}
+          </button>
+        </div>
       </div>
     </nav>
   );
@@ -117,6 +168,7 @@ function App() {
   const [isAdminAuthenticated, setAdminAuthenticatedState] = useState(() => {
     return localStorage.getItem('admin_auth') === 'true';
   });
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const setAdminAuthenticated = (val: boolean) => {
     setAdminAuthenticatedState(val);
@@ -144,7 +196,64 @@ function App() {
     }}>
       <BrowserRouter>
         <div className="relative bg-[#080808] min-h-screen">
-          <NavBar />
+          <NavBar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+          
+          {/* Mobile Drawer (Menu Overlay) - Rendered at Top-Level to guarantee stacking context! */}
+          <div 
+            className={`lg:hidden fixed top-[116px] inset-x-0 bottom-0 bg-[#080808] border-t border-white/10 z-[99999] transition-all duration-300 ease-in-out ${
+              mobileOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-4 invisible pointer-events-none'
+            }`}
+          >
+            <div className="flex flex-col items-center justify-start p-6 space-y-4 h-full overflow-y-auto pb-20">
+              <NavLink to="/" className={mobileLinkCls} onClick={() => setMobileOpen(false)} end>
+                Đặt Cược
+              </NavLink>
+              <NavLink to="/standings" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
+                Bảng Xếp Hạng
+              </NavLink>
+              <NavLink to="/results" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
+                Kết Quả Bóng Đá
+              </NavLink>
+              
+              <NavLink to="/outright" className={mobileOutrightCls} onClick={() => setMobileOpen(false)}>
+                Dự đoán Vô Địch
+                <span className="absolute top-4 right-6 bg-amber-500 text-[8px] px-2.5 py-0.5 rounded-full text-black font-black">
+                  WINNER
+                </span>
+              </NavLink>
+
+              <NavLink to="/futsal" className={mobileFutsalCls} onClick={() => setMobileOpen(false)}>
+                TIP Futsal 2026
+                <span className="absolute top-4 right-6 bg-rose-500 text-[8px] px-2.5 py-0.5 rounded-full text-white font-black">
+                  HOT
+                </span>
+              </NavLink>
+
+              <NavLink to="/admin" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
+                Admin
+              </NavLink>
+
+              {session && (
+                <div className="w-full pt-6 border-t border-white/5 flex flex-col items-center gap-3">
+                  <span className="text-[12px] text-slate-500 font-bold uppercase">Tài khoản</span>
+                  <span className="text-sm font-black text-slate-300">
+                    {session.user.user_metadata?.full_name || session.user.email}
+                  </span>
+                  <button
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      setAdminAuthenticated(false);
+                      setMobileOpen(false);
+                    }}
+                    className="w-full py-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-xs font-black uppercase tracking-widest border border-rose-500/20 active:scale-95 transition-all"
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Spacer for fixed top nav (28px warning + 80px nav = 108px) */}
           <div className="h-[108px]" />
           <Routes>
@@ -155,7 +264,7 @@ function App() {
             <Route path="/outright" element={<OutrightPage />} />
             <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
           </Routes>
-          <div className="fixed top-[120px] left-4 z-40 pointer-events-none">
+          <div className="hidden lg:block fixed top-[120px] left-4 z-40 pointer-events-none">
             <div className="pointer-events-auto">
               <RealTimeClock />
             </div>

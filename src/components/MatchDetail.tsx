@@ -110,7 +110,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
           className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8 group"
         >
           <span className="p-2 bg-white/5 rounded-lg group-hover:bg-white/10">←</span>
-          <span className="font-bold text-xs uppercase tracking-widest">Quay lại danh sách</span>
+          <span className="font-bold text-lg uppercase tracking-widest">Quay lại danh sách</span>
         </button>
 
         {/* Match Header Card */}
@@ -334,7 +334,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
         {/* Match Betting Statistics */}
         <div className="bg-[#1e293b]/60 backdrop-blur-md border border-white/10 rounded-[32px] p-6 mb-8 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-indigo-500 via-emerald-500 to-rose-500" />
-          
+
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6">
             <div className="flex items-center gap-3">
               <span className="text-2xl">📊</span>
@@ -372,12 +372,12 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
               </span>
             </div>
             <div className="h-3 w-full bg-slate-950/80 rounded-full overflow-hidden flex p-0.5 border border-white/5">
-              <div 
-                className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-l-full transition-all duration-500" 
+              <div
+                className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-l-full transition-all duration-500"
                 style={{ width: `${totalPool > 0 ? (totalA / totalPool) * 100 : 50}%` }}
               />
-              <div 
-                className="h-full bg-gradient-to-r from-rose-400 to-rose-600 rounded-r-full transition-all duration-500" 
+              <div
+                className="h-full bg-gradient-to-r from-rose-400 to-rose-600 rounded-r-full transition-all duration-500"
                 style={{ width: `${totalPool > 0 ? (totalB / totalPool) * 100 : 50}%` }}
               />
             </div>
@@ -387,14 +387,14 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
         {/* Rules & Regulations Banner */}
         <div className="mt-8 bg-indigo-950/20 backdrop-blur-md border border-indigo-500/20 rounded-3xl p-5 md:p-6 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] pointer-events-none" />
-          
+
           <div className="flex items-center gap-2.5 mb-3 border-b border-indigo-500/10 pb-2.5">
             <span className="text-xl">🛡️</span>
             <h3 className="text-xs font-black uppercase tracking-wider text-indigo-300">
               Quy định & Thể lệ đặt cược trận đấu
             </h3>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold leading-relaxed">
             <div className="flex items-start gap-3 bg-black/20 p-3.5 rounded-2xl border border-white/5">
               <span className="text-lg shrink-0 mt-0.5">🔒</span>

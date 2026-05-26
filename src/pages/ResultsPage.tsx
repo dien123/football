@@ -229,57 +229,59 @@ const ResultsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-[#222] rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
-              <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-black/40 text-[11px] font-black uppercase text-slate-500 border-b border-white/5">
-                <span className="col-span-2">Người chơi</span>
-                <span className="col-span-3">Lựa chọn</span>
-                <span className="col-span-3">Đội thắng</span>
-                <span className="col-span-2 text-right">Tiền cược</span>
-                <span className="col-span-2 text-right">Kết quả</span>
-              </div>
-              <div className="divide-y divide-white/5">
-                {results.betResults.length > 0 ? results.betResults.map((bet: any) => (
-                  <div key={bet.id} className="grid grid-cols-12 gap-4 px-6 py-4 text-xs items-center hover:bg-white/5 transition-colors">
-                    <span className="col-span-2 font-black text-[14px] text-slate-400 truncate">{bet.user_name}</span>
-                    <div className="col-span-3 flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        {bet.selectedTeamCode && (
-                          <img src={`https://flagcdn.com/w20/${bet.selectedTeamCode.toLowerCase()}.png`} alt="" className="w-4 h-3 object-cover rounded-sm shadow-sm" />
+            <div className="bg-[#222] rounded-2xl border border-white/5 overflow-hidden shadow-2xl overflow-x-auto">
+              <div className="min-w-[750px]">
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-black/40 text-[11px] font-black uppercase text-slate-500 border-b border-white/5">
+                  <span className="col-span-2">Người chơi</span>
+                  <span className="col-span-3">Lựa chọn</span>
+                  <span className="col-span-3">Đội thắng</span>
+                  <span className="col-span-2 text-right">Tiền cược</span>
+                  <span className="col-span-2 text-right">Kết quả</span>
+                </div>
+                <div className="divide-y divide-white/5">
+                  {results.betResults.length > 0 ? results.betResults.map((bet: any) => (
+                    <div key={bet.id} className="grid grid-cols-12 gap-4 px-6 py-4 text-xs items-center hover:bg-white/5 transition-colors">
+                      <span className="col-span-2 font-black text-[14px] text-slate-400 truncate">{bet.user_name}</span>
+                      <div className="col-span-3 flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          {bet.selectedTeamCode && (
+                            <img src={`https://flagcdn.com/w20/${bet.selectedTeamCode.toLowerCase()}.png`} alt="" className="w-4 h-3 object-cover rounded-sm shadow-sm" />
+                          )}
+                          <span className="font-black text-slate-100 truncate">{bet.selectedTeamName}</span>
+                        </div>
+                        {selectedMatchId === 'all' && (
+                          <span className="text-[10px] text-slate-600 truncate font-black uppercase tracking-tighter">{bet.matchName}</span>
                         )}
-                        <span className="font-black text-slate-100 truncate">{bet.selectedTeamName}</span>
                       </div>
-                      {selectedMatchId === 'all' && (
-                        <span className="text-[10px] text-slate-600 truncate font-black uppercase tracking-tighter">{bet.matchName}</span>
-                      )}
-                    </div>
-                    <div className="col-span-3">
-                      <div className="flex items-center gap-2">
-                        {bet.winningCode && (
-                          <img src={`https://flagcdn.com/w20/${bet.winningCode.toLowerCase()}.png`} alt="" className="w-4 h-3 object-cover rounded-sm" />
+                      <div className="col-span-3">
+                        <div className="flex items-center gap-2">
+                          {bet.winningCode && (
+                            <img src={`https://flagcdn.com/w20/${bet.winningCode.toLowerCase()}.png`} alt="" className="w-4 h-3 object-cover rounded-sm" />
+                          )}
+                          <span className={`font-black ${bet.winningTeam === 'Hòa' ? 'text-slate-500 border-b border-white/5 pb-0.5' : 'text-emerald-400'}`}>
+                            {bet.winningTeam}
+                            <span className="text-slate-500 ml-2 font-mono text-[14px] font-medium">({bet.matchScore})</span>
+                          </span>
+                        </div>
+                      </div>
+                      <span className="col-span-2 text-right font-mono text-slate-300 text-[12px]">{formatVND(bet.amount)}</span>
+                      <div className="col-span-2 text-right flex flex-col items-end gap-1">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${getOutcomeColorCls(bet.outcome)}`}>
+                          {getOutcomeLabel(bet.outcome)}
+                        </span>
+                        {bet.payout !== 0 && (
+                          <span className={`text-[9px] font-black ${bet.payout > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {bet.payout > 0 ? '+' : ''}{formatVND(bet.payout)}
+                          </span>
                         )}
-                        <span className={`font-black ${bet.winningTeam === 'Hòa' ? 'text-slate-500 border-b border-white/5 pb-0.5' : 'text-emerald-400'}`}>
-                          {bet.winningTeam}
-                          <span className="text-slate-500 ml-2 font-mono text-[14px] font-medium">({bet.matchScore})</span>
-                        </span>
                       </div>
                     </div>
-                    <span className="col-span-2 text-right font-mono text-slate-300 text-[12px]">{formatVND(bet.amount)}</span>
-                    <div className="col-span-2 text-right flex flex-col items-end gap-1">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${getOutcomeColorCls(bet.outcome)}`}>
-                        {getOutcomeLabel(bet.outcome)}
-                      </span>
-                      {bet.payout !== 0 && (
-                        <span className={`text-[9px] font-black ${bet.payout > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {bet.payout > 0 ? '+' : ''}{formatVND(bet.payout)}
-                        </span>
-                      )}
+                  )) : (
+                    <div className="py-20 text-center text-slate-600 font-bold uppercase tracking-widest text-xs">
+                      Chưa có dữ liệu...
                     </div>
-                  </div>
-                )) : (
-                  <div className="py-20 text-center text-slate-600 font-bold uppercase tracking-widest text-xs">
-                    Chưa có dữ liệu...
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </section>
@@ -292,61 +294,63 @@ const ResultsPage: React.FC = () => {
                 Bảng Xếp Hạng Cao Thủ
               </div>
 
-              <div className="bg-[#1a1a1a] rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
-                <div className="grid grid-cols-12 gap-4 px-8 py-5 bg-gradient-to-r from-amber-500/10 to-transparent text-[11px] font-black uppercase text-slate-400 border-b border-white/10">
-                  <span className="col-span-1 text-center">Hạng</span>
-                  <span className="col-span-4">Người chơi</span>
-                  <span className="col-span-2 text-right">Thắng</span>
-                  <span className="col-span-2 text-right">Tổng cược</span>
-                  <span className="col-span-3 text-right">Lời / Lãi</span>
-                </div>
+              <div className="bg-[#1a1a1a] rounded-3xl border border-white/10 overflow-hidden shadow-2xl overflow-x-auto">
+                <div className="min-w-[750px]">
+                  <div className="grid grid-cols-12 gap-4 px-8 py-5 bg-gradient-to-r from-amber-500/10 to-transparent text-[11px] font-black uppercase text-slate-400 border-b border-white/10">
+                    <span className="col-span-1 text-center">Hạng</span>
+                    <span className="col-span-4">Người chơi</span>
+                    <span className="col-span-2 text-right">Thắng</span>
+                    <span className="col-span-2 text-right">Tổng cược</span>
+                    <span className="col-span-3 text-right">Lời / Lãi</span>
+                  </div>
 
-                <div className="divide-y divide-white/5">
-                  {leaderboard.map((user, index) => {
-                    const rank = index + 1;
-                    const isTop3 = rank <= 3;
-                    const rankIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+                  <div className="divide-y divide-white/5">
+                    {leaderboard.map((user, index) => {
+                      const rank = index + 1;
+                      const isTop3 = rank <= 3;
+                      const rankIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
 
-                    return (
-                      <div
-                        key={user.name}
-                        className={`grid grid-cols-12 gap-4 px-8 py-5 items-center hover:bg-white/5 transition-all group ${isTop3 ? 'bg-amber-500/5' : ''}`}
-                      >
-                        <div className="col-span-1 flex justify-center">
-                          <span className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-black ${rank === 1 ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/40' :
-                            rank === 2 ? 'bg-slate-300 text-black shadow-lg shadow-slate-300/40' :
-                              rank === 3 ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/40' :
-                                'text-slate-500 bg-white/5'
-                            }`}>
-                            {rankIcon}
-                          </span>
-                        </div>
-
-                        <div className="col-span-4 flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 border border-white/10 flex items-center justify-center text-[10px] font-black text-white group-hover:scale-110 transition-transform">
-                            {user.name.substring(0, 1).toUpperCase()}
-                          </div>
-                          <span className="font-black text-slate-100 group-hover:text-amber-400 transition-colors truncate">{user.name}</span>
-                        </div>
-
-                        <div className="col-span-2 text-right">
-                          <span className="text-sm font-black text-white">{user.wins}</span>
-                        </div>
-
-                        <div className="col-span-2 text-right">
-                          <span className="text-[12px] font-black text-slate-400 font-mono">{formatVND(user.totalAmount)}</span>
-                        </div>
-
-                        <div className="col-span-3 text-right">
-                          <div className="flex flex-col items-end">
-                            <span className={`text-base font-black font-mono ${user.totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                              {user.totalProfit > 0 ? '+' : ''}{formatVND(user.totalProfit)}
+                      return (
+                        <div
+                          key={user.name}
+                          className={`grid grid-cols-12 gap-4 px-8 py-5 items-center hover:bg-white/5 transition-all group ${isTop3 ? 'bg-amber-500/5' : ''}`}
+                        >
+                          <div className="col-span-1 flex justify-center">
+                            <span className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-black ${rank === 1 ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/40' :
+                              rank === 2 ? 'bg-slate-300 text-black shadow-lg shadow-slate-300/40' :
+                                rank === 3 ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/40' :
+                                  'text-slate-500 bg-white/5'
+                              }`}>
+                              {rankIcon}
                             </span>
                           </div>
+
+                          <div className="col-span-4 flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 border border-white/10 flex items-center justify-center text-[10px] font-black text-white group-hover:scale-110 transition-transform">
+                              {user.name.substring(0, 1).toUpperCase()}
+                            </div>
+                            <span className="font-black text-slate-100 group-hover:text-amber-400 transition-colors truncate">{user.name}</span>
+                          </div>
+
+                          <div className="col-span-2 text-right">
+                            <span className="text-sm font-black text-white">{user.wins}</span>
+                          </div>
+
+                          <div className="col-span-2 text-right">
+                            <span className="text-[12px] font-black text-slate-400 font-mono">{formatVND(user.totalAmount)}</span>
+                          </div>
+
+                          <div className="col-span-3 text-right">
+                            <div className="flex flex-col items-end">
+                              <span className={`text-base font-black font-mono ${user.totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {user.totalProfit > 0 ? '+' : ''}{formatVND(user.totalProfit)}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </section>
