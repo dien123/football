@@ -25,19 +25,19 @@ export const AppContext = createContext<AppContextType | null>(null);
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 const mobileLinkCls = ({ isActive }: { isActive: boolean }) =>
-  `w-full text-center py-4 rounded-2xl text-[15px] font-black uppercase tracking-widest transition-all ${isActive
+  `w-full max-w-[280px] text-center py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all ${isActive
     ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/40'
     : 'text-slate-400 hover:text-white hover:bg-white/5'
   }`;
 
 const mobileOutrightCls = ({ isActive }: { isActive: boolean }) =>
-  `w-full text-center py-4 rounded-2xl text-[15px] font-black uppercase tracking-widest transition-all relative ${isActive
+  `w-full max-w-[280px] text-center py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all relative ${isActive
     ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.6)]'
     : 'text-amber-400 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/10'
   }`;
 
 const mobileFutsalCls = ({ isActive }: { isActive: boolean }) =>
-  `w-full text-center py-4 rounded-2xl text-[15px] font-black uppercase tracking-widest transition-all relative ${isActive
+  `w-full max-w-[280px] text-center py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all relative ${isActive
     ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]'
     : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10'
   }`;
