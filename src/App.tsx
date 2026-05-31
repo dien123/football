@@ -90,14 +90,14 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
         {/* Brand / Logo */}
         <NavLink to="/" className="flex items-center gap-2 text-emerald-400 font-black tracking-widest text-base shrink-0" onClick={() => setMobileOpen(false)}>
           <span>⚽</span>
-          <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">TIP BET</span>
+          <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">HEY HEY</span>
         </NavLink>
 
         {/* Desktop Nav Links */}
         <div className="hidden lg:flex items-center gap-2 flex-1 justify-center px-8">
           <NavLink to="/" className={linkCls} end>Đặt Cược</NavLink>
           <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
-          <NavLink to="/results" className={linkCls}>Kết Quả Bóng Đá</NavLink>
+          <NavLink to="/results" className={linkCls}>Kết Quả - Thống Kê</NavLink>
           <NavLink to="/outright" className={outrightCls}>
             Dự đoán Vô Địch
             <span className="absolute -top-2 -right-2 flex h-4 w-10">
@@ -197,12 +197,11 @@ function App() {
       <BrowserRouter>
         <div className="relative bg-[#080808] min-h-screen">
           <NavBar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
-          
+
           {/* Mobile Drawer (Menu Overlay) - Rendered at Top-Level to guarantee stacking context! */}
-          <div 
-            className={`lg:hidden fixed top-[116px] inset-x-0 bottom-0 bg-[#080808] border-t border-white/10 z-[99999] transition-all duration-300 ease-in-out ${
-              mobileOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-4 invisible pointer-events-none'
-            }`}
+          <div
+            className={`lg:hidden fixed top-[116px] inset-x-0 bottom-0 bg-[#080808] border-t border-white/10 z-[99999] transition-all duration-300 ease-in-out ${mobileOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-4 invisible pointer-events-none'
+              }`}
           >
             <div className="flex flex-col items-center justify-start p-6 space-y-4 h-full overflow-y-auto pb-20">
               <NavLink to="/" className={mobileLinkCls} onClick={() => setMobileOpen(false)} end>
@@ -212,9 +211,9 @@ function App() {
                 Bảng Xếp Hạng
               </NavLink>
               <NavLink to="/results" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
-                Kết Quả Bóng Đá
+                Kết Quả - Thống Kê
               </NavLink>
-              
+
               <NavLink to="/outright" className={mobileOutrightCls} onClick={() => setMobileOpen(false)}>
                 Dự đoán Vô Địch
                 <span className="absolute top-4 right-6 bg-amber-500 text-[8px] px-2.5 py-0.5 rounded-full text-black font-black">

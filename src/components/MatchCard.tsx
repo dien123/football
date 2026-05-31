@@ -49,15 +49,14 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin, customClas
   const canEnter = isAdmin || (!isFinished && !locked);
 
   const startTime = new Date(match.start_time);
-  const timeStr = startTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-  const dateStr = startTime.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+  const timeStr = startTime.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+  const dateStr = startTime.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
 
   return (
     <div
-      onClick={() => canEnter && onBet(match.id)}
-      className={`backdrop-blur-md rounded-[24px] p-5 shadow-2xl transition-all group ${
-        customClass || 'bg-white/5 border border-white/10'
-      } ${canEnter ? 'hover:border-indigo-500/50 hover:bg-white/10 cursor-pointer' : 'opacity-80'
+      onClick={() => onBet(match.id)}
+      className={`backdrop-blur-md rounded-[24px] p-5 shadow-2xl transition-all group ${customClass || "bg-white/5 border border-white/10"
+        } ${!canEnter ? "opacity-80" : ""} hover:border-indigo-500/50 hover:bg-white/10 cursor-pointer
       }`}
     >
       <div className="flex justify-between items-start mb-4">
