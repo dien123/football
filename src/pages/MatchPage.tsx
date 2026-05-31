@@ -402,7 +402,7 @@ interface BetListModalProps {
   isAdmin?: boolean;
 }
 
-const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match, isAdmin }) => {
+const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) => {
   const [bets, setBets] = useState<any[]>([]);
   const [loadingBets, setLoadingBets] = useState(true);
   const { user } = useContext(AppContext) || {};
