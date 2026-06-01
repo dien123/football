@@ -29,27 +29,45 @@ const RealTimeClock: React.FC = () => {
 
   const { hours, minutes, seconds } = formatTimeParts(time);
 
+  const clockItems = [
+    { label: 'HOURS', value: hours },
+    { label: 'MINUTES', value: minutes },
+    { label: 'SECONDS', value: seconds }
+  ];
+
   return (
-    <div className="flex flex-col items-center md:items-start gap-1.5">
-      <div className="flex items-center gap-1.5">
-        {[hours, minutes, seconds].map((part, i) => (
-          <React.Fragment key={i}>
-            <div className="relative group">
-              <div className="absolute -inset-[1px] bg-emerald-500/50 rounded-lg blur-[1px] opacity-100"></div>
-              <div className="relative px-3 py-1.5 bg-[#0a0a0a] rounded-lg border border-emerald-500/30 shadow-2xl min-w-[54px] text-center transition-all group-hover:border-emerald-500/60">
-                <span className="text-2xl md:text-4xl font-black tabular-nums tracking-tighter text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
-                  {part}
-                </span>
-              </div>
+    <div className="flex flex-col items-center md:items-start animate-fade-in">
+      {/* Title */}
+      <div className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 mb-3 pl-1">
+        CURRENT TIME
+      </div>
+      
+      {/* Clock cards */}
+      <div className="flex items-center gap-2.5">
+        {clockItems.map((item, index) => (
+          <div key={index} className="relative group">
+            {/* Soft glowing lime border on hover */}
+            <div className="absolute -inset-[1px] bg-lime-500/10 rounded-[14px] blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            {/* Card box */}
+            <div className="relative flex flex-col items-center justify-center w-[72px] h-[82px] bg-[#12161a] border border-white/5 rounded-[12px] shadow-2xl transition-all duration-300 group-hover:border-lime-500/20">
+              {/* Digit */}
+              <span className="text-3xl font-black font-mono tracking-tighter text-[#c5ff00] drop-shadow-[0_0_12px_rgba(197,255,0,0.35)]">
+                {item.value}
+              </span>
+              
+              {/* Label */}
+              <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-2">
+                {item.label}
+              </span>
             </div>
-            {i < 2 && <span className="text-xl font-black text-emerald-500/50 animate-pulse">:</span>}
-          </React.Fragment>
+          </div>
         ))}
       </div>
-      <div className="flex items-center gap-2 px-1 mt-1">
-        <span className="text-[11px] md:text-[13px] font-black uppercase tracking-[0.2em] text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">
-          {formatDate(time)}
-        </span>
+      
+      {/* Calendar date representation */}
+      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-3 pl-1">
+        {formatDate(time)}
       </div>
     </div>
   );

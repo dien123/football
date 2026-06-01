@@ -221,35 +221,32 @@ const MatchPage: React.FC = () => {
       />
 
       <div className="relative z-10">
+        {/* Login button: absolute top right of the page body */}
+        {!session && view === 'grid' && (
+          <div className="absolute right-6 top-6 md:right-8 md:top-8 z-30 animate-in fade-in slide-in-from-top-4 duration-300">
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              className="px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest bg-white text-black hover:bg-emerald-400 hover:scale-[1.05] active:scale-95 transition-all shadow-xl shadow-black/40 border border-white/10"
+            >
+              Đăng nhập
+            </button>
+          </div>
+        )}
+
         {view === 'grid' ? (
           <div className="max-w-7xl mx-auto px-6">
             <div className="bg-transparent py-12 mb-4 relative">
               <div className="max-w-7xl mx-auto">
                 {/* Header Top: Title and Login */}
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="flex items-center gap-3 text-emerald-500 text-2xl md:text-3xl font-black mb-3 uppercase tracking-[0.5em] drop-shadow-[0_0_20px_rgba(16,185,129,0.5)]">
-                      <span className="hidden md:block">🏆</span>
-                      FIFA WORLD CUP 2026
-                    </div>
-                    <h1 className="text-4xl md:text-8xl font-black text-white tracking-tighter flex items-center gap-4 mt-8 mb-8 drop-shadow-2xl">
-                      GIẢI ĐẤU TÔI YÊU
+                <div className="relative flex flex-col items-center mb-8">
+                  <div className="flex flex-col items-center text-center">
+                    <h1 className="text-2xl md:text-7xl font-black text-emerald-500 tracking-tighter flex items-center gap-4 mt-8 mb-4 drop-shadow-2xl">
+                      <span className="hidden md:block">🏆</span> FIFA WORLD CUP 2026
                     </h1>
                     {isAdmin && (
                       <div className="mt-2 px-3 py-1 bg-amber-500 rounded text-[10px] text-black font-black uppercase inline-block">
                         Admin Mode
                       </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col items-center md:items-end gap-4">
-                    {!session && (
-                      <button
-                        onClick={() => setAuthModalOpen(true)}
-                        className="px-2 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest bg-white text-black hover:bg-emerald-400 transition-all shadow-lg"
-                      >
-                        Đăng nhập
-                      </button>
                     )}
                   </div>
                 </div>
