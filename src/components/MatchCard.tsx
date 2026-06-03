@@ -1,52 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import { Match } from '../types';
+import { isMatchBettingLocked } from '../utils/betLogic';
 
 interface MatchCardProps {
-  match: {
-    id: string;
-    team_a_name: string;
-    team_b_name: string;
-    team_a_icon: string;
-    team_b_icon: string;
-    team_a_code?: string;
-    team_b_code?: string;
-    stadium: string;
-    league: string;
-    start_time: string;
-    commentator: string;
-    status: string;
-    score_a: number;
-    score_b: number;
-  };
+  match: Match;
   onBet: (matchId: string) => void;
   isAdmin?: boolean;
   customClass?: string;
 }
-
-const LOCK_MINUTES = 30; // lock betting N minutes before kick-off
-
-const isBettingLocked = (startTime: string): boolean => {
-  const now = new Date().getTime();
-  const kick = new Date(startTime).getTime();
-  const diffMinutes = (kick - now) / 60000;
-  // Lock if kick-off is within 30 min OR has already passed (but not yet marked live/finished)
-  return diffMinutes <= LOCK_MINUTES;
-};
 
 const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin, customClass }) => {
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
 
   // Real-time lock: re-evaluate every 30 seconds
-  const [locked, setLocked] = useState(() => isBettingLocked(match.start_time));
+  const [locked, setLocked] = useState(() => isMatchBettingLocked(match));
 
   useEffect(() => {
-    const check = () => setLocked(isBettingLocked(match.start_time));
+    const check = () => setLocked(isMatchBettingLocked(match));
     check();
     const interval = setInterval(check, 30_000); // re-check every 30s
     return () => clearInterval(interval);
-  }, [match.start_time]);
+  }, [match]);
 
-  const canEnter = isAdmin || (!isFinished && !locked);
+  const canEnter = isAdmin || !locked;
 
   const startTime = new Date(match.start_time);
   const timeStr = startTime.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });

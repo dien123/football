@@ -16,9 +16,10 @@ export const formatDate = (date: Date): string => {
 };
 
 export const formatHandicap = (h: number): string => {
-  if (h === 0) return '0';
-  const integerPart = Math.floor(h);
-  const decimalPart = h - integerPart;
+  const absH = Math.abs(h);
+  if (absH === 0) return '0';
+  const integerPart = Math.floor(absH);
+  const decimalPart = absH - integerPart;
   let fraction = '';
   if (decimalPart === 0.25) fraction = '1/4';
   else if (decimalPart === 0.5) fraction = '1/2';

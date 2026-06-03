@@ -19,6 +19,7 @@ export interface Match {
   score_a: number;
   score_b: number;
   favorite_team: BetOption;
+  betting_open?: boolean | null; // Control betting override: true = force open, false = force closed, null/undefined = auto
   created_at?: string;
 }
 

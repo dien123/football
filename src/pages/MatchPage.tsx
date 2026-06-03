@@ -6,6 +6,7 @@ import BetModal from '../components/BetModal';
 import MatchDetail from '../components/MatchDetail';
 import AuthModal from '../components/AuthModal';
 import { AppContext } from '../App';
+import { isMatchBettingLocked } from '../utils/betLogic';
 
 const MatchPage: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -79,28 +80,16 @@ const MatchPage: React.FC = () => {
     const match = matches.find(m => m.id === matchId);
     if (match) {
       setSelectedMatch(match);
-      // Check if betting is locked or match is finished
-      const isLocked = isBettingLocked(match.start_time);
-      const isFinished = match.status === 'finished';
+      const isLocked = isMatchBettingLocked(match);
+      const canBet = isAdmin || !isLocked;
 
-      if (isAdmin || (!isLocked && !isFinished)) {
-        // If admin OR match is open for betting, go to detail view
+      if (canBet) {
         setView('detail');
         window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (isLocked || isFinished) {
-        // If not admin AND match is locked/finished, open the bet list modal
+      } else {
         setBetListModalOpen(true);
       }
     }
-  };
-
-  // Helper function to check if betting is locked (copied from MatchCard for consistency)
-  const isBettingLocked = (startTime: string): boolean => {
-    const LOCK_MINUTES = 30; // lock betting N minutes before kick-off
-    const now = new Date().getTime();
-    const kick = new Date(startTime).getTime();
-    const diffMinutes = (kick - now) / 60000;
-    return diffMinutes <= LOCK_MINUTES;
   };
 
   const handleBetClick = (option: BetOption) => {
@@ -350,6 +339,7 @@ const MatchPage: React.FC = () => {
               isAdmin={isAdmin}
               currentUserId={user?.id}
               currentFullName={user?.user_metadata?.full_name}
+              isBettingLockedManually={isMatchBettingLocked(selectedMatch)}
             />
           )
         )}

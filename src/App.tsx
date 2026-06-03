@@ -91,7 +91,7 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
         {/* Brand / Logo */}
         <NavLink to="/" className="flex items-center gap-2 text-emerald-400 font-black tracking-widest text-base shrink-0" onClick={() => setMobileOpen(false)}>
           <span>⚽</span>
-          <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">HEY HEY</span>
+          <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">AZ</span>
         </NavLink>
 
         {/* Desktop Nav Links */}

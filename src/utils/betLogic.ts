@@ -1,4 +1,4 @@
-import { BetOption } from '../types';
+import { BetOption, Match } from '../types';
 
 export type BetOutcome = 'WIN_FULL' | 'WIN_HALF' | 'PUSH' | 'LOSS_HALF' | 'LOSS_FULL';
 
@@ -93,4 +93,20 @@ export const getOutcomeColorCls = (outcome: BetOutcome): string => {
     case 'LOSS_FULL': return 'text-rose-400 bg-rose-500/10 border-rose-500/30';
     default: return 'text-slate-400';
   }
+};
+
+export const isMatchBettingLocked = (match: Match): boolean => {
+  // Trận đấu đã kết thúc thì luôn khóa
+  if (match.status === 'finished') return true;
+
+  // Ghi đè thủ công từ Admin
+  if (match.betting_open === true) return false;  // Force Open
+  if (match.betting_open === false) return true; // Force Closed
+
+  // Mặc định tự động theo thời gian thực
+  const LOCK_MINUTES = 30;
+  const now = new Date().getTime();
+  const kick = new Date(match.start_time).getTime();
+  const diffMinutes = (kick - now) / 60000;
+  return diffMinutes <= LOCK_MINUTES;
 };

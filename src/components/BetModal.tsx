@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Match, BetOption } from '../types';
-import { parseVND } from '../utils/format';
+import { parseVND, formatHandicap } from '../utils/format';
 
 interface BetModalProps {
   isOpen: boolean;
@@ -91,11 +91,14 @@ const BetModal: React.FC<BetModalProps> = ({
 
   const isTeamA = currentOption === 'teamA';
   const rate = isTeamA ? match.rate_a : match.rate_b;
-  const handicapVal = match.handicap;
+  const handicapVal = Math.abs(match.handicap);
 
-  const handicapDisplay = isTeamA
-    ? (match.favorite_team === 'teamA' ? '0' : `+${handicapVal}`)
-    : (match.favorite_team === 'teamB' ? '0' : `+${handicapVal}`);
+  const handicapDisplay = handicapVal === 0
+    ? '0'
+    : (isTeamA
+        ? (match.favorite_team === 'teamA' ? '0' : `+${formatHandicap(handicapVal)}`)
+        : (match.favorite_team === 'teamB' ? '0' : `+${formatHandicap(handicapVal)}`)
+      );
 
 
   return (

@@ -12,6 +12,7 @@ interface MatchDetailProps {
   isAdmin?: boolean;
   currentUserId?: string;
   currentFullName?: string;
+  isBettingLockedManually?: boolean; // New prop to indicate manual lock
 }
 
 const MatchDetail: React.FC<MatchDetailProps> = ({
@@ -22,7 +23,8 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
   refreshTrigger,
   isAdmin,
   currentUserId,
-  currentFullName
+  currentFullName,
+  isBettingLockedManually
 }) => {
   const [bets, setBets] = useState<any[]>([]);
 
@@ -174,21 +176,37 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center justify-center w-full gap-3 md:gap-6 text-lg md:text-3xl font-black text-amber-100 uppercase tracking-wide">
-              <div className="flex-1 text-center">
-                {match.favorite_team === 'teamA'
-                  ? `${match.team_a_name} 0`
-                  : `${match.team_a_name} +${formatHandicap(match.handicap)}`}
+            <div className="flex items-center justify-center w-full gap-2 md:gap-6 tracking-wide">
+              {/* Team A container */}
+              <div className="flex-1 flex items-center justify-end gap-2 md:gap-3 min-w-0">
+                <span className="text-white font-black text-sm md:text-3xl truncate text-right">
+                  {match.team_a_name}
+                </span>
+                <span className="text-cyan-400 font-black text-base md:text-2xl shrink-0 bg-amber-500/10 px-2 py-1 rounded-xl border border-amber-500/20 shadow-inner">
+                  {match.favorite_team === 'teamA' || match.handicap === 0
+                    ? '0'
+                    : `+${formatHandicap(Math.abs(match.handicap))}`}
+                </span>
               </div>
 
-              <div className="text-3xl md:text-4xl flex-shrink-0 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]">🏆</div>
+              {/* Center Cup */}
+              <div className="text-2xl md:text-4xl flex-shrink-0 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]">
+                🏆
+              </div>
 
-              <div className="flex-1 text-center">
-                {match.favorite_team === 'teamA'
-                  ? `+${formatHandicap(match.handicap)} ${match.team_b_name}`
-                  : `0 ${match.team_b_name} `}
+              {/* Team B container */}
+              <div className="flex-1 flex items-center justify-start gap-2 md:gap-3 min-w-0">
+                <span className="text-cyan-400 font-black text-base md:text-2xl shrink-0 bg-amber-500/10 px-2 py-1 rounded-xl border border-amber-500/20 shadow-inner">
+                  {match.favorite_team === 'teamA' && match.handicap !== 0
+                    ? `+${formatHandicap(Math.abs(match.handicap))}`
+                    : '0'}
+                </span>
+                <span className="text-white font-black text-sm md:text-3xl truncate text-left">
+                  {match.team_b_name}
+                </span>
               </div>
             </div>
+
           </div>
         </div>
 
@@ -198,9 +216,9 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
           <div className="space-y-4 relative">
             <div className="absolute -left-14 top-1/3 -translate-y-1/2 text-4xl animate-bounce hidden xl:block pointer-events-none">👉</div>
             <button
-              onClick={() => (isAdmin || match.status !== 'finished') && onBet('teamA')}
-              disabled={!isAdmin && match.status === 'finished'}
-              className={`w-full bg-slate-900/60 border border-white/10 rounded-[32px] p-8 transition-all relative overflow-hidden shadow-2xl backdrop-blur-md group ${(isAdmin || match.status !== 'finished') ? 'hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98]' : 'opacity-60 cursor-not-allowed'
+              onClick={() => (isAdmin || (match.status !== 'finished' && !isBettingLockedManually)) && onBet('teamA')}
+              disabled={!isAdmin && (match.status === 'finished' || isBettingLockedManually)}
+              className={`w-full bg-slate-900/60 border border-white/10 rounded-[32px] p-8 transition-all relative overflow-hidden shadow-2xl backdrop-blur-md group ${(isAdmin || (match.status !== 'finished' && !isBettingLockedManually)) ? 'hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98]' : 'opacity-60 cursor-not-allowed'}
                 }`}
             >
               <div className="flex flex-col items-center">
@@ -266,9 +284,9 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
           <div className="space-y-4 relative">
             <div className="absolute -right-14 top-1/3 -translate-y-1/2 text-4xl animate-bounce hidden xl:block pointer-events-none">👈</div>
             <button
-              onClick={() => (isAdmin || match.status !== 'finished') && onBet('teamB')}
-              disabled={!isAdmin && match.status === 'finished'}
-              className={`w-full bg-slate-900/60 border border-white/10 rounded-[32px] p-8 transition-all relative overflow-hidden shadow-2xl backdrop-blur-md group ${(isAdmin || match.status !== 'finished') ? 'hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98]' : 'opacity-60 cursor-not-allowed'
+              onClick={() => (isAdmin || (match.status !== 'finished' && !isBettingLockedManually)) && onBet('teamB')}
+              disabled={!isAdmin && (match.status === 'finished' || isBettingLockedManually)}
+              className={`w-full bg-slate-900/60 border border-white/10 rounded-[32px] p-8 transition-all relative overflow-hidden shadow-2xl backdrop-blur-md group ${(isAdmin || (match.status !== 'finished' && !isBettingLockedManually)) ? 'hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98]' : 'opacity-60 cursor-not-allowed'}
                 }`}
             >
               <div className="flex flex-col items-center">
