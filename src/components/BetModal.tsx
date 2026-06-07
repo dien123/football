@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Match, BetOption } from '../types';
-import { parseVND, formatHandicap } from '../utils/format';
+import { parseVND, formatHandicap, formatRate } from '../utils/format';
 
 interface BetModalProps {
   isOpen: boolean;
@@ -161,7 +161,7 @@ const BetModal: React.FC<BetModalProps> = ({
             </div>
             <div className="text-right flex flex-col gap-1">
               <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Tỉ lệ ăn</span>
-              <span className="text-sm font-bold text-emerald-400">Ăn {rate}%</span>
+              <span className="text-sm font-bold text-emerald-400">Ăn {formatRate(rate)}</span>
             </div>
           </div>
 

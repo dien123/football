@@ -15,6 +15,16 @@ export const formatDate = (date: Date): string => {
   }).format(date);
 };
 
+/**
+ * Convert a percentage rate (e.g. 97, 90, 100) to decimal display (0.97, 0.9, 1).
+ * Strips trailing zeros for cleaner display.
+ */
+export const formatRate = (rate: number): string => {
+  const decimal = rate / 100;
+  // Use parseFloat to strip trailing zeros (e.g. 0.90 → 0.9, 1.00 → 1)
+  return parseFloat(decimal.toFixed(2)).toString();
+};
+
 export const formatHandicap = (h: number): string => {
   const absH = Math.abs(h);
   if (absH === 0) return '0';

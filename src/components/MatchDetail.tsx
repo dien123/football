@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Match, BetOption } from '../types';
 import { supabase } from '../lib/supabase';
-import { formatVND, formatHandicap } from '../utils/format';
+import { formatVND, formatHandicap, formatRate } from '../utils/format';
 
 interface MatchDetailProps {
   match: Match;
@@ -233,8 +233,8 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
                 </div>
                 <span className="text-lg font-bold text-slate-300 mb-4">{match.team_a_name}</span>
 
-                <div className="inline-block px-4 py-1.5 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-indigo-300 text-[16px] font-black uppercase">
-                  Ăn {match.rate_a}%
+                <div className="inline-block px-10 py-1.5 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-indigo-300 text-[16px] font-black">
+                  Rate: {formatRate(match.rate_a)}
                 </div>
               </div>
             </button>
@@ -301,8 +301,8 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
                 </div>
                 <span className="text-lg font-bold text-slate-300 mb-4">{match.team_b_name}</span>
 
-                <div className="inline-block px-4 py-1.5 bg-rose-500/20 border border-rose-500/30 rounded-full text-rose-300 text-[16px] font-black uppercase">
-                  Ăn {match.rate_b}%
+                <div className="inline-block px-10 py-1.5 bg-rose-500/20 border border-rose-500/30 rounded-full text-rose-300 text-[16px] font-black">
+                  Rate: {formatRate(match.rate_b)}
                 </div>
               </div>
             </button>
