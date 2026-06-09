@@ -807,6 +807,49 @@ const DC13Page: React.FC = () => {
     exportToCSV(csv, 'Tat_Ca_Bets_DC13.csv');
   };
 
+  const handleExportOutrightBets = () => {
+    if (outrightBets.length === 0) {
+      alert('Không có dữ liệu dự đoán vô địch nào!');
+      return;
+    }
+
+    let csv = 'ID Lượt dự đoán,Tài Khoản,Đội Tuyển Chọn,Số Tiền Cược,Kết Quả Dự Đoán,Tiền Thắng Chia Quỹ,Tổng Thực Nhận,Thời Gian Dự Đoán\n';
+
+    outrightBets.forEach(b => {
+      let statusStr = 'Chờ kết quả';
+      let estWinnings = 0;
+      let estTotal = 0;
+
+      if (outrightWinner) {
+        if (b.team_name === outrightWinner) {
+          const winPool = outrightBets.filter(x => x.team_name === outrightWinner).reduce((sum, x) => sum + x.amount, 0);
+          const netPool = totalOutrightPool - winPool;
+          estWinnings = winPool > 0 ? (b.amount * netPool) / winPool : 0;
+          estTotal = b.amount + estWinnings;
+          statusStr = 'Thắng';
+        } else {
+          estWinnings = -b.amount;
+          estTotal = 0;
+          statusStr = 'Thua';
+        }
+      } else {
+        const teamBets = outrightBets.filter(x => x.team_name === b.team_name);
+        const teamTotalBet = teamBets.reduce((sum, x) => sum + x.amount, 0);
+        estWinnings = teamTotalBet > 0 ? (b.amount * (totalOutrightPool - teamTotalBet)) / teamTotalBet : 0;
+        estTotal = b.amount + estWinnings;
+        statusStr = 'Chờ kết quả (Dự kiến)';
+      }
+
+      const timeStr = new Date(b.created_at).toLocaleString('vi-VN');
+      const escapedName = b.user_name.includes(',') ? `"${b.user_name}"` : b.user_name;
+      const escapedTeamName = b.team_name.includes(',') ? `"${b.team_name}"` : b.team_name;
+
+      csv += `${b.id},${escapedName},${escapedTeamName},${b.amount},${statusStr},${Math.round(estWinnings)},${Math.round(estTotal)},${timeStr}\n`;
+    });
+
+    exportToCSV(csv, 'Tat_Ca_Bets_Vo_Dich_DC13.csv');
+  };
+
   // ─── Date Filtering Helpers ─────────────────────────────────────────────────
   const uniqueDates = [...new Set(matches.map(m => new Date(m.start_time).toLocaleDateString('vi-VN')))].sort((a, b) => {
     const [da, ma, ya] = a.split('/').map(Number);
@@ -1648,6 +1691,14 @@ const DC13Page: React.FC = () => {
                     </h3>
                     <p className="text-[10px] text-slate-500 mt-0.5">Tất cả các lượt dự đoán của các thành viên.</p>
                   </div>
+                  {outrightBets.length > 0 && (
+                    <button
+                      onClick={handleExportOutrightBets}
+                      className="px-4 py-2 bg-cyan-600/10 hover:bg-cyan-600 border border-cyan-500/20 text-cyan-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 self-start sm:self-auto"
+                    >
+                      📥 Xuất Excel
+                    </button>
+                  )}
                 </div>
 
                 <div className="overflow-x-auto">
@@ -2097,12 +2148,18 @@ const DC13Page: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap justify-end">
                       <button
                         onClick={handleExportAllBets}
                         className="px-5 py-2 bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/20 text-emerald-400 hover:text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
                       >
                         📊 Xuất Tất Cả Bets
+                      </button>
+                      <button
+                        onClick={handleExportOutrightBets}
+                        className="px-5 py-2 bg-purple-600/20 hover:bg-purple-600 border border-purple-500/20 text-purple-400 hover:text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
+                      >
+                        🏆 Xuất Bets Vô Địch
                       </button>
                       <button onClick={() => setAdminAuthed(false)} className="px-5 py-2 bg-white/10 hover:bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest transition-all">
                         Thoát
