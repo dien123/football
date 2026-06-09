@@ -9,6 +9,7 @@ const ResultsPage: React.FC = () => {
   const [selectedMatchId, setSelectedMatchId] = useState<string>('all');
   const [bets, setBets] = useState<Bet[]>([]); // Bets for specific selected match
   const [allBets, setAllBets] = useState<Bet[]>([]); // ALL bets for ALL finished matches
+  const [selectedLossUser, setSelectedLossUser] = useState<any>(null);
 
   useEffect(() => {
     fetchFinishedMatches();
@@ -160,6 +161,135 @@ const ResultsPage: React.FC = () => {
     });
   }, [allBets, matches]);
 
+  // Helper for computing refund based on losing streak and total bet amount
+  const getRefundAmount = (streakCount: number, totalAmount: number) => {
+    if (streakCount >= 4) {
+      if (totalAmount >= 400000) return 100000;
+      if (totalAmount >= 300000) return 50000; // fallback to 3-match tier
+      return 0;
+    }
+    if (streakCount === 3) {
+      if (totalAmount >= 300000) return 50000;
+      return 0;
+    }
+    return 0;
+  };
+
+  // Consecutive Loss Streaks (Bảo hiểm dây đen)
+  const userStreaks = useMemo(() => {
+    const streaks: Record<string, {
+      name: string;
+      currentStreak: number;
+      maxStreak: number;
+      currentTotalAmount: number;
+      maxTotalAmount: number;
+      streakMatches: { matchName: string; outcome: string; payout: number; amount: number; date: string }[];
+      currentStreakMatches: { matchName: string; outcome: string; payout: number; amount: number; date: string }[]
+    }> = {};
+
+    // Group bets by user
+    const userBets: Record<string, Bet[]> = {};
+    allBets.forEach(bet => {
+      if (!userBets[bet.user_name]) {
+        userBets[bet.user_name] = [];
+      }
+      userBets[bet.user_name].push(bet);
+    });
+
+    // For each user, calculate streaks
+    Object.entries(userBets).forEach(([userName, betsList]) => {
+      // Group this user's bets by match_id
+      const betsByMatch: Record<string, { match: Match; bets: Bet[] }> = {};
+      betsList.forEach(bet => {
+        const match = matches.find(m => m.id === bet.match_id);
+        if (!match) return;
+        if (!betsByMatch[bet.match_id]) {
+          betsByMatch[bet.match_id] = { match, bets: [] };
+        }
+        betsByMatch[bet.match_id].bets.push(bet);
+      });
+
+      // Sort matches chronologically
+      const sortedMatches = Object.values(betsByMatch).sort((a, b) =>
+        new Date(a.match.start_time).getTime() - new Date(b.match.start_time).getTime()
+      );
+
+      let current = 0;
+      let max = 0;
+      let currentLosingMatches: any[] = [];
+      let longestLosingMatches: any[] = [];
+      let tempLosingMatches: any[] = [];
+
+      sortedMatches.forEach(({ match, bets }) => {
+        // Calculate the net result of this match for the user
+        let netPayout = 0;
+        let totalAmountOnMatch = 0;
+
+        bets.forEach(bet => {
+          const res = calculateBetResult(
+            bet.option,
+            bet.amount,
+            match.score_a,
+            match.score_b,
+            {
+              handicap: match.handicap,
+              rateA: match.rate_a,
+              rateB: match.rate_b,
+              teamAName: match.team_a_name,
+              teamBName: match.team_b_name
+            }
+          );
+          netPayout += res.payout;
+          totalAmountOnMatch += bet.amount;
+        });
+
+        // The user lost this match if their net payout is negative
+        const isLoss = netPayout < 0;
+
+        if (isLoss) {
+          current++;
+          tempLosingMatches.push({
+            matchName: `${match.team_a_name} vs ${match.team_b_name}`,
+            outcome: netPayout === -totalAmountOnMatch ? 'LOSS_FULL' : 'LOSS_HALF',
+            payout: netPayout,
+            amount: totalAmountOnMatch,
+            date: new Date(match.start_time).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+          });
+          if (current > max) {
+            max = current;
+            longestLosingMatches = [...tempLosingMatches];
+          }
+        } else {
+          current = 0;
+          tempLosingMatches = [];
+        }
+      });
+
+      currentLosingMatches = [...tempLosingMatches];
+
+      const currentTotalAmount = currentLosingMatches.reduce((sum, item) => sum + item.amount, 0);
+      const maxTotalAmount = longestLosingMatches.reduce((sum, item) => sum + item.amount, 0);
+
+      if (max >= 3 || current >= 3) {
+        streaks[userName] = {
+          name: userName,
+          currentStreak: current,
+          maxStreak: max,
+          currentTotalAmount,
+          maxTotalAmount,
+          streakMatches: longestLosingMatches,
+          currentStreakMatches: currentLosingMatches
+        };
+      }
+    });
+
+    // Sort by currentStreak desc, then maxStreak desc
+    return Object.values(streaks).sort((a, b) => {
+      if (b.currentStreak !== a.currentStreak) return b.currentStreak - a.currentStreak;
+      return b.maxStreak - a.maxStreak;
+    });
+  }, [allBets, matches]);
+
   return (
     <div className="min-h-screen relative overflow-hidden text-white pb-12">
       {/* Background */}
@@ -205,6 +335,123 @@ const ResultsPage: React.FC = () => {
         </div>
 
         <div className="max-w-4xl mx-auto px-6 space-y-12">
+          {/* Consecutive Loss Insurance Section */}
+          <section className="animate-fade-in">
+            <div className="flex items-center gap-2 mb-4 text-[12px] font-black uppercase tracking-[0.2em] text-rose-400">
+              <span className="w-4 h-4 rounded-full bg-rose-500/20 flex items-center justify-center">🛡️</span>
+              Bảo Hiểm Thua Liên Tiếp
+            </div>
+
+            <div className="bg-gradient-to-br from-rose-950/20 via-slate-900/50 to-black/40 rounded-3xl border border-rose-500/20 p-6 shadow-xl relative overflow-hidden">
+              {/* Decorative background glow */}
+              <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-36 h-36 bg-rose-600/5 rounded-full blur-2xl pointer-events-none" />
+
+              <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-white/5">
+                <div className="space-y-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-[10px] font-black text-rose-400 uppercase tracking-widest">
+                    🚨 QUYỀN LỢI THÀNH VIÊN
+                  </span>
+                  <h3 className="text-xl font-black text-white uppercase tracking-tight">Voucher Hoàn</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed font-medium">
+                    Nhằm khích lệ tinh thần khi người chơi gặp chuỗi không may mắn, ban tổ chức áp dụng chính sách hoàn trả bảo hiểm dây đen:
+                  </p>
+                </div>
+
+                {/* Visual striking benefits badge */}
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+                  <div className="bg-[#1f1215] border border-rose-500/30 rounded-2xl px-5 py-3.5 text-center flex-1 md:flex-none shadow-lg">
+                    <p className="text-[10px] text-rose-400 font-bold uppercase tracking-wider">Thua 3 trận liên tiếp</p>
+                    <p className="text-lg font-black text-amber-400 mt-1">Hoàn 50.000đ</p>
+                    <p className="text-[12px] text-slate-500 font-bold mt-1">(Tổng cược ≥ 300k)</p>
+                  </div>
+                  <div className="bg-[#2a1318] border border-rose-500/40 rounded-2xl px-5 py-3.5 text-center flex-1 md:flex-none shadow-lg relative overflow-hidden">
+                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-rose-500/20 rotate-45" />
+                    <p className="text-[10px] text-rose-300 font-bold uppercase tracking-wider">Thua 4 trận trở lên</p>
+                    <p className="text-lg font-black text-amber-300 mt-1">Hoàn 100.000đ</p>
+                    <p className="text-[12px] text-rose-400/75 font-bold mt-1">(Tổng cược ≥ 400k)</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Leaderboard of Losing Streaks */}
+              <div className="mt-6">
+                <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <span>📉</span> Thành viên đang trong chuỗi thua (từ 3 trận trở lên)
+                </p>
+
+                {userStreaks.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {userStreaks.map(streak => {
+                      const currentTotal = streak.currentTotalAmount;
+                      const refundAmount = getRefundAmount(streak.currentStreak, currentTotal);
+
+                      return (
+                        <div
+                          key={streak.name}
+                          className="bg-black/30 border border-white/5 rounded-2xl p-4 hover:border-rose-500/30 hover:bg-black/45 transition-all cursor-pointer group flex flex-col justify-between"
+                          onClick={() => setSelectedLossUser(streak)}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-900/30 to-slate-900 border border-rose-500/20 flex items-center justify-center text-xs font-black text-rose-400">
+                                {streak.name.substring(0, 1).toUpperCase()}
+                              </div>
+                              <div>
+                                <p className="font-black text-slate-200 group-hover:text-rose-400 transition-colors text-sm">{streak.name}</p>
+                                <div className="flex flex-col gap-1 mt-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-bold text-slate-500">Chuỗi:</span>
+                                    <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[9px] font-black uppercase tracking-wider">
+                                      {streak.currentStreak} Trận Thua 🔴
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] font-bold text-slate-500">
+                                    Tổng cược chuỗi: <span className="font-mono text-slate-300">{formatVND(currentTotal)}</span>
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="text-right">
+                              {refundAmount > 0 ? (
+                                <>
+                                  <p className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Đủ ĐK Hoàn</p>
+                                  <p className="text-sm font-black text-white mt-0.5 font-mono">{formatVND(refundAmount)}</p>
+                                </>
+                              ) : streak.currentStreak >= 3 ? (
+                                <>
+                                  <p className="text-[10px] font-black text-amber-500 uppercase tracking-wider">Thiếu Tổng Cược</p>
+                                  <p className="text-[9px] text-slate-500 mt-0.5">
+                                    Yêu cầu {formatVND(streak.currentStreak === 3 ? 300000 : 400000)}
+                                  </p>
+                                </>
+                              ) : (
+                                <>
+                                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Kỷ lục chuỗi</p>
+                                  <p className="text-xs font-black text-slate-400 mt-0.5 font-mono">{streak.maxStreak} Trận</p>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="mt-3.5 pt-3.5 border-t border-white/5 flex items-center justify-between text-[10px] font-semibold text-slate-500">
+                            <span>Chi tiết trận thua gần nhất</span>
+                            <span className="text-rose-400 group-hover:underline flex items-center gap-1">Xem chi tiết 🔍</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="bg-white/[0.02] border border-dashed border-white/5 rounded-2xl py-8 text-center text-slate-500 font-bold text-xs uppercase tracking-widest">
+                    🎉 Hiện tại chưa có người chơi nào chạm mốc chuỗi thua liên tiếp ≥ 3 trận!
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
           {/* Statistics Cards */}
           <section className="animate-fade-in">
             <div className="flex items-center gap-2 mb-4 text-[12px] font-black uppercase tracking-[0.2em] text-emerald-400">
@@ -357,6 +604,117 @@ const ResultsPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Consecutive Loss Details Modal */}
+      {selectedLossUser && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/85 backdrop-blur-md" onClick={() => setSelectedLossUser(null)} />
+          <div className="relative z-10 w-full max-w-lg bg-[#1a1315] rounded-[32px] shadow-2xl border border-rose-500/20 overflow-hidden animate-in zoom-in-95 duration-300">
+            {/* Header */}
+            <div className="relative bg-gradient-to-br from-rose-950 to-slate-900 px-8 py-8 text-center border-b border-rose-500/10">
+              <button onClick={() => setSelectedLossUser(null)} className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors text-lg">✕</button>
+              <div className="w-14 h-14 bg-rose-500/20 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3 border border-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.3)]">🛡️</div>
+              <h2 className="text-xl font-black text-white uppercase tracking-wider">Chi Tiết Chuỗi Thua</h2>
+              <p className="text-rose-300 text-[14px] mt-1 uppercase font-bold tracking-widest">{selectedLossUser.name}</p>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+              {/* Summary Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
+                  <p className="text-[10px] text-slate-500 uppercase font-black">Chuỗi hiện tại</p>
+                  <p className="text-2xl font-black text-rose-500 mt-1">{selectedLossUser.currentStreak} trận</p>
+                  <p className="text-[10px] text-slate-400 mt-1 font-bold">Tổng cược: {formatVND(selectedLossUser.currentTotalAmount)}</p>
+                </div>
+                <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
+                  <p className="text-[10px] text-slate-500 uppercase font-black">Chuỗi kỷ lục</p>
+                  <p className="text-2xl font-black text-slate-400 mt-1">{selectedLossUser.maxStreak} trận</p>
+                  <p className="text-[10px] text-slate-400 mt-1 font-bold">Tổng cược: {formatVND(selectedLossUser.maxTotalAmount)}</p>
+                </div>
+              </div>
+
+              {/* Match list */}
+              <div className="space-y-3">
+                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Danh sách trận cược liên tiếp gần nhất</p>
+
+                <div className="space-y-2">
+                  {selectedLossUser.currentStreakMatches.length > 0 ? (
+                    selectedLossUser.currentStreakMatches.map((item: any, idx: number) => (
+                      <div key={idx} className="bg-white/[0.03] border border-white/5 rounded-xl p-3.5 flex items-center justify-between text-xs hover:bg-white/[0.05] transition-colors">
+                        <div>
+                          <p className="font-black text-slate-200">{item.matchName}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5 font-semibold">Ngày đá: {item.date} • Cược: {formatVND(item.amount)}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="inline-block px-2 py-0.5 rounded text-[9px] font-black border bg-rose-500/10 text-rose-400 border-rose-500/20 uppercase tracking-wider">
+                            {item.outcome === 'LOSS_FULL' ? 'Thua' : 'Thua nửa'}
+                          </span>
+                          <p className="text-[11px] font-black font-mono text-rose-400 mt-0.5">{formatVND(item.payout)}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-500 italic text-center py-4">Không có trận thua nào trong chuỗi hiện tại.</p>
+                  )}
+                </div>
+
+                {/* If max streak is longer, show notice */}
+                {selectedLossUser.maxStreak > selectedLossUser.currentStreak && (
+                  <div className="mt-4 pt-4 border-t border-white/5">
+                    <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2">Chuỗi kỷ lục lịch sử ({selectedLossUser.maxStreak} trận)</p>
+                    <div className="space-y-2">
+                      {selectedLossUser.streakMatches.map((item: any, idx: number) => (
+                        <div key={idx} className="bg-white/[0.01] border border-white/[0.02] rounded-xl p-3 flex items-center justify-between text-[11px]">
+                          <div>
+                            <p className="font-bold text-slate-400">{item.matchName}</p>
+                            <p className="text-[9px] text-slate-600 mt-0.5">Ngày đá: {item.date} • Cược: {formatVND(item.amount)}</p>
+                          </div>
+                          <div className="text-right">
+                            <span className="inline-block px-1.5 py-0.5 rounded text-[8px] font-black bg-rose-500/5 text-rose-500 border border-rose-500/10 uppercase tracking-wider">
+                              {item.outcome === 'LOSS_FULL' ? 'Thua' : 'Thua nửa'}
+                            </span>
+                            <p className="text-[10px] font-bold font-mono text-rose-500/80 mt-0.5">{formatVND(item.payout)}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 bg-black/40 border-t border-white/5 flex items-center justify-between">
+              <div>
+                {getRefundAmount(selectedLossUser.currentStreak, selectedLossUser.currentTotalAmount) > 0 ? (
+                  <div className="text-left">
+                    <p className="text-[9px] text-emerald-400 font-black uppercase tracking-wider">Đủ điều kiện hoàn</p>
+                    <p className="text-base font-black text-amber-400 font-mono">
+                      {formatVND(getRefundAmount(selectedLossUser.currentStreak, selectedLossUser.currentTotalAmount))}
+                    </p>
+                  </div>
+                ) : selectedLossUser.currentStreak >= 3 ? (
+                  <div className="text-left">
+                    <p className="text-[9px] text-amber-500 font-black uppercase tracking-wider">Chưa đủ tổng cược</p>
+                    <p className="text-[10px] font-bold text-slate-400">
+                      Tổng cược: {formatVND(selectedLossUser.currentTotalAmount)} / {formatVND(selectedLossUser.currentStreak === 3 ? 300000 : 400000)}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-[11px] font-bold text-slate-500">Chưa đạt chuỗi thua 3 trận</p>
+                )}
+              </div>
+              <button
+                onClick={() => setSelectedLossUser(null)}
+                className="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-md shadow-rose-900/30"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

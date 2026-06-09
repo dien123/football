@@ -114,13 +114,13 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin, customClas
           </span>
         ) : locked ? (
           <span className="flex items-center gap-1.5 text-amber-400 text-[11px] font-black uppercase border-2 border-amber-500/30 px-3 py-1.5 rounded-xl bg-amber-500/10 shadow-lg backdrop-blur-sm">
-            🔒 Khóa Cược
+            🔒 Khóa Dự đoán
           </span>
         ) : (
           <button
             className="relative bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black py-1.5 px-4 rounded shadow-lg shadow-rose-900/20 transition-all uppercase animate-pulse hover:animate-none ring-2 ring-rose-400/50 ring-offset-1 ring-offset-transparent"
           >
-            Cược Ngay 👈
+            Dự đoán Ngay 👈
           </button>
         )}
       </div>

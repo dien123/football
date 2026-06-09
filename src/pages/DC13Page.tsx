@@ -537,11 +537,11 @@ const DC13Page: React.FC = () => {
   const handleExportMatchBets = (match: Match) => {
     const matchBets = bets.filter(b => b.match_id === match.id);
     if (matchBets.length === 0) {
-      alert('Trận đấu này chưa có ai đặt cược!');
+      alert('Trận đấu này chưa có ai dự đoán!');
       return;
     }
 
-    let csv = 'ID Lượt Cược,Tài Khoản,Họ Tên Đầy Đủ,Đội Chọn,Kết Quả Bet,Thời Gian Đặt Cược\n';
+    let csv = 'ID Lượt Cược,Tài Khoản,Họ Tên Đầy Đủ,Đội Chọn,Kết Quả Bet,Thời Gian Dự Đoán\n';
 
     matchBets.forEach(b => {
       const resolvedName = b.dc13_profiles?.full_name || b.user_name || 'N/A';
@@ -565,11 +565,11 @@ const DC13Page: React.FC = () => {
 
   const handleExportAllBets = () => {
     if (bets.length === 0) {
-      alert('Không có dữ liệu đặt cược nào!');
+      alert('Không có dữ liệu dự đoán nào!');
       return;
     }
 
-    let csv = 'Trận Đấu,Thời Gian Trận Đấu,ID Lượt Cược,Tài Khoản,Họ Tên Đầy Đủ,Đội Chọn,Kết Quả Bet,Thời Gian Đặt Cược\n';
+    let csv = 'Trận Đấu,Thời Gian Trận Đấu,ID Lượt Cược,Tài Khoản,Họ Tên Đầy Đủ,Đội Chọn,Kết Quả Bet,Thời Gian Dự Đoán\n';
 
     bets.forEach(b => {
       const match = matches.find(m => m.id === b.match_id);
