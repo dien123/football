@@ -116,13 +116,13 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
           <NavLink to="/" className={linkCls} end>Đặt Cược</NavLink>
           <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
           <NavLink to="/results" className={linkCls}>Kết Quả - Thống Kê</NavLink>
-          <NavLink to="/outright" className={outrightCls}>
+          {/* <NavLink to="/outright" className={outrightCls}>
             Dự đoán Vô Địch
             <span className="absolute -top-2 -right-2 flex h-4 w-9">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-4 w-10 bg-amber-500 text-[7px] items-center justify-center text-black font-black">WINNER</span>
             </span>
-          </NavLink>
+          </NavLink> */}
           <NavLink to="/futsal" className={futsalCls}>
             TIP Futsal 2026
             <span className="absolute -top-2 -right-2 flex h-4 w-7">
