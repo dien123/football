@@ -361,15 +361,15 @@ const ResultsPage: React.FC = () => {
                 {/* Visual striking benefits badge */}
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
                   <div className="bg-[#1f1215] border border-rose-500/30 rounded-2xl px-5 py-3.5 text-center flex-1 md:flex-none shadow-lg">
-                    <p className="text-[10px] text-rose-400 font-bold uppercase tracking-wider">Thua 3 trận liên tiếp</p>
+                    <p className="text-[12px] text-rose-400 font-bold uppercase tracking-wider">Thua 3 trận liên tiếp</p>
                     <p className="text-lg font-black text-amber-400 mt-1">Hoàn 50.000đ</p>
-                    <p className="text-[12px] text-slate-500 font-bold mt-1">(Tổng cược ≥ 300k)</p>
+                    <p className="text-[12px] text-slate-500 font-bold mt-1">(Tổng dự đoán ≥ 300k)</p>
                   </div>
                   <div className="bg-[#2a1318] border border-rose-500/40 rounded-2xl px-5 py-3.5 text-center flex-1 md:flex-none shadow-lg relative overflow-hidden">
                     <div className="absolute -top-3 -right-3 w-8 h-8 bg-rose-500/20 rotate-45" />
-                    <p className="text-[10px] text-rose-300 font-bold uppercase tracking-wider">Thua 4 trận trở lên</p>
+                    <p className="text-[12px] text-rose-300 font-bold uppercase tracking-wider">Thua 4 trận trở lên</p>
                     <p className="text-lg font-black text-amber-300 mt-1">Hoàn 100.000đ</p>
-                    <p className="text-[12px] text-rose-400/75 font-bold mt-1">(Tổng cược ≥ 400k)</p>
+                    <p className="text-[12px] text-rose-400/75 font-bold mt-1">(Tổng dự đoán ≥ 400k)</p>
                   </div>
                 </div>
               </div>
