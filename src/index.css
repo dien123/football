@@ -39,3 +39,34 @@
 .animate-marquee {
   animation: marquee 50s linear infinite;
 }
+
+/* ─── Premium Toast Animations ──────────────────────────────────────────────── */
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(120%) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes toastFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.85) translateY(-12px);
+  }
+}
+
+.animate-toast-in {
+  animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-toast-out {
+  animation: toastFadeOut 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

@@ -1,6 +1,7 @@
 import { createContext, useEffect, useContext, useState } from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
+import { ToastProvider } from './components/Toast';
 import MatchPage from './pages/MatchPage';
 import FutsalLeaguePage from './pages/FutsalLeaguePage';
 import ResultsPage from './pages/ResultsPage';
@@ -277,93 +278,95 @@ function App() {
       fullName,
       refreshFullName
     }}>
-      <BrowserRouter>
-        <div className="relative bg-[#080808] min-h-screen">
-          <NavBar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+      <ToastProvider>
+        <BrowserRouter>
+          <div className="relative bg-[#080808] min-h-screen">
+            <NavBar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
 
-          {/* Mobile Drawer (Menu Overlay) - Rendered at Top-Level to guarantee stacking context! */}
-          <div
-            className={`lg:hidden fixed top-[116px] inset-x-0 bottom-0 bg-[#080808] border-t border-white/10 z-[99999] transition-all duration-300 ease-in-out ${mobileOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-4 invisible pointer-events-none'
-              }`}
-          >
-            <div className="flex flex-col items-center justify-start p-6 space-y-4 h-full overflow-y-auto pb-20">
-              <NavLink to="/" className={mobileLinkCls} onClick={() => setMobileOpen(false)} end>
-                Đặt Cược
-              </NavLink>
-              <NavLink to="/standings" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
-                Bảng Xếp Hạng
-              </NavLink>
-              <NavLink to="/results" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
-                Kết Quả - Thống Kê
-              </NavLink>
+            {/* Mobile Drawer (Menu Overlay) - Rendered at Top-Level to guarantee stacking context! */}
+            <div
+              className={`lg:hidden fixed top-[116px] inset-x-0 bottom-0 bg-[#080808] border-t border-white/10 z-[99999] transition-all duration-300 ease-in-out ${mobileOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-4 invisible pointer-events-none'
+                }`}
+            >
+              <div className="flex flex-col items-center justify-start p-6 space-y-4 h-full overflow-y-auto pb-20">
+                <NavLink to="/" className={mobileLinkCls} onClick={() => setMobileOpen(false)} end>
+                  Đặt Cược
+                </NavLink>
+                <NavLink to="/standings" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
+                  Bảng Xếp Hạng
+                </NavLink>
+                <NavLink to="/results" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
+                  Kết Quả - Thống Kê
+                </NavLink>
 
-              <NavLink to="/outright" className={mobileOutrightCls} onClick={() => setMobileOpen(false)}>
-                Dự đoán Vô Địch
-                <span className="absolute top-4 right-6 bg-amber-500 text-[8px] px-2.5 py-0.5 rounded-full text-black font-black">
-                  WINNER
-                </span>
-              </NavLink>
-
-              <NavLink to="/futsal" className={mobileFutsalCls} onClick={() => setMobileOpen(false)}>
-                TIP Futsal 2026
-                <span className="absolute top-4 right-6 bg-rose-500 text-[8px] px-2.5 py-0.5 rounded-full text-white font-black">
-                  HOT
-                </span>
-              </NavLink>
-
-              <NavLink to="/dc13" className={mobileDC13Cls} onClick={() => setMobileOpen(false)}>
-                DC 13
-                <span className="absolute top-4 right-6 bg-cyan-500 text-[8px] px-2.5 py-0.5 rounded-full text-black font-black">
-                  NEW
-                </span>
-              </NavLink>
-
-              <NavLink to="/admin" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
-                Admin
-              </NavLink>
-
-              {session && (
-                <div className="w-full pt-6 border-t border-white/5 flex flex-col items-center gap-3">
-                  <span className="text-[12px] text-slate-500 font-bold uppercase">Tài khoản</span>
-                  <span className="text-sm font-black text-slate-300">
-                    {fullName || session.user.user_metadata?.full_name || session.user.email}
+                <NavLink to="/outright" className={mobileOutrightCls} onClick={() => setMobileOpen(false)}>
+                  Dự đoán Vô Địch
+                  <span className="absolute top-4 right-6 bg-amber-500 text-[8px] px-2.5 py-0.5 rounded-full text-black font-black">
+                    WINNER
                   </span>
-                  <button
-                    onClick={async () => {
-                      await supabase.auth.signOut();
-                      setAdminAuthenticated(false);
-                      setMobileOpen(false);
-                    }}
-                    className="w-full py-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-xs font-black uppercase tracking-widest border border-rose-500/20 active:scale-95 transition-all"
-                  >
-                    Đăng xuất
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+                </NavLink>
 
-          {/* Spacer for fixed top nav (28px warning + 80px nav = 108px) */}
-          <div className="h-[108px]" />
-          <Routes>
-            <Route path="/" element={<MatchPage />} />
-            <Route path="/futsal" element={<FutsalLeaguePage />} />
-            <Route path="/results" element={<ResultsPage />} />
-            <Route path="/standings" element={<StandingsPage />} />
-            <Route path="/outright" element={<OutrightPage />} />
-            <Route path="/dc13" element={<DC13Page />} />
-            <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
-          </Routes>
-          <div className="hidden lg:block fixed top-[120px] left-4 z-40 pointer-events-none">
-            <div className="pointer-events-auto flex flex-col gap-8 pl-2">
-              <RealTimeClock />
-              <CountdownClock />
+                <NavLink to="/futsal" className={mobileFutsalCls} onClick={() => setMobileOpen(false)}>
+                  TIP Futsal 2026
+                  <span className="absolute top-4 right-6 bg-rose-500 text-[8px] px-2.5 py-0.5 rounded-full text-white font-black">
+                    HOT
+                  </span>
+                </NavLink>
+
+                <NavLink to="/dc13" className={mobileDC13Cls} onClick={() => setMobileOpen(false)}>
+                  DC 13
+                  <span className="absolute top-4 right-6 bg-cyan-500 text-[8px] px-2.5 py-0.5 rounded-full text-black font-black">
+                    NEW
+                  </span>
+                </NavLink>
+
+                <NavLink to="/admin" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
+                  Admin
+                </NavLink>
+
+                {session && (
+                  <div className="w-full pt-6 border-t border-white/5 flex flex-col items-center gap-3">
+                    <span className="text-[12px] text-slate-500 font-bold uppercase">Tài khoản</span>
+                    <span className="text-sm font-black text-slate-300">
+                      {fullName || session.user.user_metadata?.full_name || session.user.email}
+                    </span>
+                    <button
+                      onClick={async () => {
+                        await supabase.auth.signOut();
+                        setAdminAuthenticated(false);
+                        setMobileOpen(false);
+                      }}
+                      className="w-full py-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-xs font-black uppercase tracking-widest border border-rose-500/20 active:scale-95 transition-all"
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Spacer for fixed top nav (28px warning + 80px nav = 108px) */}
+            <div className="h-[108px]" />
+            <Routes>
+              <Route path="/" element={<MatchPage />} />
+              <Route path="/futsal" element={<FutsalLeaguePage />} />
+              <Route path="/results" element={<ResultsPage />} />
+              <Route path="/standings" element={<StandingsPage />} />
+              <Route path="/outright" element={<OutrightPage />} />
+              <Route path="/dc13" element={<DC13Page />} />
+              <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
+            </Routes>
+            <div className="hidden lg:block fixed top-[120px] left-4 z-40 pointer-events-none">
+              <div className="pointer-events-auto flex flex-col gap-8 pl-2">
+                <RealTimeClock />
+                <CountdownClock />
+              </div>
+            </div>
+            <Footer />
+            <ScrollToTop />
           </div>
-          <Footer />
-          <ScrollToTop />
-        </div>
-      </BrowserRouter>
+        </BrowserRouter>
+      </ToastProvider>
     </AppContext.Provider>
   );
 }

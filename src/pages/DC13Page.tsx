@@ -29,6 +29,90 @@ interface PlayerStats {
   total_penalty: number; // negative number
 }
 
+// ─── Skeleton Component for Match Card ──────────────────────────────────────
+const MatchCardSkeleton: React.FC = () => {
+  return (
+    <div className="bg-slate-950/40 backdrop-blur-2xl border border-white/[0.06] rounded-2xl md:rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)] animate-pulse">
+      {/* Skeleton header */}
+      <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between gap-3 bg-slate-900/20">
+        <div className="flex items-center gap-2">
+          {/* Status badge skeleton */}
+          <div className="w-16 h-5 bg-slate-800 rounded-full animate-pulse" />
+          {/* Time skeleton */}
+          <div className="w-24 h-4 bg-slate-800/60 rounded" />
+        </div>
+        {/* Right badge skeleton */}
+        <div className="w-20 h-5 bg-slate-800/60 rounded-full" />
+      </div>
+
+      {/* Teams display skeleton */}
+      <div className="px-5 py-5 md:py-6">
+        <div className="flex items-center justify-between gap-3">
+          {/* Team A */}
+          <div className="flex-1 flex flex-col items-center">
+            {/* Flag flag skeleton */}
+            <div className="w-14 h-14 md:w-16 md:h-16 bg-slate-800/80 rounded-2xl border border-white/5 mb-2" />
+            {/* Team name skeleton */}
+            <div className="w-20 h-4 bg-slate-800/80 rounded mb-1.5" />
+            {/* Bet count skeleton */}
+            <div className="w-12 h-3 bg-slate-800/60 rounded mb-1.5" />
+            {/* Handicap skeleton */}
+            <div className="w-24 h-4 bg-slate-800/60 rounded" />
+          </div>
+
+          {/* VS skeleton */}
+          <div className="px-3 text-center">
+            <div className="text-xl font-bold text-slate-700 italic">VS</div>
+          </div>
+
+          {/* Team B */}
+          <div className="flex-1 flex flex-col items-center">
+            {/* Flag flag skeleton */}
+            <div className="w-14 h-14 md:w-16 md:h-16 bg-slate-800/80 rounded-2xl border border-white/5 mb-2" />
+            {/* Team name skeleton */}
+            <div className="w-20 h-4 bg-slate-800/80 rounded mb-1.5" />
+            {/* Bet count skeleton */}
+            <div className="w-12 h-3 bg-slate-800/60 rounded mb-1.5" />
+            {/* Handicap skeleton */}
+            <div className="w-24 h-4 bg-slate-800/60 rounded" />
+          </div>
+        </div>
+
+        {/* Bet button skeleton */}
+        <div className="w-full h-11 bg-slate-800/50 rounded-xl mt-4" />
+      </div>
+    </div>
+  );
+};
+
+// ─── Skeleton Component for Admin Match Row ─────────────────────────────────
+const AdminMatchRowSkeleton: React.FC = () => {
+  return (
+    <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-4 md:p-5 animate-pulse">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="w-10 h-10 bg-slate-800/80 rounded-xl border border-white/5" />
+            <div className="w-10 h-10 bg-slate-800/80 rounded-xl border border-white/5" />
+          </div>
+          <div className="space-y-2">
+            <div className="w-32 h-4 bg-slate-800/80 rounded" />
+            <div className="flex gap-2">
+              <div className="w-10 h-3.5 bg-slate-800/60 rounded-full" />
+              <div className="w-20 h-3.5 bg-slate-800/60 rounded" />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2 justify-end shrink-0">
+          <div className="w-16 h-9 bg-slate-800/60 rounded-xl" />
+          <div className="w-9 h-9 bg-slate-800/60 rounded-xl" />
+          <div className="w-9 h-9 bg-slate-800/60 rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // DC13Page Component
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -38,12 +122,32 @@ const DC13Page: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [bets, setBets] = useState<DC13Bet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cardsLoading, setCardsLoading] = useState(false);
 
   // Date Filtering
   const [filter, setFilter] = useState<'date' | 'live' | 'all'>('date');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const scrollerRef = useRef<HTMLDivElement>(null);
   const adminScrollerRef = useRef<HTMLDivElement>(null);
+
+  // Filter change handlers with local cardsLoading skeleton triggers
+  const handleSelectDate = (date: string) => {
+    if (date === selectedDate) return;
+    setCardsLoading(true);
+    setSelectedDate(date);
+    setTimeout(() => {
+      setCardsLoading(false);
+    }, 350);
+  };
+
+  const handleFilterChange = (newFilter: 'date' | 'live' | 'all') => {
+    if (newFilter === filter) return;
+    setCardsLoading(true);
+    setFilter(newFilter);
+    setTimeout(() => {
+      setCardsLoading(false);
+    }, 350);
+  };
 
   // Auth & modal
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -76,24 +180,28 @@ const DC13Page: React.FC = () => {
       // Exclude TIP Futsal league
       const wcMatches = data.filter(m => m.league !== 'TIP Futsal league');
       setMatches(wcMatches);
-
-      // Auto-set the initial selected date if not set yet, matching MatchPage behavior
-      if (wcMatches.length > 0 && !selectedDate) {
-        const wcDates = [...new Set(wcMatches.map(m => new Date(m.start_time).toLocaleDateString('vi-VN')))].sort((a, b) => {
-          const [da, ma, ya] = a.split('/').map(Number);
-          const [db, mb, yb] = b.split('/').map(Number);
-          return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime();
-        });
-
-        const startingDate = wcDates.find(d => {
-          const [day, month] = d.split('/').map(Number);
-          return day === 12 && month === 6;
-        }) || wcDates[0];
-
-        setSelectedDate(startingDate);
-      }
     }
-  }, [selectedDate]);
+  }, []);
+
+  // Auto-set the initial selected date if not set yet, matching MatchPage behavior
+  const initialDateSetRef = useRef(false);
+  useEffect(() => {
+    if (matches.length > 0 && !selectedDate && !initialDateSetRef.current) {
+      initialDateSetRef.current = true;
+      const wcDates = [...new Set(matches.map(m => new Date(m.start_time).toLocaleDateString('vi-VN')))].sort((a, b) => {
+        const [da, ma, ya] = a.split('/').map(Number);
+        const [db, mb, yb] = b.split('/').map(Number);
+        return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime();
+      });
+
+      const startingDate = wcDates.find(d => {
+        const [day, month] = d.split('/').map(Number);
+        return day === 12 && month === 6;
+      }) || wcDates[0];
+
+      setSelectedDate(startingDate);
+    }
+  }, [matches, selectedDate]);
 
   const fetchBets = useCallback(async () => {
     const { data } = await supabase
@@ -675,132 +783,132 @@ const DC13Page: React.FC = () => {
           </div>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
-          </div>
-        ) : (
-          <>
-            {/* ═══════════════════════════════════════════════════════════════ */}
-            {/* TAB 1: MATCHES & BET                                           */}
-            {/* ═══════════════════════════════════════════════════════════════ */}
-            {activeTab === 'matches' && (
-              <div className="space-y-4">
-                {/* User login status */}
-                {!session && (
-                  <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-2xl p-4 text-center">
-                    <p className="text-lg text-slate-400">
-                      <button onClick={() => setShowAuthModal(true)} className="text-cyan-400 font-black underline underline-offset-2 hover:text-cyan-300 transition-colors">
-                        Đăng nhập
-                      </button>
-                      {' '}để bắt đầu bet trận đấu
-                    </p>
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* TAB 1: MATCHES & BET                                           */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {activeTab === 'matches' && (
+          <div className="space-y-4">
+            {/* User login status */}
+            {!session && (
+              <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-2xl p-4 text-center">
+                <p className="text-lg text-slate-400">
+                  <button onClick={() => setShowAuthModal(true)} className="text-cyan-400 font-black underline underline-offset-2 hover:text-cyan-300 transition-colors">
+                    Đăng nhập
+                  </button>
+                  {' '}để bắt đầu bet trận đấu
+                </p>
+              </div>
+            )}
+
+            {/* My stats quick view */}
+            {session && myBetsWithResult.length > 0 && (
+              <div className="bg-gradient-to-r from-[#0f2441]/80 via-[#0a182b]/80 to-slate-900/80 backdrop-blur-3xl border border-cyan-500/30 rounded-3xl p-5 flex items-center justify-between gap-5 flex-wrap shadow-[0_12px_40px_rgba(0,0,0,0.6),inset_0_1px_2px_rgba(255,255,255,0.06)] hover:border-cyan-400/50 transition-all duration-300">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 bg-cyan-500/20 rounded-2xl flex items-center justify-center text-base border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">👤</div>
+                  <div>
+                    <p className="text-base font-extrabold text-white tracking-wide">{fullName || user?.user_metadata?.full_name || user?.email?.split('@')[0]}</p>
+                    <p className="text-[11px] text-cyan-400/70 font-black uppercase tracking-wider mt-0.5">DC 13 Player</p>
                   </div>
-                )}
-
-                {/* My stats quick view */}
-                {session && myBetsWithResult.length > 0 && (
-                  <div className="bg-gradient-to-r from-[#0f2441]/80 via-[#0a182b]/80 to-slate-900/80 backdrop-blur-3xl border border-cyan-500/30 rounded-3xl p-5 flex items-center justify-between gap-5 flex-wrap shadow-[0_12px_40px_rgba(0,0,0,0.6),inset_0_1px_2px_rgba(255,255,255,0.06)] hover:border-cyan-400/50 transition-all duration-300">
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-10 h-10 bg-cyan-500/20 rounded-2xl flex items-center justify-center text-base border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">👤</div>
-                      <div>
-                        <p className="text-base font-extrabold text-white tracking-wide">{fullName || user?.user_metadata?.full_name || user?.email?.split('@')[0]}</p>
-                        <p className="text-[11px] text-cyan-400/70 font-black uppercase tracking-wider mt-0.5">DC 13 Player</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-6 text-center">
-                      <div className="bg-slate-950/40 px-4 py-2 rounded-2xl border border-white/[0.03]">
-                        <p className="text-xl font-extrabold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">{myBetsWithResult.filter(b => b.effectiveResult === 'win').length}</p>
-                        <p className="text-[10px] font-black text-slate-500 uppercase mt-0.5 tracking-wider">Thắng</p>
-                      </div>
-                      <div className="bg-slate-950/40 px-4 py-2 rounded-2xl border border-white/[0.03]">
-                        <p className="text-xl font-extrabold text-rose-400 drop-shadow-[0_0_8px_rgba(251,113,133,0.4)]">{myBetsWithResult.filter(b => b.effectiveResult === 'loss').length}</p>
-                        <p className="text-[10px] font-black text-slate-500 uppercase mt-0.5 tracking-wider">Thua</p>
-                      </div>
-                      <div className="bg-slate-950/40 px-4 py-2 rounded-2xl border border-white/[0.03]">
-                        <p className="text-xl font-extrabold text-rose-400 drop-shadow-[0_0_8px_rgba(251,113,133,0.4)]">
-                          {(-myBetsWithResult.filter(b => b.effectiveResult === 'loss').length * PENALTY_AMOUNT).toLocaleString('vi-VN')}đ
-                        </p>
-                        <p className="text-[10px] font-black text-slate-500 uppercase mt-0.5 tracking-wider">Tổng phạt</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Date/Status Filters & Scroller */}
-                <div className="flex flex-col lg:flex-row items-center gap-6 bg-slate-900/60 backdrop-blur-xl p-4 rounded-[32px] border border-cyan-500/20 mb-6 shadow-[0_15px_35px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.05)]">
-                  <div className="flex items-center gap-2 shrink-0 bg-slate-950/40 p-1 rounded-2xl border border-white/[0.03]">
-                    <button
-                      onClick={() => setFilter('date')}
-                      className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border ${filter === 'date' ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white border-cyan-400/30 shadow-[0_4px_15px_rgba(6,182,212,0.4)]' : 'border-transparent text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10'}`}
-                    >
-                      Theo Ngày
-                    </button>
-                    <button
-                      onClick={() => setFilter('live')}
-                      className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border ${filter === 'live' ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white border-rose-400/30 shadow-[0_4px_15px_rgba(244,63,94,0.4)] animate-pulse' : 'border-transparent text-slate-400 hover:text-rose-400 hover:bg-rose-500/10'}`}
-                    >
-                      Đang Đá
-                    </button>
-                    <button
-                      onClick={() => setFilter('all')}
-                      className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border ${filter === 'all' ? 'bg-gradient-to-r from-slate-600 to-slate-700 text-white border-slate-500/30 shadow-[0_4px_15px_rgba(71,85,105,0.4)]' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
-                    >
-                      Tất Cả
-                    </button>
-                  </div>
-
-                  {/* Date Scroller */}
-                  {filter === 'date' && uniqueDates.length > 0 && (
-                    <div className="flex-1 flex items-center gap-2.5 w-full max-w-2xl min-w-0">
-                      <button
-                        onClick={() => scrollerRef.current?.scrollBy({ left: -150, behavior: 'smooth' })}
-                        className="shrink-0 w-8 h-8 flex items-center justify-center bg-slate-950/60 border border-white/5 hover:border-cyan-500/30 rounded-full text-white/50 hover:text-cyan-400 transition-all text-xs shadow-sm"
-                      >
-                        ◀
-                      </button>
-
-                      <div
-                        ref={scrollerRef}
-                        className="flex-1 overflow-x-auto no-scrollbar flex items-center gap-3 scroll-smooth py-1"
-                      >
-                        {uniqueDates.map((date) => {
-                          const [d] = date.split('/');
-                          const isActive = selectedDate === date;
-                          return (
-                            <button
-                              key={date}
-                              onClick={() => setSelectedDate(date)}
-                              className={`flex flex-col items-center min-w-[55px] py-1.5 rounded-xl border transition-all shrink-0 ${isActive
-                                ? 'bg-gradient-to-b from-cyan-500/25 to-cyan-600/10 border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.25)] text-white scale-[1.02]'
-                                : 'bg-slate-950/50 border-white/[0.04] hover:bg-cyan-500/15 hover:border-cyan-500/40 hover:text-cyan-400 shadow-sm'
-                                }`}
-                            >
-                              <span className={`text-[10px] font-black uppercase tracking-wide ${isActive ? 'text-cyan-400' : 'text-slate-500'}`}>{getWeekday(date)}</span>
-                              <span className={`text-xs font-black leading-tight ${isActive ? 'text-white' : 'text-slate-300'}`}>{d}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      <button
-                        onClick={() => scrollerRef.current?.scrollBy({ left: 150, behavior: 'smooth' })}
-                        className="shrink-0 w-8 h-8 flex items-center justify-center bg-slate-950/60 border border-white/5 hover:border-cyan-500/30 rounded-full text-white/50 hover:text-cyan-400 transition-all text-xs shadow-sm"
-                      >
-                        ▶
-                      </button>
-                    </div>
-                  )}
                 </div>
-
-                {filteredMatches.length === 0 ? (
-                  <div className="text-center py-16 text-slate-500">
-                    <p className="text-4xl mb-4">⚽</p>
-                    <p className="font-black uppercase tracking-widest text-sm">Chưa có trận đấu nào</p>
-                    <p className="text-xs mt-1 text-slate-600">Admin hãy thêm trận đấu trong tab Admin</p>
+                <div className="flex gap-6 text-center">
+                  <div className="bg-slate-950/40 px-4 py-2 rounded-2xl border border-white/[0.03]">
+                    <p className="text-xl font-extrabold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">{myBetsWithResult.filter(b => b.effectiveResult === 'win').length}</p>
+                    <p className="text-[10px] font-black text-slate-500 uppercase mt-0.5 tracking-wider">Thắng</p>
                   </div>
-                ) : (
-                  filteredMatches.map(match => {
+                  <div className="bg-slate-950/40 px-4 py-2 rounded-2xl border border-white/[0.03]">
+                    <p className="text-xl font-extrabold text-rose-400 drop-shadow-[0_0_8px_rgba(251,113,133,0.4)]">{myBetsWithResult.filter(b => b.effectiveResult === 'loss').length}</p>
+                    <p className="text-[10px] font-black text-slate-500 uppercase mt-0.5 tracking-wider">Thua</p>
+                  </div>
+                  <div className="bg-slate-950/40 px-4 py-2 rounded-2xl border border-white/[0.03]">
+                    <p className="text-xl font-extrabold text-rose-400 drop-shadow-[0_0_8px_rgba(251,113,133,0.4)]">
+                      {(-myBetsWithResult.filter(b => b.effectiveResult === 'loss').length * PENALTY_AMOUNT).toLocaleString('vi-VN')}đ
+                    </p>
+                    <p className="text-[10px] font-black text-slate-500 uppercase mt-0.5 tracking-wider">Tổng phạt</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Date/Status Filters & Scroller */}
+            <div className="flex flex-col lg:flex-row items-center gap-6 bg-slate-900/60 backdrop-blur-xl p-4 rounded-[32px] border border-cyan-500/20 mb-6 shadow-[0_15px_35px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.05)]">
+              <div className="flex items-center gap-2 shrink-0 bg-slate-950/40 p-1 rounded-2xl border border-white/[0.03]">
+                <button
+                  onClick={() => handleFilterChange('date')}
+                  className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border ${filter === 'date' ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white border-cyan-400/30 shadow-[0_4px_15px_rgba(6,182,212,0.4)]' : 'border-transparent text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10'}`}
+                >
+                  Theo Ngày
+                </button>
+                <button
+                  onClick={() => handleFilterChange('live')}
+                  className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border ${filter === 'live' ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white border-rose-400/30 shadow-[0_4px_15px_rgba(244,63,94,0.4)] animate-pulse' : 'border-transparent text-slate-400 hover:text-rose-400 hover:bg-rose-500/10'}`}
+                >
+                  Đang Đá
+                </button>
+                <button
+                  onClick={() => handleFilterChange('all')}
+                  className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border ${filter === 'all' ? 'bg-gradient-to-r from-slate-600 to-slate-700 text-white border-slate-500/30 shadow-[0_4px_15px_rgba(71,85,105,0.4)]' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
+                >
+                  Tất Cả
+                </button>
+              </div>
+
+              {/* Date Scroller */}
+              {filter === 'date' && uniqueDates.length > 0 && (
+                <div className="flex-1 flex items-center gap-2.5 w-full max-w-2xl min-w-0">
+                  <button
+                    onClick={() => scrollerRef.current?.scrollBy({ left: -150, behavior: 'smooth' })}
+                    className="shrink-0 w-8 h-8 flex items-center justify-center bg-slate-950/60 border border-white/5 hover:border-cyan-500/30 rounded-full text-white/50 hover:text-cyan-400 transition-all text-xs shadow-sm"
+                  >
+                    ◀
+                  </button>
+
+                  <div
+                    ref={scrollerRef}
+                    className="flex-1 overflow-x-auto no-scrollbar flex items-center gap-3 scroll-smooth py-1"
+                  >
+                    {uniqueDates.map((date) => {
+                      const [d] = date.split('/');
+                      const isActive = selectedDate === date;
+                      return (
+                        <button
+                          key={date}
+                          onClick={() => handleSelectDate(date)}
+                          className={`flex flex-col items-center min-w-[55px] py-1.5 rounded-xl border transition-all shrink-0 ${isActive
+                            ? 'bg-gradient-to-b from-cyan-500/25 to-cyan-600/10 border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.25)] text-white scale-[1.02]'
+                            : 'bg-slate-950/50 border-white/[0.04] hover:bg-cyan-500/15 hover:border-cyan-500/40 hover:text-cyan-400 shadow-sm'
+                            }`}
+                        >
+                          <span className={`text-[10px] font-black uppercase tracking-wide ${isActive ? 'text-cyan-400' : 'text-slate-500'}`}>{getWeekday(date)}</span>
+                          <span className={`text-xs font-black leading-tight ${isActive ? 'text-white' : 'text-slate-300'}`}>{d}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => scrollerRef.current?.scrollBy({ left: 150, behavior: 'smooth' })}
+                    className="shrink-0 w-8 h-8 flex items-center justify-center bg-slate-950/60 border border-white/5 hover:border-cyan-500/30 rounded-full text-white/50 hover:text-cyan-400 transition-all text-xs shadow-sm"
+                  >
+                    ▶
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {loading || cardsLoading ? (
+              <div className="space-y-4">
+                <MatchCardSkeleton />
+                <MatchCardSkeleton />
+                <MatchCardSkeleton />
+              </div>
+            ) : filteredMatches.length === 0 ? (
+              <div className="text-center py-16 text-slate-500">
+                <p className="text-4xl mb-4">⚽</p>
+                <p className="font-black uppercase tracking-widest text-sm">Chưa có trận đấu nào</p>
+                <p className="text-xs mt-1 text-slate-600">Admin hãy thêm trận đấu trong tab Admin</p>
+              </div>
+            ) : (
+              filteredMatches.map(match => {
                     const locked = isDC13BettingLocked(match);
                     const alreadyBet = myBetMatchIds.has(match.id);
                     const myBet = myBets.find(b => b.match_id === match.id);
@@ -1069,7 +1177,12 @@ const DC13Page: React.FC = () => {
             {/* TAB 2: STATISTICS                                              */}
             {/* ═══════════════════════════════════════════════════════════════ */}
             {activeTab === 'stats' && (
-              <div className="space-y-6">
+              loading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
+                </div>
+              ) : (
+                <div className="space-y-6">
                 {/* Prize Forecast Panel */}
                 <div className="bg-gradient-to-br from-[#0c1f38]/60 to-slate-950/60 border border-cyan-500/25 rounded-3xl p-5 md:p-6 shadow-[0_15px_35px_rgba(0,0,0,0.4)]">
                   <div className="flex items-center justify-between gap-4 mb-5 flex-wrap border-b border-white/5 pb-4">
@@ -1079,7 +1192,7 @@ const DC13Page: React.FC = () => {
                     </div>
                     <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl px-4 py-2 flex items-center gap-2 shadow-inner">
                       <span className="text-sm">💰</span>
-                      <span className="text-[10px] font-black text-cyan-400/80 uppercase tracking-wider">Tổng quỹ phạt thu (Admin nhận):</span>
+                      <span className="text-[10px] font-black text-cyan-400/80 uppercase tracking-wider">Tổng quỹ phạt thu (IC nhận):</span>
                       <span className="text-base font-extrabold text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.4)]">
                         {playerStats.reduce((sum, p) => sum + Math.abs(p.total_penalty), 0).toLocaleString('vi-VN')}đ
                       </span>
@@ -1250,7 +1363,8 @@ const DC13Page: React.FC = () => {
                     </div>
                   </div>
                 )}
-              </div>
+                </div>
+              )
             )}
 
             {/* ═══════════════════════════════════════════════════════════════ */}
@@ -1343,7 +1457,12 @@ const DC13Page: React.FC = () => {
             {/* TAB 4: ADMIN                                                   */}
             {/* ═══════════════════════════════════════════════════════════════ */}
             {activeTab === 'admin' && (
-              <>
+              loading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
+                </div>
+              ) : (
+                <>
                 {!adminAuthed ? (
                   /* Admin PIN */
                   <div className="flex items-center justify-center py-16">
@@ -1563,19 +1682,19 @@ const DC13Page: React.FC = () => {
                     <div className="flex flex-col md:flex-row items-center gap-6 bg-white/5 backdrop-blur-md p-3 rounded-[32px] border border-white/10 mb-6">
                       <div className="flex items-center gap-2 shrink-0">
                         <button
-                          onClick={() => setFilter('date')}
+                          onClick={() => handleFilterChange('date')}
                           className={`px-4 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${filter === 'date' ? 'bg-cyan-600 text-white shadow-xl shadow-cyan-900/40' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
                         >
                           Theo Ngày
                         </button>
                         <button
-                          onClick={() => setFilter('live')}
+                          onClick={() => handleFilterChange('live')}
                           className={`px-4 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${filter === 'live' ? 'bg-rose-600 text-white shadow-xl animate-pulse' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
                         >
                           Đang Đá
                         </button>
                         <button
-                          onClick={() => setFilter('all')}
+                          onClick={() => handleFilterChange('all')}
                           className={`px-4 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${filter === 'all' ? 'bg-slate-700 text-white shadow-xl' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
                         >
                           Tất Cả
@@ -1602,7 +1721,7 @@ const DC13Page: React.FC = () => {
                               return (
                                 <button
                                   key={date}
-                                  onClick={() => setSelectedDate(date)}
+                                  onClick={() => handleSelectDate(date)}
                                   className={`flex flex-col items-center min-w-[55px] py-1.5 rounded-xl border transition-all shrink-0 ${isActive
                                     ? 'bg-cyan-500/20 border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.2)] text-white'
                                     : 'bg-white/5 border-white/5 hover:bg-white/10 text-slate-400'
@@ -1627,7 +1746,13 @@ const DC13Page: React.FC = () => {
 
                     {/* Match list */}
                     <div className="space-y-3">
-                      {filteredMatches.length === 0 ? (
+                      {cardsLoading ? (
+                        <>
+                          <AdminMatchRowSkeleton />
+                          <AdminMatchRowSkeleton />
+                          <AdminMatchRowSkeleton />
+                        </>
+                      ) : filteredMatches.length === 0 ? (
                         <div className="text-center py-12 text-slate-500">
                           <p className="font-black uppercase tracking-widest text-sm">Chương trình không tìm thấy trận đấu nào</p>
                         </div>
@@ -1717,9 +1842,8 @@ const DC13Page: React.FC = () => {
                   </div>
                 )}
               </>
-            )}
-          </>
-        )}
+            )
+          )}
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
