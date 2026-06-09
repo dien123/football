@@ -1090,7 +1090,7 @@ const DC13Page: React.FC = () => {
                     {/* Hạng Nhất */}
                     <div className="bg-gradient-to-b from-amber-500/15 via-amber-600/5 to-slate-950/20 border border-amber-500/30 rounded-2xl p-4 flex flex-col justify-between min-h-[110px] shadow-[0_0_25px_rgba(245,158,11,0.08)] hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.18)] hover:scale-[1.02] transition-all duration-300">
                       <div>
-                        <p className="text-[11px] font-black text-amber-400/80 uppercase tracking-wider flex items-center gap-1.5">🥇 GIẢI NHẤT (300K)</p>
+                        <p className="text-[11px] font-black text-amber-400/80 uppercase tracking-wider flex items-center gap-1.5">🥇 GIẢI NHẤT (200K)</p>
                         <p className="text-sm font-black text-white mt-1.5 tracking-wide">
                           {prizeStandings.first ? prizeStandings.first.player.user_name : 'Chưa có'}
                         </p>
@@ -1108,7 +1108,7 @@ const DC13Page: React.FC = () => {
                     {/* Hạng Nhì */}
                     <div className="bg-gradient-to-b from-slate-300/15 via-slate-400/5 to-slate-950/20 border border-slate-400/30 rounded-2xl p-4 flex flex-col justify-between min-h-[110px] shadow-[0_0_25px_rgba(148,163,184,0.08)] hover:border-slate-300 hover:shadow-[0_0_30px_rgba(148,163,184,0.18)] hover:scale-[1.02] transition-all duration-300">
                       <div>
-                        <p className="text-[11px] font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">🥈 GIẢI NHÌ (200K)</p>
+                        <p className="text-[11px] font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">🥈 GIẢI NHÌ (150K)</p>
                         <p className="text-sm font-black text-white mt-1.5 tracking-wide">
                           {prizeStandings.second ? prizeStandings.second.player.user_name : 'Chưa có'}
                         </p>
@@ -1304,11 +1304,11 @@ const DC13Page: React.FC = () => {
                         <div className="space-y-3 border-b border-white/5 pb-3">
                           <div className="flex items-center justify-between text-xs">
                             <span className="font-bold text-slate-300">🥇 Giải Nhất:</span>
-                            <span className="font-black text-cyan-300 text-sm">300.000đ</span>
+                            <span className="font-black text-cyan-300 text-sm">200.000đ</span>
                           </div>
                           <div className="flex items-center justify-between text-xs">
                             <span className="font-bold text-slate-300">🥈 Giải Nhì:</span>
-                            <span className="font-black text-cyan-300 text-sm">200.000đ</span>
+                            <span className="font-black text-cyan-300 text-sm">150.000đ</span>
                           </div>
                           <div className="flex items-center justify-between text-xs">
                             <span className="font-bold text-slate-300">🥉 Giải Ba:</span>
