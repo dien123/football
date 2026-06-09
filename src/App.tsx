@@ -113,7 +113,7 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
 
         {/* Desktop Nav Links */}
         <div className="hidden lg:flex items-center gap-2 flex-1 justify-center px-8">
-          <NavLink to="/" className={linkCls} end>Đặt Cược</NavLink>
+          <NavLink to="/" className={linkCls} end>Dự đoán</NavLink>
           <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
           <NavLink to="/results" className={linkCls}>Kết Quả - Thống Kê</NavLink>
           {/* <NavLink to="/outright" className={outrightCls}>
@@ -290,7 +290,7 @@ function App() {
             >
               <div className="flex flex-col items-center justify-start p-6 space-y-4 h-full overflow-y-auto pb-20">
                 <NavLink to="/" className={mobileLinkCls} onClick={() => setMobileOpen(false)} end>
-                  Đặt Cược
+                  Dự đoán
                 </NavLink>
                 <NavLink to="/standings" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
                   Bảng Xếp Hạng

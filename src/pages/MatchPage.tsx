@@ -142,11 +142,11 @@ const MatchPage: React.FC = () => {
         });
 
       if (error) {
-        alert('Lỗi khi đặt cược: ' + error.message);
+        alert('Lỗi khi dự đoán: ' + error.message);
       } else {
         setModalOpen(false);
         setRefreshTrigger(prev => prev + 1);
-        alert('Đặt cược thành công!');
+        alert('Dự đoán thành công!');
       }
     }
   };
