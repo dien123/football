@@ -862,47 +862,45 @@ const DC13Page: React.FC = () => {
                 </button>
               </div>
 
-              {/* Date Scroller */}
-              {filter === 'date' && uniqueDates.length > 0 && (
-                <div className="flex-1 flex items-center gap-2.5 w-full max-w-2xl min-w-0">
-                  <button
-                    onClick={() => scrollerRef.current?.scrollBy({ left: -150, behavior: 'smooth' })}
-                    className="shrink-0 w-8 h-8 flex items-center justify-center bg-slate-950/60 border border-white/5 hover:border-cyan-500/30 rounded-full text-white/50 hover:text-cyan-400 transition-all text-xs shadow-sm"
-                  >
-                    ◀
-                  </button>
+              {/* Date Scroller - always rendered for stable height, hidden when not date filter */}
+              <div className={`flex-1 flex items-center gap-2.5 w-full max-w-2xl min-w-0 ${filter !== 'date' || uniqueDates.length === 0 ? 'invisible' : ''}`} style={{ minHeight: '42px' }}>
+                <button
+                  onClick={() => scrollerRef.current?.scrollBy({ left: -150, behavior: 'smooth' })}
+                  className="shrink-0 w-8 h-8 flex items-center justify-center bg-slate-950/60 border border-white/5 hover:border-cyan-500/30 rounded-full text-white/50 hover:text-cyan-400 transition-all text-xs shadow-sm"
+                >
+                  ◀
+                </button>
 
-                  <div
-                    ref={scrollerRef}
-                    className="flex-1 overflow-x-auto no-scrollbar flex items-center gap-3 scroll-smooth py-1"
-                  >
-                    {uniqueDates.map((date) => {
-                      const [d] = date.split('/');
-                      const isActive = selectedDate === date;
-                      return (
-                        <button
-                          key={date}
-                          onClick={() => handleSelectDate(date)}
-                          className={`flex flex-col items-center min-w-[55px] py-1.5 rounded-xl border transition-all shrink-0 ${isActive
-                            ? 'bg-gradient-to-b from-cyan-500/25 to-cyan-600/10 border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.25)] text-white scale-[1.02]'
-                            : 'bg-slate-950/50 border-white/[0.04] hover:bg-cyan-500/15 hover:border-cyan-500/40 hover:text-cyan-400 shadow-sm'
-                            }`}
-                        >
-                          <span className={`text-[10px] font-black uppercase tracking-wide ${isActive ? 'text-cyan-400' : 'text-slate-500'}`}>{getWeekday(date)}</span>
-                          <span className={`text-xs font-black leading-tight ${isActive ? 'text-white' : 'text-slate-300'}`}>{d}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <button
-                    onClick={() => scrollerRef.current?.scrollBy({ left: 150, behavior: 'smooth' })}
-                    className="shrink-0 w-8 h-8 flex items-center justify-center bg-slate-950/60 border border-white/5 hover:border-cyan-500/30 rounded-full text-white/50 hover:text-cyan-400 transition-all text-xs shadow-sm"
-                  >
-                    ▶
-                  </button>
+                <div
+                  ref={scrollerRef}
+                  className="flex-1 overflow-x-auto no-scrollbar flex items-center gap-3 scroll-smooth py-1"
+                >
+                  {uniqueDates.map((date) => {
+                    const [d] = date.split('/');
+                    const isActive = selectedDate === date;
+                    return (
+                      <button
+                        key={date}
+                        onClick={() => handleSelectDate(date)}
+                        className={`flex flex-col items-center min-w-[55px] py-1.5 rounded-xl border transition-all shrink-0 ${isActive
+                          ? 'bg-gradient-to-b from-cyan-500/25 to-cyan-600/10 border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.25)] text-white scale-[1.02]'
+                          : 'bg-slate-950/50 border-white/[0.04] hover:bg-cyan-500/15 hover:border-cyan-500/40 hover:text-cyan-400 shadow-sm'
+                          }`}
+                      >
+                        <span className={`text-[10px] font-black uppercase tracking-wide ${isActive ? 'text-cyan-400' : 'text-slate-500'}`}>{getWeekday(date)}</span>
+                        <span className={`text-xs font-black leading-tight ${isActive ? 'text-white' : 'text-slate-300'}`}>{d}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
+
+                <button
+                  onClick={() => scrollerRef.current?.scrollBy({ left: 150, behavior: 'smooth' })}
+                  className="shrink-0 w-8 h-8 flex items-center justify-center bg-slate-950/60 border border-white/5 hover:border-cyan-500/30 rounded-full text-white/50 hover:text-cyan-400 transition-all text-xs shadow-sm"
+                >
+                  ▶
+                </button>
+              </div>
             </div>
 
             {loading || cardsLoading ? (
@@ -918,7 +916,8 @@ const DC13Page: React.FC = () => {
                 <p className="text-xs mt-1 text-slate-600">Admin hãy thêm trận đấu trong tab Admin</p>
               </div>
             ) : (
-              filteredMatches.map(match => {
+              <div className={filter === 'all' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
+              {filteredMatches.map(match => {
                     const locked = isDC13BettingLocked(match);
                     const alreadyBet = myBetMatchIds.has(match.id);
                     const myBet = myBets.find(b => b.match_id === match.id);
@@ -928,7 +927,7 @@ const DC13Page: React.FC = () => {
                     const computedResult = getMatchResult(match);
 
                     return (
-                      <div key={match.id} className="bg-slate-950/40 backdrop-blur-2xl border border-white/[0.06] rounded-2xl md:rounded-3xl overflow-hidden group hover:border-cyan-500/40 hover:bg-slate-900/40 shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:shadow-[0_15px_45px_rgba(6,182,212,0.18)] transition-all duration-300">
+                      <div key={match.id} className="flex flex-col h-full bg-slate-950/40 backdrop-blur-2xl border border-white/[0.06] rounded-2xl md:rounded-3xl overflow-hidden group hover:border-cyan-500/40 hover:bg-slate-900/40 shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:shadow-[0_15px_45px_rgba(6,182,212,0.18)] transition-all duration-300">
                         {/* Match header info */}
                         <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between gap-3 flex-wrap bg-slate-900/20">
                           <div className="flex items-center gap-2">
@@ -957,8 +956,8 @@ const DC13Page: React.FC = () => {
                         </div>
 
                         {/* Teams display */}
-                        <div className="px-5 py-5 md:py-6">
-                          <div className="flex items-center justify-between gap-3">
+                        <div className="px-5 py-5 md:py-6 flex flex-col flex-1">
+                          <div className="flex items-start justify-between gap-3">
                             {/* Team A */}
                             <div className="flex-1 text-center">
                               <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-slate-900 rounded-2xl overflow-hidden border border-white/10 mb-2 group-hover:border-cyan-500/40 shadow-inner transition-all duration-300">
@@ -968,7 +967,7 @@ const DC13Page: React.FC = () => {
                                   <div className="w-full h-full flex items-center justify-center text-2xl">⚽</div>
                                 )}
                               </div>
-                              <p className="text-sm md:text-base font-black text-white uppercase tracking-tight">{match.team_a_name}</p>
+                              <p className="text-sm md:text-base font-black text-white uppercase tracking-tight min-h-[40px] md:min-h-[48px] flex items-center justify-center">{match.team_a_name}</p>
                               <p className="text-[13px] text-slate-500 font-bold mt-0.5">{teamABets} bet{teamABets !== 1 ? 's' : ''}</p>
                               <div className="mt-1.5">
                                 {match.dc13_handicap === 0 || match.dc13_handicap === undefined ? (
@@ -982,7 +981,7 @@ const DC13Page: React.FC = () => {
                             </div>
 
                             {/* VS / Result */}
-                            <div className="flex flex-col items-center px-3">
+                            <div className="flex flex-col items-center px-3 self-start pt-3.5 md:pt-4">
                               {(match.dc13_status || 'scheduled') === 'finished' && computedResult ? (
                                 <div className="flex flex-col items-center gap-1">
                                   <div className="text-lg font-black text-slate-300">{(match.dc13_score_a ?? 0)} - {(match.dc13_score_b ?? 0)}</div>
@@ -1011,7 +1010,7 @@ const DC13Page: React.FC = () => {
                                   <div className="w-full h-full flex items-center justify-center text-2xl">⚽</div>
                                 )}
                               </div>
-                              <p className="text-sm md:text-base font-black text-white uppercase tracking-tight">{match.team_b_name}</p>
+                              <p className="text-sm md:text-base font-black text-white uppercase tracking-tight min-h-[40px] md:min-h-[48px] flex items-center justify-center">{match.team_b_name}</p>
                               <p className="text-[13px] text-slate-500 font-bold mt-0.5">{teamBBets} bet{teamBBets !== 1 ? 's' : ''}</p>
                               <div className="mt-1.5">
                                 {match.dc13_handicap === 0 || match.dc13_handicap === undefined ? (
@@ -1025,70 +1024,74 @@ const DC13Page: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* My bet info */}
-                          {myBet && (() => {
-                            let effRes = myBet.result;
-                            if (effRes === 'pending' && (match.dc13_status || 'scheduled') === 'finished') {
-                              const diff = (match.dc13_score_a ?? 0) - (match.dc13_score_b ?? 0);
-                              const handicap = match.dc13_handicap || 0;
-                              const effectiveScore = diff - handicap;
-                              if (effectiveScore > 0) {
-                                effRes = myBet.chosen_team === 'teamA' ? 'win' : 'loss';
-                              } else if (effectiveScore < 0) {
-                                effRes = myBet.chosen_team === 'teamB' ? 'win' : 'loss';
-                              } else {
-                                effRes = 'draw';
+                          {/* Actions Block */}
+                          <div className="mt-auto pt-4 w-full">
+                            {/* My bet info */}
+                            {myBet && (() => {
+                              let effRes = myBet.result;
+                              if (effRes === 'pending' && (match.dc13_status || 'scheduled') === 'finished') {
+                                const diff = (match.dc13_score_a ?? 0) - (match.dc13_score_b ?? 0);
+                                const handicap = match.dc13_handicap || 0;
+                                const effectiveScore = diff - handicap;
+                                if (effectiveScore > 0) {
+                                  effRes = myBet.chosen_team === 'teamA' ? 'win' : 'loss';
+                                } else if (effectiveScore < 0) {
+                                  effRes = myBet.chosen_team === 'teamB' ? 'win' : 'loss';
+                                } else {
+                                  effRes = 'draw';
+                                }
                               }
-                            }
 
-                            return (
-                              <div className="space-y-2 mt-4">
-                                <div className={`p-3 rounded-xl border text-center text-xs font-bold ${effRes === 'win' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                                  effRes === 'loss' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
-                                    effRes === 'draw' ? 'bg-slate-500/10 border-slate-500/20 text-slate-400' :
-                                      'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
-                                  }`}>
-                                  Bạn chọn: <span className="font-black">{myBet.chosen_team === 'teamA' ? match.team_a_name : match.team_b_name}</span>
-                                  {effRes === 'win' && ' — ✅ THẮNG (0đ)'}
-                                  {effRes === 'loss' && ` — ❌ THUA (-${PENALTY_AMOUNT.toLocaleString('vi-VN')}đ)`}
-                                  {effRes === 'draw' && ' — 🤝 HÒA (0đ)'}
-                                  {effRes === 'pending' && ' — ⏳ Đang chờ kết quả'}
-                                </div>
-                                {!locked && (
-                                  <div className="flex gap-2">
-                                    <button
-                                      onClick={() => handleBetClick(match)}
-                                      className="flex-1 py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-600 text-cyan-400 hover:text-white border border-cyan-500/20 font-black text-[10px] uppercase tracking-widest transition-all"
-                                    >
-                                      Sửa cược ✏️
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteBet(myBet.id)}
-                                      className="px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/20 font-black text-[10px] uppercase tracking-widest transition-all"
-                                    >
-                                      Hủy cược 🗑️
-                                    </button>
+                              return (
+                                <div className="space-y-2">
+                                  <div className={`p-3 rounded-xl border text-center text-xs font-bold ${effRes === 'win' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                                    effRes === 'loss' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
+                                      effRes === 'draw' ? 'bg-slate-500/10 border-slate-500/20 text-slate-400' :
+                                        'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
+                                    }`}>
+                                    Bạn chọn: <span className="font-black">{myBet.chosen_team === 'teamA' ? match.team_a_name : match.team_b_name}</span>
+                                    {effRes === 'win' && ' — ✅ THẮNG (0đ)'}
+                                    {effRes === 'loss' && ` — ❌ THUA (-${PENALTY_AMOUNT.toLocaleString('vi-VN')}đ)`}
+                                    {effRes === 'draw' && ' — 🤝 HÒA (0đ)'}
+                                    {effRes === 'pending' && ' — ⏳ Đang chờ kết quả'}
                                   </div>
-                                )}
+                                  {!locked && (
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => handleBetClick(match)}
+                                        className="flex-1 py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-600 text-cyan-400 hover:text-white border border-cyan-500/20 font-black text-[10px] uppercase tracking-widest transition-all"
+                                      >
+                                        Sửa cược ✏️
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteBet(myBet.id)}
+                                        className="px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/20 font-black text-[10px] uppercase tracking-widest transition-all"
+                                      >
+                                        Hủy cược 🗑️
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
+
+                            {/* Bet button */}
+                            {!locked && !alreadyBet && (
+                              <button
+                                onClick={() => handleBetClick(match)}
+                                className="w-full block mx-auto py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-cyan-900/40 hover:shadow-cyan-900/60 active:scale-[0.98] transition-all"
+                              >
+                                Bet 🎯
+                              </button>
+                            )}
+
+                            {/* Locked bet banner */}
+                            {locked && !alreadyBet && (match.dc13_status || 'scheduled') !== 'finished' && (
+                              <div className="py-3 rounded-xl bg-white/5 border border-white/5 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                🔒 Đã khóa bet
                               </div>
-                            );
-                          })()}
-
-                          {/* Bet button */}
-                          {!locked && !alreadyBet && (
-                            <button
-                              onClick={() => handleBetClick(match)}
-                              className="w-full block mx-auto mt-4 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-cyan-900/40 hover:shadow-cyan-900/60 active:scale-[0.98] transition-all"
-                            >
-                              Bet 🎯
-                            </button>
-                          )}
-
-                          {locked && !alreadyBet && (match.dc13_status || 'scheduled') !== 'finished' && (
-                            <div className="mt-4 py-3 rounded-xl bg-white/5 border border-white/5 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                              🔒 Đã khóa bet
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
 
                         {/* Bet list for this match */}
@@ -1181,9 +1184,11 @@ const DC13Page: React.FC = () => {
                       </div>
                     );
                   })
-                )}
+              }
               </div>
             )}
+          </div>
+        )}
 
             {/* ═══════════════════════════════════════════════════════════════ */}
             {/* TAB 2: STATISTICS                                              */}
@@ -1713,9 +1718,8 @@ const DC13Page: React.FC = () => {
                         </button>
                       </div>
 
-                      {/* Date Scroller */}
-                      {filter === 'date' && uniqueDates.length > 0 && (
-                        <div className="flex-1 flex items-center gap-2.5 w-full max-w-2xl min-w-0">
+                      {/* Date Scroller - always rendered for stable height */}
+                      <div className={`flex-1 flex items-center gap-2.5 w-full max-w-2xl min-w-0 ${filter !== 'date' || uniqueDates.length === 0 ? 'invisible' : ''}`} style={{ minHeight: '42px' }}>
                           <button
                             onClick={() => adminScrollerRef.current?.scrollBy({ left: -150, behavior: 'smooth' })}
                             className="shrink-0 w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-cyan-500/20 rounded-full text-white/50 hover:text-cyan-400 transition-all text-xs"
@@ -1752,8 +1756,7 @@ const DC13Page: React.FC = () => {
                           >
                             ▶
                           </button>
-                        </div>
-                      )}
+                      </div>
                     </div>
 
                     {/* Match list */}
