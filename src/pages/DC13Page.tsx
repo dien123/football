@@ -9,7 +9,8 @@ const ADMIN_PIN = 'DC13123';
 
 // ─── Helper: Check if betting is locked ──────────────────────────────────────
 const isDC13BettingLocked = (match: Match): boolean => {
-  if (match.status === 'finished') return true;
+  const status = match.dc13_status || match.status || 'scheduled';
+  if (status === 'finished') return true;
   if (match.betting_open === true) return false;
   if (match.betting_open === false) return true;
   const LOCK_MINUTES = 30;
@@ -371,7 +372,7 @@ const DC13Page: React.FC = () => {
     // Update match scores and status in 'matches'
     const { error: matchErr } = await supabase
       .from('matches')
-      .update({ status: 'finished', score_a: scoreA, score_b: scoreB })
+      .update({ dc13_status: 'finished', dc13_score_a: scoreA, dc13_score_b: scoreB })
       .eq('id', match.id);
 
     if (matchErr) {
@@ -425,9 +426,12 @@ const DC13Page: React.FC = () => {
 
     let error;
     if (id) {
-      if (payload.status === 'scheduled') {
-        payload.score_a = 0;
-        payload.score_b = 0;
+      delete (payload as any).status;
+      delete (payload as any).score_a;
+      delete (payload as any).score_b;
+      if (payload.dc13_status === 'scheduled') {
+        payload.dc13_score_a = 0;
+        payload.dc13_score_b = 0;
         await supabase.from('dc13_bets').delete().eq('match_id', id);
       }
       const { error: err } = await supabase.from('matches').update(payload).eq('id', id);
@@ -440,7 +444,10 @@ const DC13Page: React.FC = () => {
         team_a_icon: payload.team_a_icon || '⚽',
         team_b_icon: payload.team_b_icon || '⚽',
         dc13_handicap: payload.dc13_handicap || 0,
-        dc13_favorite_team: payload.dc13_favorite_team || 'teamA'
+        dc13_favorite_team: payload.dc13_favorite_team || 'teamA',
+        dc13_status: payload.dc13_status || 'scheduled',
+        dc13_score_a: payload.dc13_score_a || 0,
+        dc13_score_b: payload.dc13_score_b || 0
       };
       const { error: err } = await supabase.from('matches').insert([newPayload]);
       error = err;
@@ -448,9 +455,9 @@ const DC13Page: React.FC = () => {
 
     if (!error) {
       // Resolve bets if finished and edited
-      if (id && payload.status === 'finished' && payload.score_a !== undefined && payload.score_b !== undefined) {
-        const scoreA = Number(payload.score_a);
-        const scoreB = Number(payload.score_b);
+      if (id && payload.dc13_status === 'finished' && payload.dc13_score_a !== undefined && payload.dc13_score_b !== undefined) {
+        const scoreA = Number(payload.dc13_score_a);
+        const scoreB = Number(payload.dc13_score_b);
         const dc13Handicap = Number(payload.dc13_handicap || 0);
         const effectiveScore = (scoreA - scoreB) - dc13Handicap;
 
@@ -488,9 +495,9 @@ const DC13Page: React.FC = () => {
     const { error: matchErr } = await supabase
       .from('matches')
       .update({
-        status: 'scheduled',
-        score_a: 0,
-        score_b: 0
+        dc13_status: 'scheduled',
+        dc13_score_a: 0,
+        dc13_score_b: 0
       })
       .eq('id', matchId);
 
@@ -605,7 +612,7 @@ const DC13Page: React.FC = () => {
   };
 
   const filteredMatches = matches.filter(m => {
-    if (filter === 'live') return m.status === 'live';
+    if (filter === 'live') return (m.dc13_status || 'scheduled') === 'live';
     if (filter === 'date' && selectedDate) {
       return new Date(m.start_time).toLocaleDateString('vi-VN') === selectedDate;
     }
@@ -613,9 +620,12 @@ const DC13Page: React.FC = () => {
   });
 
   const getMatchResult = (match: Match): 'teamA' | 'teamB' | 'draw' | null => {
-    if (match.status !== 'finished') return null;
-    if (match.score_a > match.score_b) return 'teamA';
-    if (match.score_b > match.score_a) return 'teamB';
+    const status = match.dc13_status || 'scheduled';
+    const scoreA = match.dc13_score_a ?? 0;
+    const scoreB = match.dc13_score_b ?? 0;
+    if (status !== 'finished') return null;
+    if (scoreA > scoreB) return 'teamA';
+    if (scoreB > scoreA) return 'teamB';
     return 'draw';
   };
 
@@ -627,8 +637,8 @@ const DC13Page: React.FC = () => {
       let effectiveResult = bet.result;
 
       // Dynamic calculation for finished matches with pending bets
-      if (effectiveResult === 'pending' && match && match.status === 'finished') {
-        const diff = match.score_a - match.score_b;
+      if (effectiveResult === 'pending' && match && (match.dc13_status || 'scheduled') === 'finished') {
+        const diff = (match.dc13_score_a ?? 0) - (match.dc13_score_b ?? 0);
         const handicap = match.dc13_handicap || 0;
         const effectiveScore = diff - handicap;
         if (effectiveScore > 0) {
@@ -702,8 +712,8 @@ const DC13Page: React.FC = () => {
     const match = matches.find(m => m.id === bet.match_id);
     let effectiveResult = bet.result;
 
-    if (effectiveResult === 'pending' && match && match.status === 'finished') {
-      const diff = match.score_a - match.score_b;
+    if (effectiveResult === 'pending' && match && (match.dc13_status || 'scheduled') === 'finished') {
+      const diff = (match.dc13_score_a ?? 0) - (match.dc13_score_b ?? 0);
       const handicap = match.dc13_handicap || 0;
       const effectiveScore = diff - handicap;
       if (effectiveScore > 0) {
@@ -922,11 +932,11 @@ const DC13Page: React.FC = () => {
                         {/* Match header info */}
                         <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between gap-3 flex-wrap bg-slate-900/20">
                           <div className="flex items-center gap-2">
-                            <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest ${match.status === 'live' ? 'bg-rose-500 text-white animate-pulse' :
-                              match.status === 'finished' ? 'bg-slate-700 text-slate-400' :
+                            <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest ${(match.dc13_status || 'scheduled') === 'live' ? 'bg-rose-500 text-white animate-pulse' :
+                              (match.dc13_status || 'scheduled') === 'finished' ? 'bg-slate-700 text-slate-400' :
                                 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                               }`}>
-                              {match.status === 'live' ? '🔴 LIVE' : match.status === 'finished' ? 'Kết thúc' : 'Sắp đá'}
+                              {(match.dc13_status || 'scheduled') === 'live' ? '🔴 LIVE' : (match.dc13_status || 'scheduled') === 'finished' ? 'Kết thúc' : 'Sắp đá'}
                             </span>
                             <span className="text-[12px] text-slate-400 font-bold">
                               {new Date(match.start_time).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
@@ -973,9 +983,9 @@ const DC13Page: React.FC = () => {
 
                             {/* VS / Result */}
                             <div className="flex flex-col items-center px-3">
-                              {match.status === 'finished' && computedResult ? (
+                              {(match.dc13_status || 'scheduled') === 'finished' && computedResult ? (
                                 <div className="flex flex-col items-center gap-1">
-                                  <div className="text-lg font-black text-slate-300">{match.score_a} - {match.score_b}</div>
+                                  <div className="text-lg font-black text-slate-300">{(match.dc13_score_a ?? 0)} - {(match.dc13_score_b ?? 0)}</div>
                                   <div className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest ${computedResult === 'draw' ? 'bg-slate-700 text-slate-300' :
                                     'bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 shadow-[0_0_12px_rgba(6,182,212,0.15)]'
                                     }`}>
@@ -986,7 +996,7 @@ const DC13Page: React.FC = () => {
                                 </div>
                               ) : (
                                 <div className="text-center">
-                                  {match.status === 'live' && <div className="text-sm font-black text-rose-500 mb-1">{match.score_a} - {match.score_b}</div>}
+                                  {(match.dc13_status || 'scheduled') === 'live' && <div className="text-sm font-black text-rose-500 mb-1">{(match.dc13_score_a ?? 0)} - {(match.dc13_score_b ?? 0)}</div>}
                                   <span className="text-xl md:text-2xl font-black text-slate-400 group-hover:text-cyan-300 transition-colors duration-300 italic">VS</span>
                                 </div>
                               )}
@@ -1018,8 +1028,8 @@ const DC13Page: React.FC = () => {
                           {/* My bet info */}
                           {myBet && (() => {
                             let effRes = myBet.result;
-                            if (effRes === 'pending' && match.status === 'finished') {
-                              const diff = match.score_a - match.score_b;
+                            if (effRes === 'pending' && (match.dc13_status || 'scheduled') === 'finished') {
+                              const diff = (match.dc13_score_a ?? 0) - (match.dc13_score_b ?? 0);
                               const handicap = match.dc13_handicap || 0;
                               const effectiveScore = diff - handicap;
                               if (effectiveScore > 0) {
@@ -1074,7 +1084,7 @@ const DC13Page: React.FC = () => {
                             </button>
                           )}
 
-                          {locked && !alreadyBet && match.status !== 'finished' && (
+                          {locked && !alreadyBet && (match.dc13_status || 'scheduled') !== 'finished' && (
                             <div className="mt-4 py-3 rounded-xl bg-white/5 border border-white/5 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest">
                               🔒 Đã khóa bet
                             </div>
@@ -1100,8 +1110,9 @@ const DC13Page: React.FC = () => {
                                   <div className="space-y-1 max-h-36 overflow-y-auto pr-1 text-[12px]">
                                     {betsA.map(b => {
                                       let effRes = b.result;
-                                      if (effRes === 'pending' && match.status === 'finished') {
-                                        const diff = match.score_a - match.score_b;
+                                      const dc13Status = match.dc13_status || 'scheduled';
+                                      if (effRes === 'pending' && dc13Status === 'finished') {
+                                        const diff = (match.dc13_score_a ?? 0) - (match.dc13_score_b ?? 0);
                                         const handicap = match.dc13_handicap || 0;
                                         const effectiveScore = diff - handicap;
                                         if (effectiveScore > 0) effRes = 'win';
@@ -1136,8 +1147,9 @@ const DC13Page: React.FC = () => {
                                   <div className="space-y-1 max-h-36 overflow-y-auto pr-1 text-[12px]">
                                     {betsB.map(b => {
                                       let effRes = b.result;
-                                      if (effRes === 'pending' && match.status === 'finished') {
-                                        const diff = match.score_a - match.score_b;
+                                      const dc13Status = match.dc13_status || 'scheduled';
+                                      if (effRes === 'pending' && dc13Status === 'finished') {
+                                        const diff = (match.dc13_score_a ?? 0) - (match.dc13_score_b ?? 0);
                                         const handicap = match.dc13_handicap || 0;
                                         const effectiveScore = diff - handicap;
                                         if (effectiveScore > 0) effRes = 'loss';
@@ -1519,7 +1531,7 @@ const DC13Page: React.FC = () => {
                         <button onClick={() => setAdminAuthed(false)} className="px-5 py-2 bg-white/10 hover:bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest transition-all">
                           Thoát
                         </button>
-                        <button onClick={() => { setIsAddingMatch(true); setEditingMatch({ status: 'scheduled', dc13_handicap: 0, dc13_favorite_team: 'teamA' }); }} className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-cyan-900/40">
+                        <button onClick={() => { setIsAddingMatch(true); setEditingMatch({ status: 'scheduled', dc13_status: 'scheduled', dc13_score_a: 0, dc13_score_b: 0, dc13_handicap: 0, dc13_favorite_team: 'teamA' }); }} className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-cyan-900/40">
                           + Thêm Trận
                         </button>
                       </div>
@@ -1561,23 +1573,23 @@ const DC13Page: React.FC = () => {
                             <input type="datetime-local" className={inputCls} value={editingMatch?.start_time ? new Date(editingMatch.start_time).toISOString().slice(0, 16) : ''} onChange={e => setEditingMatch({ ...editingMatch, start_time: new Date(e.target.value).toISOString() })} />
                           </div>
                           <div>
-                            <label className={labelCls}>Trạng thái</label>
+                            <label className={labelCls}>Trạng thái (DC 13)</label>
                             <select
                               className={inputCls}
-                              value={editingMatch?.status || 'scheduled'}
+                              value={editingMatch?.dc13_status || 'scheduled'}
                               onChange={e => {
                                 const newStatus = e.target.value;
                                 if (newStatus === 'scheduled') {
                                   setEditingMatch({
                                     ...editingMatch,
-                                    status: newStatus,
-                                    score_a: 0,
-                                    score_b: 0
+                                    dc13_status: newStatus,
+                                    dc13_score_a: 0,
+                                    dc13_score_b: 0
                                   });
                                 } else {
                                   setEditingMatch({
                                     ...editingMatch,
-                                    status: newStatus
+                                    dc13_status: newStatus
                                   });
                                 }
                               }}
@@ -1642,12 +1654,12 @@ const DC13Page: React.FC = () => {
                           {editingMatch?.id && (
                             <>
                               <div>
-                                <label className={labelCls}>Tỷ số Đội A</label>
-                                <input type="number" className={inputCls} placeholder="Tỷ số Đội A" value={editingMatch?.score_a ?? 0} onChange={e => setEditingMatch({ ...editingMatch, score_a: Number(e.target.value) })} />
+                                <label className={labelCls}>Tỷ số Đội A (DC 13)</label>
+                                <input type="number" className={inputCls} placeholder="Tỷ số Đội A" value={editingMatch?.dc13_score_a ?? 0} onChange={e => setEditingMatch({ ...editingMatch, dc13_score_a: Number(e.target.value) })} />
                               </div>
                               <div>
-                                <label className={labelCls}>Tỷ số Đội B</label>
-                                <input type="number" className={inputCls} placeholder="Tỷ số Đội B" value={editingMatch?.score_b ?? 0} onChange={e => setEditingMatch({ ...editingMatch, score_b: Number(e.target.value) })} />
+                                <label className={labelCls}>Tỷ số Đội B (DC 13)</label>
+                                <input type="number" className={inputCls} placeholder="Tỷ số Đội B" value={editingMatch?.dc13_score_b ?? 0} onChange={e => setEditingMatch({ ...editingMatch, dc13_score_b: Number(e.target.value) })} />
                               </div>
                             </>
                           )}
@@ -1760,6 +1772,7 @@ const DC13Page: React.FC = () => {
                         filteredMatches.map(m => {
                           const matchBets = bets.filter(b => b.match_id === m.id);
                           const computedResult = getMatchResult(m);
+                          const mStatus = m.dc13_status || 'scheduled';
                           return (
                             <div key={m.id} className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-4 md:p-5 hover:bg-white/[0.06] transition-all group">
                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -1778,17 +1791,17 @@ const DC13Page: React.FC = () => {
                                       {m.team_a_name} <span className="text-slate-500 mx-1 text-[9px]">🏆</span> {m.team_b_name}
                                     </h4>
                                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                      <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${m.status === 'live' ? 'bg-rose-500 text-white animate-pulse' :
-                                        m.status === 'finished' ? 'bg-slate-700 text-slate-400' :
+                                      <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${mStatus === 'live' ? 'bg-rose-500 text-white animate-pulse' :
+                                        mStatus === 'finished' ? 'bg-slate-700 text-slate-400' :
                                           'bg-cyan-500/20 text-cyan-400'
-                                        }`}>{m.status}</span>
+                                        }`}>{mStatus}</span>
                                       <span className="text-[9px] text-slate-500 font-bold">
                                         {new Date(m.start_time).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                                       </span>
                                       <span className="text-[12px] text-slate-600 font-bold">{matchBets.length} bet(s)</span>
-                                      {m.status === 'finished' && (
+                                      {mStatus === 'finished' && (
                                         <span className="text-[9px] font-black text-slate-400">
-                                          Tỷ số: {m.score_a} - {m.score_b}
+                                          Tỷ số: {m.dc13_score_a ?? 0} - {m.dc13_score_b ?? 0}
                                         </span>
                                       )}
                                       {computedResult && (
@@ -1802,12 +1815,12 @@ const DC13Page: React.FC = () => {
 
                                 {/* Actions */}
                                 <div className="flex gap-2 justify-end shrink-0 flex-wrap">
-                                  {m.status !== 'finished' && (
+                                  {mStatus !== 'finished' && (
                                     <button onClick={() => setResultModal(m)} className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-emerald-500/20">
                                       Kết Quả
                                     </button>
                                   )}
-                                  {m.status === 'finished' && (
+                                  {mStatus === 'finished' && (
                                     <button onClick={() => handleResetMatchDirect(m.id)} className="px-3 py-2 bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-amber-500/20">
                                       Reset
                                     </button>
@@ -1821,7 +1834,7 @@ const DC13Page: React.FC = () => {
                                   </button>
                                   <button onClick={() => setEditingMatch(m)} className="w-9 h-9 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-xl border border-white/10 transition-all text-xs">✏️</button>
                                   <button onClick={() => handleDeleteMatch(m.id)} className="w-9 h-9 flex items-center justify-center bg-white/10 hover:bg-rose-500 hover:text-white rounded-xl border border-white/10 transition-all text-xs">🗑️</button>
-                                  {m.status !== 'finished' && (
+                                  {mStatus !== 'finished' && (
                                     <select
                                       value={m.betting_open === true ? 'open' : (m.betting_open === false ? 'closed' : 'auto')}
                                       onChange={(e) => handleUpdateBettingStatus(m.id, e.target.value)}

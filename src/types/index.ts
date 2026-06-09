@@ -23,6 +23,9 @@ export interface Match {
   created_at?: string;
   dc13_handicap?: number;
   dc13_favorite_team?: BetOption;
+  dc13_status?: string;
+  dc13_score_a?: number;
+  dc13_score_b?: number;
 }
 
 export interface Bet {

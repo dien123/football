@@ -159,6 +159,36 @@ const AdminPage: React.FC = () => {
     fetchMatches();
   };
 
+  const handleResetMatch = async (matchId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn reset trận đấu này về "Sắp đá"? Mọi tỷ số và lượt cược bên ngoài của trận đấu này sẽ bị xóa!')) return;
+
+    const { error: matchErr } = await supabase
+      .from('matches')
+      .update({
+        status: 'scheduled',
+        score_a: 0,
+        score_b: 0
+      })
+      .eq('id', matchId);
+
+    if (matchErr) {
+      alert(`Lỗi reset trận: ${matchErr.message}`);
+      return;
+    }
+
+    const { error: betErr } = await supabase
+      .from('bets')
+      .delete()
+      .eq('match_id', matchId);
+
+    if (betErr) {
+      alert(`Lỗi xóa cược: ${betErr.message}`);
+    } else {
+      alert('Đã reset trận đấu thành công!');
+    }
+    fetchMatches();
+  };
+
   const filteredMatches = matches.filter(m => {
     if (m.id === 'WORLD_CUP_2026_WINNER_REF') return false;
     if (filter === 'live') return m.status === 'live';
@@ -310,6 +340,21 @@ const AdminPage: React.FC = () => {
                 </div>
                 <div className="mt-6 md:mt-8 flex gap-3 md:gap-4">
                   <button onClick={handleSaveMatch} className="flex-1 bg-emerald-600 py-3 md:py-5 rounded-xl md:rounded-2xl font-black uppercase text-xs md:text-sm">LƯU TRẬN ĐẤU</button>
+                  {editingMatch?.id && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (editingMatch.id) {
+                          await handleResetMatch(editingMatch.id);
+                          setEditingMatch(null);
+                          setIsAdding(false);
+                        }
+                      }}
+                      className="px-6 bg-amber-500/10 hover:bg-amber-500 border border-amber-500/20 text-amber-400 hover:text-white py-3 md:py-5 rounded-xl md:rounded-2xl font-black uppercase text-xs md:text-sm transition-all"
+                    >
+                      Reset
+                    </button>
+                  )}
                   <button onClick={() => { setIsAdding(false); setEditingMatch(null); }} className="px-6 md:px-10 bg-white/5 py-3 md:py-5 rounded-xl md:rounded-2xl font-black uppercase text-xs md:text-sm">HỦY</button>
                 </div>
               </div>
@@ -346,6 +391,14 @@ const AdminPage: React.FC = () => {
                       {localScores[m.id] && <button onClick={() => handleQuickUpdateResult(m)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-emerald-500 text-black rounded-full shadow-lg shadow-emerald-500/20 hover:scale-110 active:scale-95 transition-all text-[10px] md:text-xs">✅</button>}
                       <button onClick={() => setEditingMatch(m)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full border border-white/10 transition-all text-[10px] md:text-xs">✏️</button>
                       <button onClick={() => handleDeleteMatch(m.id)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-rose-500 hover:text-white rounded-full border border-white/10 transition-all text-[10px] md:text-xs">🗑️</button>
+                      {m.status === 'finished' && (
+                        <button
+                          onClick={() => handleResetMatch(m.id)}
+                          className="px-3 bg-amber-500/10 hover:bg-amber-500 border border-amber-500/20 text-amber-400 hover:text-white rounded-full text-[9px] md:text-[11px] font-black uppercase tracking-widest transition-all"
+                        >
+                          Reset
+                        </button>
+                      )}
                       {m.status !== 'finished' && (
                         <div className="flex items-center">
                           <select
