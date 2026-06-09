@@ -7,12 +7,14 @@ import ResultsPage from './pages/ResultsPage';
 import StandingsPage from './pages/StandingsPage';
 import OutrightPage from './pages/OutrightPage';
 import AdminPage from './pages/AdminPage';
+import DC13Page from './pages/DC13Page';
 import AdminGuard from './components/AdminGuard';
 import RealTimeClock from './components/RealTimeClock';
 import CountdownClock from './components/CountdownClock';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/Footer';
 import { supabase } from './lib/supabase';
+import { checkAdminSession, setAdminSession } from './utils/security';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 interface AppContextType {
@@ -20,6 +22,8 @@ interface AppContextType {
   setAdminAuthenticated: (val: boolean) => void;
   session: Session | null;
   user: User | null;
+  fullName: string;
+  refreshFullName: () => Promise<void>;
 }
 
 export const AppContext = createContext<AppContextType | null>(null);
@@ -43,6 +47,12 @@ const mobileFutsalCls = ({ isActive }: { isActive: boolean }) =>
     : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10'
   }`;
 
+const mobileDC13Cls = ({ isActive }: { isActive: boolean }) =>
+  `w-full max-w-[280px] text-center py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all relative ${isActive
+    ? 'bg-cyan-600 text-white shadow-[0_0_20px_rgba(6,182,212,0.6)]'
+    : 'text-cyan-400 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-500/10'
+  }`;
+
 interface NavBarProps {
   mobileOpen: boolean;
   setMobileOpen: (val: boolean) => void;
@@ -51,7 +61,7 @@ interface NavBarProps {
 function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
   const ctx = useContext(AppContext);
   if (!ctx) return null;
-  const { session, user, setAdminAuthenticated } = ctx;
+  const { session, user, setAdminAuthenticated, fullName } = ctx;
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -66,15 +76,21 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
     }`;
 
   const outrightCls = ({ isActive }: { isActive: boolean }) =>
-    `px-5 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
+    `px-4 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
       ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.6)]'
       : 'text-amber-400 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
     }`;
 
   const futsalCls = ({ isActive }: { isActive: boolean }) =>
-    `px-5 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
+    `px-4 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
       ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]'
       : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+    }`;
+
+  const dc13Cls = ({ isActive }: { isActive: boolean }) =>
+    `px-4 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
+      ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.6)] transform scale-[1.02]'
+      : 'text-cyan-300 border border-cyan-400/35 hover:border-cyan-300 hover:bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
     }`;
 
   return (
@@ -101,16 +117,23 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
           <NavLink to="/results" className={linkCls}>Kết Quả - Thống Kê</NavLink>
           <NavLink to="/outright" className={outrightCls}>
             Dự đoán Vô Địch
-            <span className="absolute -top-2 -right-2 flex h-4 w-10">
+            <span className="absolute -top-2 -right-2 flex h-4 w-9">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-4 w-10 bg-amber-500 text-[7px] items-center justify-center text-black font-black">WINNER</span>
             </span>
           </NavLink>
           <NavLink to="/futsal" className={futsalCls}>
             TIP Futsal 2026
-            <span className="absolute -top-2 -right-2 flex h-4 w-8">
+            <span className="absolute -top-2 -right-2 flex h-4 w-7">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-4 w-8 bg-rose-500 text-[8px] items-center justify-center text-white font-black">HOT</span>
+            </span>
+          </NavLink>
+          <NavLink to="/dc13" className={dc13Cls}>
+            DC 13
+            <span className="absolute -top-2 -right-2 flex h-4 w-8">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-8 bg-gradient-to-r from-cyan-400 to-teal-400 text-[8px] items-center justify-center text-slate-950 font-black">NEW</span>
             </span>
           </NavLink>
           <NavLink to="/admin" className={linkCls}>Admin</NavLink>
@@ -122,7 +145,7 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
             <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-2xl border border-white/5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
               <span className="text-[13px] text-slate-300 font-black truncate max-w-[120px]">
-                {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+                {fullName || user?.user_metadata?.full_name || user?.email?.split('@')[0]}
               </span>
               <button
                 onClick={handleLogout}
@@ -140,7 +163,7 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-xl border border-white/5 max-w-[120px]">
               <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
               <span className="text-[11px] text-slate-300 font-black truncate">
-                {user?.user_metadata?.full_name?.split(' ').pop() || user?.email?.split('@')[0]}
+                {fullName ? fullName.split(' ').pop() : (user?.user_metadata?.full_name?.split(' ').pop() || user?.email?.split('@')[0])}
               </span>
             </div>
           )}
@@ -167,13 +190,62 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [isAdminAuthenticated, setAdminAuthenticatedState] = useState(() => {
-    return localStorage.getItem('admin_auth') === 'true';
+    // Cleanup old insecure key if present to prevent F12 bypass
+    if (localStorage.getItem('admin_auth')) {
+      localStorage.removeItem('admin_auth');
+    }
+    return checkAdminSession();
   });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [fullName, setFullName] = useState<string>('');
 
   const setAdminAuthenticated = (val: boolean) => {
     setAdminAuthenticatedState(val);
-    localStorage.setItem('admin_auth', val.toString());
+    setAdminSession(val);
+  };
+
+  const refreshFullName = async () => {
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    const currentUser = currentSession?.user;
+    if (!currentUser) {
+      setFullName('');
+      return;
+    }
+    try {
+      // 1. Try dc13_profiles
+      const { data: dc13Prof, error: err1 } = await supabase
+        .from('dc13_profiles')
+        .select('full_name')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+
+      if (!err1 && dc13Prof?.full_name) {
+        setFullName(dc13Prof.full_name);
+        return;
+      }
+
+      // 2. Try profiles
+      const { data: stdProf, error: err2 } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+
+      if (!err2 && stdProf?.full_name) {
+        setFullName(stdProf.full_name);
+        return;
+      }
+    } catch (err) {
+      console.error('Lỗi khi tải thông tin tên hiển thị:', err);
+    }
+
+    // Fallback: metadata or email split
+    const metaName = currentUser.user_metadata?.full_name;
+    if (metaName) {
+      setFullName(metaName);
+    } else {
+      setFullName(currentUser.email?.split('@')[0] || '');
+    }
   };
 
   useEffect(() => {
@@ -188,12 +260,22 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (session?.user) {
+      refreshFullName();
+    } else {
+      setFullName('');
+    }
+  }, [session]);
+
   return (
     <AppContext.Provider value={{
       isAdminAuthenticated,
       setAdminAuthenticated,
       session,
-      user: session?.user ?? null
+      user: session?.user ?? null,
+      fullName,
+      refreshFullName
     }}>
       <BrowserRouter>
         <div className="relative bg-[#080808] min-h-screen">
@@ -229,6 +311,13 @@ function App() {
                 </span>
               </NavLink>
 
+              <NavLink to="/dc13" className={mobileDC13Cls} onClick={() => setMobileOpen(false)}>
+                DC 13
+                <span className="absolute top-4 right-6 bg-cyan-500 text-[8px] px-2.5 py-0.5 rounded-full text-black font-black">
+                  NEW
+                </span>
+              </NavLink>
+
               <NavLink to="/admin" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
                 Admin
               </NavLink>
@@ -237,7 +326,7 @@ function App() {
                 <div className="w-full pt-6 border-t border-white/5 flex flex-col items-center gap-3">
                   <span className="text-[12px] text-slate-500 font-bold uppercase">Tài khoản</span>
                   <span className="text-sm font-black text-slate-300">
-                    {session.user.user_metadata?.full_name || session.user.email}
+                    {fullName || session.user.user_metadata?.full_name || session.user.email}
                   </span>
                   <button
                     onClick={async () => {
@@ -262,6 +351,7 @@ function App() {
             <Route path="/results" element={<ResultsPage />} />
             <Route path="/standings" element={<StandingsPage />} />
             <Route path="/outright" element={<OutrightPage />} />
+            <Route path="/dc13" element={<DC13Page />} />
             <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
           </Routes>
           <div className="hidden lg:block fixed top-[120px] left-4 z-40 pointer-events-none">

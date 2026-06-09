@@ -265,17 +265,17 @@ const MatchPage: React.FC = () => {
 
                   {/* Date Scroller */}
                   {filter === 'date' && (
-                    <div className="relative flex-1 w-full max-w-3xl group px-10">
+                    <div className="flex-1 flex items-center gap-2.5 w-full max-w-3xl min-w-0">
                       <button
                         onClick={scrollPrev}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 hover:bg-emerald-500/20 rounded-full text-white/50 hover:text-emerald-400 transition-all"
+                        className="shrink-0 w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-emerald-500/20 rounded-full text-white/50 hover:text-emerald-400 transition-all text-xs"
                       >
                         ◀
                       </button>
 
                       <div
                         ref={scrollerRef}
-                        className="w-full overflow-x-auto no-scrollbar flex items-center gap-3 scroll-smooth"
+                        className="flex-1 overflow-x-auto no-scrollbar flex items-center gap-3 scroll-smooth py-1"
                       >
                         {uniqueDates.map((date) => {
                           const [d, m, y] = date.split('/');
@@ -287,8 +287,8 @@ const MatchPage: React.FC = () => {
                             <button
                               key={date}
                               onClick={() => setSelectedDate(date)}
-                              className={`flex flex-col items-center min-w-[64px] py-1.5 rounded-xl border transition-all ${isActive
-                                ? 'bg-emerald-500/20 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                              className={`flex flex-col items-center min-w-[64px] py-1.5 rounded-xl border transition-all shrink-0 ${isActive
+                                ? 'bg-emerald-500/20 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)] text-white'
                                 : 'bg-white/5 border-white/5 hover:bg-white/10 text-slate-400'
                                 }`}
                             >
@@ -301,7 +301,7 @@ const MatchPage: React.FC = () => {
 
                       <button
                         onClick={scrollNext}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 hover:bg-emerald-500/20 rounded-full text-white/50 hover:text-emerald-400 transition-all"
+                        className="shrink-0 w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-emerald-500/20 rounded-full text-white/50 hover:text-emerald-400 transition-all text-xs"
                       >
                         ▶
                       </button>

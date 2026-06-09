@@ -77,6 +77,10 @@ const AdminPage: React.FC = () => {
 
     let error;
     if (id) {
+      if (payload.status === 'scheduled') {
+        payload.score_a = 0;
+        payload.score_b = 0;
+      }
       const { error: err } = await supabase.from('matches').update(payload).eq('id', id);
       error = err;
     } else {

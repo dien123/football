@@ -1,7 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { AppContext } from '../App';
-
-const ADMIN_PASSWORD = 'adml123'; // Can be changed by the user
+import { ADMIN_PASSWORD } from '../utils/security';
 
 interface AdminGuardProps {
   children: React.ReactNode;
