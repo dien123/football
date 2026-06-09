@@ -334,10 +334,10 @@ const ResultsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-6 space-y-12">
+        <div className="max-w-4xl mx-auto px-6 space-y-8">
           {/* Consecutive Loss Insurance Section */}
           <section className="animate-fade-in">
-            <div className="flex items-center gap-2 mb-4 text-[12px] font-black uppercase tracking-[0.2em] text-rose-400">
+            <div className="flex items-center gap-2 mb-2 text-[13px] font-black uppercase tracking-[0.2em] text-rose-400">
               <span className="w-4 h-4 rounded-full bg-rose-500/20 flex items-center justify-center">🛡️</span>
               Bảo Hiểm Thua Liên Tiếp
             </div>
@@ -349,10 +349,10 @@ const ResultsPage: React.FC = () => {
 
               <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-white/5">
                 <div className="space-y-2">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-[10px] font-black text-rose-400 uppercase tracking-widest">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-[12px] font-black text-rose-400 uppercase tracking-widest">
                     🚨 QUYỀN LỢI THÀNH VIÊN
                   </span>
-                  <h3 className="text-xl font-black text-white uppercase tracking-tight">Voucher Hoàn</h3>
+                  <h3 className="text-lg font-black text-white uppercase tracking-tight">Voucher Hoàn</h3>
                   <p className="text-sm text-slate-400 leading-relaxed font-medium">
                     Nhằm khích lệ tinh thần khi người chơi gặp chuỗi không may mắn, ban tổ chức áp dụng chính sách hoàn trả bảo hiểm dây đen:
                   </p>

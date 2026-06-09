@@ -76,11 +76,11 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
       : 'text-slate-400 hover:text-white hover:bg-white/5'
     }`;
 
-  const outrightCls = ({ isActive }: { isActive: boolean }) =>
-    `px-4 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
-      ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.6)]'
-      : 'text-amber-400 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
-    }`;
+  // const outrightCls = ({ isActive }: { isActive: boolean }) =>
+  //   `px-4 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
+  //     ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.6)]'
+  //     : 'text-amber-400 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
+  //   }`;
 
   const futsalCls = ({ isActive }: { isActive: boolean }) =>
     `px-4 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
@@ -116,13 +116,13 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
           <NavLink to="/" className={linkCls} end>Dự đoán</NavLink>
           <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
           <NavLink to="/results" className={linkCls}>Kết Quả - Thống Kê</NavLink>
-          <NavLink to="/outright" className={outrightCls}>
+          {/* <NavLink to="/outright" className={outrightCls}>
             Dự đoán Vô Địch
             <span className="absolute -top-2 -right-2 flex h-4 w-9">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-4 w-10 bg-amber-500 text-[7px] items-center justify-center text-black font-black">WINNER</span>
             </span>
-          </NavLink>
+          </NavLink> */}
           <NavLink to="/futsal" className={futsalCls}>
             TIP Futsal 2026
             <span className="absolute -top-2 -right-2 flex h-4 w-7">
