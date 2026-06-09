@@ -7,6 +7,58 @@ import DC13AuthModal from '../components/DC13AuthModal';
 const PENALTY_AMOUNT = 5000;
 const ADMIN_PIN = 'DC13123';
 
+const DC13_TEAMS = [
+  { name: "Argentina", code: "ar" },
+  { name: "Pháp", code: "fr" },
+  { name: "Brazil", code: "br" },
+  { name: "Tây Ban Nha", code: "es" },
+  { name: "Anh", code: "gb-eng" },
+  { name: "Đức", code: "de" },
+  { name: "Hà Lan", code: "nl" },
+  { name: "Bồ Đào Nha", code: "pt" },
+  { name: "Uruguay", code: "uy" },
+  { name: "Bỉ", code: "be" },
+  { name: "Croatia", code: "hr" },
+  { name: "Colombia", code: "co" },
+  { name: "Nhật Bản", code: "jp" },
+  { name: "Maroc", code: "ma" },
+  { name: "Thụy Sĩ", code: "ch" },
+  { name: "Mexico", code: "mx" },
+  { name: "Hoa Kỳ", code: "us" },
+  { name: "Hàn Quốc", code: "kr" },
+  { name: "Senegal", code: "sn" },
+  { name: "Áo", code: "at" },
+  { name: "Thụy Điển", code: "se" },
+  { name: "Na Uy", code: "no" },
+  { name: "Thổ Nhĩ Kỳ", code: "tr" },
+  { name: "Paraguay", code: "py" },
+  { name: "Ecuador", code: "ec" },
+  { name: "Đan Mạch", code: "dk" },
+  { name: "Iran", code: "ir" },
+  { name: "Ai Cập", code: "eg" },
+  { name: "Canada", code: "ca" },
+  { name: "Úc", code: "au" },
+  { name: "Tunisia", code: "tn" },
+  { name: "Algeria", code: "dz" },
+  { name: "Ghana", code: "gh" },
+  { name: "Bờ Biển Ngà", code: "ci" },
+  { name: "Cộng hòa Séc", code: "cz" },
+  { name: "Scotland", code: "gb-sct" },
+  { name: "Ả Rập Xê Út", code: "sa" },
+  { name: "Qatar", code: "qa" },
+  { name: "Nam Phi", code: "za" },
+  { name: "Bosnia & HZ", code: "ba" },
+  { name: "CHDC Congo", code: "cd" },
+  { name: "Panama", code: "pa" },
+  { name: "Iraq", code: "iq" },
+  { name: "Jordan", code: "jo" },
+  { name: "Uzbekistan", code: "uz" },
+  { name: "Cape Verde", code: "cv" },
+  { name: "New Zealand", code: "nz" },
+  { name: "Haiti", code: "ht" },
+  { name: "Curaçao", code: "cw" },
+];
+
 // ─── Helper: Check if betting is locked ──────────────────────────────────────
 const isDC13BettingLocked = (match: Match): boolean => {
   const status = match.dc13_status || match.status || 'scheduled';
@@ -119,11 +171,22 @@ const AdminMatchRowSkeleton: React.FC = () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 const DC13Page: React.FC = () => {
   // ─── State ─────────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<'matches' | 'stats' | 'rules' | 'admin'>('matches');
+  const [activeTab, setActiveTab] = useState<'matches' | 'stats' | 'rules' | 'admin' | 'outright'>('matches');
   const [matches, setMatches] = useState<Match[]>([]);
   const [bets, setBets] = useState<DC13Bet[]>([]);
   const [loading, setLoading] = useState(true);
   const [cardsLoading, setCardsLoading] = useState(false);
+
+  // Outright state variables
+  const [outrightBets, setOutrightBets] = useState<any[]>([]);
+  const [outrightWinner, setOutrightWinner] = useState<string | null>(null);
+  const [outrightBettingOn, setOutrightBettingOn] = useState<any | null>(null);
+  const [outrightAmount, setOutrightAmount] = useState<number | ''>('');
+  const [outrightSubmitting, setOutrightSubmitting] = useState(false);
+  const [editingOutrightBet, setEditingOutrightBet] = useState<any | null>(null);
+  const [editOutrightAmount, setEditOutrightAmount] = useState<number | ''>('');
+  const [outrightSearch, setOutrightSearch] = useState('');
+  const [showOutrightRules, setShowOutrightRules] = useState(false);
 
   // Date Filtering
   const [filter, setFilter] = useState<'date' | 'live' | 'all'>('date');
@@ -212,10 +275,34 @@ const DC13Page: React.FC = () => {
     if (data) setBets(data as any);
   }, []);
 
+  const fetchDC13OutrightData = useCallback(async () => {
+    try {
+      const { data: betsData } = await supabase
+        .from('dc13_outright_bets')
+        .select('*');
+      if (betsData) setOutrightBets(betsData);
+
+      const { data: winData } = await supabase
+        .from('dc13_outright_winner')
+        .select('team_name')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (winData) {
+        setOutrightWinner(winData.team_name);
+      } else {
+        setOutrightWinner(null);
+      }
+    } catch (err) {
+      console.error('Error fetching dc13 outright data:', err);
+    }
+  }, []);
+
   useEffect(() => {
     setLoading(true);
-    Promise.all([fetchMatches(), fetchBets()]).finally(() => setLoading(false));
-  }, [fetchMatches, fetchBets]);
+    Promise.all([fetchMatches(), fetchBets(), fetchDC13OutrightData()]).finally(() => setLoading(false));
+  }, [fetchMatches, fetchBets, fetchDC13OutrightData]);
 
   // Real-time changes listener
   useEffect(() => {
@@ -233,11 +320,27 @@ const DC13Page: React.FC = () => {
       })
       .subscribe();
 
+    const channelOutrightBets = supabase
+      .channel('public:dc13_outright_bets')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dc13_outright_bets' }, () => {
+        fetchDC13OutrightData();
+      })
+      .subscribe();
+
+    const channelOutrightWinner = supabase
+      .channel('public:dc13_outright_winner')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dc13_outright_winner' }, () => {
+        fetchDC13OutrightData();
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channelMatches);
       supabase.removeChannel(channelBets);
+      supabase.removeChannel(channelOutrightBets);
+      supabase.removeChannel(channelOutrightWinner);
     };
-  }, [fetchMatches, fetchBets]);
+  }, [fetchMatches, fetchBets, fetchDC13OutrightData]);
 
   // ─── DC13 Profile auto-create ──────────────────────────────────────────────
   const ensureDC13Profile = async () => {
@@ -259,6 +362,113 @@ const DC13Page: React.FC = () => {
         await ctx.refreshFullName();
       }
     }
+  };
+
+  // ─── Outright Handlers & Calculations ──────────────────────────────────────
+  const handlePlaceDC13OutrightBet = async () => {
+    if (!outrightBettingOn || !user) {
+      if (!user) setShowAuthModal(true);
+      return;
+    }
+    const betVal = Number(outrightAmount);
+    if (!betVal || betVal < 20000) {
+      alert('Số tiền tối thiểu là 20.000đ');
+      return;
+    }
+    setOutrightSubmitting(true);
+    try {
+      await ensureDC13Profile();
+      const pName = fullName || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Người dùng';
+      const { error } = await supabase.from('dc13_outright_bets').insert([{
+        user_id: user.id,
+        user_name: pName,
+        team_name: outrightBettingOn.name,
+        amount: betVal,
+        created_at: new Date().toISOString()
+      }]);
+
+      if (error) throw error;
+      alert(`Đã gửi dự đoán thành công!`);
+      setOutrightBettingOn(null);
+      setOutrightAmount('');
+      fetchDC13OutrightData();
+    } catch (err: any) {
+      alert('Lỗi: ' + err.message);
+    } finally {
+      setOutrightSubmitting(false);
+    }
+  };
+
+  const handleUpdateDC13OutrightBet = async () => {
+    if (!editingOutrightBet) return;
+    const betVal = Number(editOutrightAmount);
+    if (!betVal || betVal < 20000) {
+      alert('Số tiền tối thiểu là 20.000đ');
+      return;
+    }
+    setOutrightSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('dc13_outright_bets')
+        .update({ amount: betVal })
+        .eq('id', editingOutrightBet.id);
+
+      if (error) throw error;
+      alert('Cập nhật lượt dự đoán thành công!');
+      setEditingOutrightBet(null);
+      setEditOutrightAmount('');
+      fetchDC13OutrightData();
+    } catch (err: any) {
+      alert('Lỗi khi sửa lượt dự đoán: ' + err.message);
+    } finally {
+      setOutrightSubmitting(false);
+    }
+  };
+
+  const handleDeleteDC13OutrightBet = async (betId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa lượt dự đoán này?')) return;
+    try {
+      const { error } = await supabase
+        .from('dc13_outright_bets')
+        .delete()
+        .eq('id', betId);
+
+      if (error) throw error;
+      alert('Đã xóa lượt dự đoán thành công!');
+      fetchDC13OutrightData();
+    } catch (err: any) {
+      alert('Lỗi khi xóa lượt dự đoán: ' + err.message);
+    }
+  };
+
+  const handleSetDC13OutrightWinner = async (teamName: string | null) => {
+    if (!adminAuthed) return;
+    try {
+      if (!teamName) {
+        if (!window.confirm('Bạn có muốn xóa đội vô địch hiện tại?')) return;
+        const { error } = await supabase.from('dc13_outright_winner').delete().neq('team_name', '');
+        if (error) throw error;
+        alert('Đã xóa đội vô địch thành công!');
+      } else {
+        // Clear previous winners first to prevent multiple active rows
+        await supabase.from('dc13_outright_winner').delete().neq('team_name', '');
+        const { error } = await supabase.from('dc13_outright_winner').insert([{
+          team_name: teamName,
+          updated_at: new Date().toISOString()
+        }]);
+        if (error) throw error;
+        alert(`Đã cập nhật đội vô địch: ${teamName}`);
+      }
+      fetchDC13OutrightData();
+    } catch (err: any) {
+      alert('Lỗi khi cập nhật đội vô địch: ' + err.message);
+    }
+  };
+
+
+  const getDC13TeamFlag = (teamName: string) => {
+    const team = DC13_TEAMS.find(t => t.name === teamName);
+    return team ? team.code : '';
   };
 
 
@@ -289,7 +499,7 @@ const DC13Page: React.FC = () => {
 
     // Check if match betting is locked 30m before kickoff
     if (isDC13BettingLocked(betMatch)) {
-      alert('Trận đấu này đã khóa nhận cược!');
+      alert('Trận đấu này đã khóa dự đoán!');
       return;
     }
 
@@ -319,7 +529,7 @@ const DC13Page: React.FC = () => {
         .eq('id', existingBet.id);
 
       if (error) {
-        alert(`Lỗi khi sửa cược: ${error.message}`);
+        alert(`Lỗi khi sửa dự đoán: ${error.message}`);
         return;
       }
     } else {
@@ -348,14 +558,14 @@ const DC13Page: React.FC = () => {
   };
 
   const handleDeleteBet = async (betId: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn hủy cược cho trận đấu này?')) return;
+    if (!window.confirm('Bạn có chắc chắn muốn hủy dự đoán cho trận đấu này?')) return;
     const { error } = await supabase
       .from('dc13_bets')
       .delete()
       .eq('id', betId);
 
     if (error) {
-      alert(`Lỗi khi hủy cược: ${error.message}`);
+      alert(`Lỗi khi hủy dự đoán: ${error.message}`);
     } else {
       fetchBets();
     }
@@ -508,7 +718,7 @@ const DC13Page: React.FC = () => {
 
     await supabase.from('dc13_bets').delete().eq('match_id', matchId);
 
-    alert('Đã reset trận đấu về "Sắp đá" và xóa mọi kết quả, lượt cược thành công!');
+    alert('Đã reset trận đấu về "Sắp đá" và xóa mọi kết quả, lượt dự đoán thành công!');
     fetchMatches();
     fetchBets();
   };
@@ -541,7 +751,7 @@ const DC13Page: React.FC = () => {
       return;
     }
 
-    let csv = 'ID Lượt Cược,Tài Khoản,Họ Tên Đầy Đủ,Đội Chọn,Kết Quả Bet,Thời Gian Dự Đoán\n';
+    let csv = 'ID Lượt dự đoán,Tài Khoản,Họ Tên Đầy Đủ,Đội Chọn,Kết Quả Bet,Thời Gian Dự Đoán\n';
 
     matchBets.forEach(b => {
       const resolvedName = b.dc13_profiles?.full_name || b.user_name || 'N/A';
@@ -569,7 +779,7 @@ const DC13Page: React.FC = () => {
       return;
     }
 
-    let csv = 'Trận Đấu,Thời Gian Trận Đấu,ID Lượt Cược,Tài Khoản,Họ Tên Đầy Đủ,Đội Chọn,Kết Quả Bet,Thời Gian Dự Đoán\n';
+    let csv = 'Trận Đấu,Thời Gian Trận Đấu,ID Lượt dự đoán,Tài Khoản,Họ Tên Đầy Đủ,Đội Chọn,Kết Quả Bet,Thời Gian Dự Đoán\n';
 
     bets.forEach(b => {
       const match = matches.find(m => m.id === b.match_id);
@@ -731,6 +941,17 @@ const DC13Page: React.FC = () => {
   const myBets = user ? bets.filter(b => b.user_id === user.id) : [];
   const myBetMatchIds = new Set(myBets.map(b => b.match_id));
 
+  // ─── Outright Pool Derived Variables ───────────────────────────────────────
+  const totalOutrightPool = outrightBets.reduce((sum, b) => sum + b.amount, 0);
+  const winnerOutrightPool = outrightWinner
+    ? outrightBets.filter(b => b.team_name === outrightWinner).reduce((sum, b) => sum + b.amount, 0)
+    : 0;
+  const netOutrightPool = totalOutrightPool - winnerOutrightPool;
+
+  const myOutrightBets = user ? outrightBets.filter(b => b.user_id === user.id) : [];
+
+  const isOutrightLocked = matches.some(m => (m.dc13_status || m.status || 'scheduled') === 'live' || (m.dc13_status || m.status || 'scheduled') === 'finished') || !!outrightWinner;
+
   // ─── Styles ────────────────────────────────────────────────────────────────
   const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-cyan-500 outline-none transition-all";
   const labelCls = "block text-[10px] font-black text-slate-500 mb-1.5 uppercase tracking-widest";
@@ -775,6 +996,7 @@ const DC13Page: React.FC = () => {
           <div className="flex bg-slate-950/60 backdrop-blur-2xl p-1.5 rounded-full border border-white/[0.08] gap-1.5 flex-wrap justify-center shadow-[0_10px_35px_rgba(0,0,0,0.5)]">
             {([
               { key: 'matches', label: '📅 Lịch & Bet' },
+              { key: 'outright', label: '🏆 Dự đoán Vô Địch' },
               { key: 'stats', label: '📊 Thống Kê' },
               { key: 'rules', label: '📋 Thể Lệ' },
               { key: 'admin', label: '⚙️ Admin' },
@@ -1061,13 +1283,13 @@ const DC13Page: React.FC = () => {
                                       onClick={() => handleBetClick(match)}
                                       className="flex-1 py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-600 text-cyan-400 hover:text-white border border-cyan-500/20 font-black text-[10px] uppercase tracking-widest transition-all"
                                     >
-                                      Sửa cược ✏️
+                                      Sửa dự đoán ✏️
                                     </button>
                                     <button
                                       onClick={() => handleDeleteBet(myBet.id)}
                                       className="px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/20 font-black text-[10px] uppercase tracking-widest transition-all"
                                     >
-                                      Hủy cược 🗑️
+                                      Hủy dự đoán 🗑️
                                     </button>
                                   </div>
                                 )}
@@ -1188,6 +1410,355 @@ const DC13Page: React.FC = () => {
               </div>
             )}
           </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* TAB: OUTRIGHT CHAMPION WINNER PREDICTION                       */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {activeTab === 'outright' && (
+          loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* 1. Header Banner & Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Outright Status */}
+                <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-white/5 rounded-3xl p-6 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+                  <div>
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Trạng thái dự đoán</span>
+                    {isOutrightLocked ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase tracking-wider">
+                        🔴 ĐÃ ĐÓNG CỬA
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wider animate-pulse">
+                        🟢 ĐANG MỞ dự đoán
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-3xl">🏁</div>
+                </div>
+
+                {/* Total Pool */}
+                <div className="bg-gradient-to-br from-cyan-950/40 to-slate-950 border border-cyan-500/20 rounded-3xl p-6 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+                  <div>
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Tổng quỹ dự đoán vô địch</span>
+                    <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-400">
+                      {totalOutrightPool.toLocaleString('vi-VN')}đ
+                    </span>
+                    <span className="block text-[10px] text-slate-500 mt-1">
+                      Quỹ chia (thua): {netOutrightPool.toLocaleString('vi-VN')}đ
+                    </span>
+                  </div>
+                  <div className="text-3xl">💰</div>
+                </div>
+
+                {/* My outright bets */}
+                <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-white/5 rounded-3xl p-6 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+                  <div>
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Bạn đã dự đoán vô địch</span>
+                    <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">
+                      {myOutrightBets.reduce((sum, b) => sum + b.amount, 0).toLocaleString('vi-VN')}đ
+                    </span>
+                  </div>
+                  <div className="text-3xl">🎟️</div>
+                </div>
+
+                {/* Winner Status / Champion */}
+                <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-white/5 rounded-3xl p-6 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+                  <div>
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Đội vô địch chính thức</span>
+                    {outrightWinner ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-8 h-5 rounded overflow-hidden border border-white/20 shrink-0 bg-slate-800">
+                          <img src={`https://flagcdn.com/w80/${getDC13TeamFlag(outrightWinner).toLowerCase()}.png`} className="w-full h-full object-cover" alt={outrightWinner} />
+                        </div>
+                        <span className="text-sm font-black text-emerald-400 uppercase tracking-wide truncate max-w-[80px]">{outrightWinner}</span>
+                      </div>
+                    ) : (
+                      <span className="text-slate-400 text-sm font-bold block mt-1">⏳ Chờ xác định...</span>
+                    )}
+                  </div>
+                  <div className="text-3xl">🏆</div>
+                </div>
+              </div>
+
+              {/* 2. Simplified Rules / Formula Explanation Toggle Card */}
+              <div className="bg-gradient-to-br from-[#0b1329] to-slate-950 border border-cyan-500/25 rounded-3xl p-6 md:p-8 shadow-[0_15px_35px_rgba(0,0,0,0.4)] relative overflow-hidden">
+                <div className="absolute -right-10 -bottom-10 text-9xl text-cyan-500/5 select-none pointer-events-none font-bold">∑</div>
+                <div className="flex items-center justify-between flex-wrap gap-4 relative z-10">
+                  <h3 className="text-base font-black text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+                    <span>💡 LUẬT CHƠI & CÔNG THỨC CHIA QUỸ CỰC DỄ HIỂU</span>
+                  </h3>
+                  <button
+                    onClick={() => setShowOutrightRules(!showOutrightRules)}
+                    className="px-4 py-1.5 rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 hover:text-white border border-cyan-500/20 text-[10px] font-black uppercase tracking-wider transition-all"
+                  >
+                    {showOutrightRules ? 'Thu Gọn ✕' : 'Xem Chi Tiết ➡️'}
+                  </button>
+                </div>
+
+                <p className="text-base text-slate-300 leading-relaxed mt-2 font-medium">
+                  Đặt dự đoán cho đội bạn tin là nhà vô địch. Hệ thống sử dụng hình thức <strong className="text-cyan-400">dự đoán chia quỹ (Pool Betting)</strong>: Người dự đoán sai sẽ mất tiền, toàn bộ số tiền đó được chia cho những người dự đoán đúng theo tỷ lệ tiền dự đoán của họ.
+                </p>
+
+                {showOutrightRules && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-white/5 relative z-10 animate-in fade-in duration-300">
+                    {/* Left: General Steps */}
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-black text-white uppercase tracking-wider border-b border-white/5 pb-2">3 Bước Tính Giải Thưởng Đơn Giản</h4>
+
+                      <div className="flex gap-3 items-start">
+                        <div className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-[10px] font-black text-cyan-400 shrink-0 mt-0.5">1</div>
+                        <div>
+                          <p className="text-xs font-black text-slate-200">Tổng Quỹ (A)</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">Tổng tiền dự đoán của tất cả mọi người (bao gồm cả bạn).</p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 items-start">
+                        <div className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-[10px] font-black text-cyan-400 shrink-0 mt-0.5">2</div>
+                        <div>
+                          <p className="text-xs font-black text-slate-200">Quỹ Người Thắng (B)</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">Tổng tiền dự đoán của tất cả những ai đoán đúng đội vô địch.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 items-start">
+                        <div className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-[10px] font-black text-cyan-400 shrink-0 mt-0.5">3</div>
+                        <div>
+                          <p className="text-xs font-black text-slate-200">Cách tính tiền thắng của bạn</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">Tiền thắng = Tiền dự đoán của bạn × Quỹ những người thua (A - B) / Quỹ người thắng (B).</p>
+                          <div className="bg-slate-900/60 p-2.5 rounded-xl border border-white/5 mt-2 font-mono text-[11px] text-cyan-300">
+                            Tiền thắng = dự đoán của bạn × (Tổng Quỹ - Quỹ Thắng) / Quỹ Thắng
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Concrete Example */}
+                    <div className="bg-slate-950/60 border border-white/5 rounded-2xl p-5 space-y-4">
+                      <h4 className="text-xs font-black text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <span>✏️ Ví dụ thực tế dễ hiểu</span>
+                      </h4>
+
+                      <div className="space-y-2.5 text-xs text-slate-300">
+                        <p>Giả sử cả làng dự đoán vô địch như sau:</p>
+                        <ul className="list-disc pl-4 space-y-1 text-slate-400">
+                          <li>Tổng số tiền dự đoán của cả làng là <strong className="text-slate-200">1.300.000đ</strong></li>
+                          <li>Tổng tiền dự đoán vào Argentina (Đội vô địch) là <strong className="text-slate-200">500.000đ</strong></li>
+                          <li>Quỹ của các đội thua bị mất là: <strong className="text-slate-200">1.300.000đ - 500.000đ = 800.000đ</strong></li>
+                        </ul>
+
+                        <div className="border-t border-white/5 my-2.5" />
+
+                        <p className="font-bold text-slate-200">Nếu bạn dự đoán 100.000đ vào Argentina:</p>
+                        <div className="space-y-1.5 pl-2 border-l-2 border-cyan-500/40">
+                          <p>• Tiền thắng bạn nhận được từ quỹ thua:</p>
+                          <p className="font-black text-cyan-400 text-sm">100.000đ × 800.000đ / 500.000đ = 160.000đ</p>
+
+                          <p className="mt-1">• Tổng thực nhận bạn mang về (bao gồm gốc):</p>
+                          <p className="font-black text-emerald-400 text-sm">100.000đ (gốc) + 160.000đ (thắng) = 260.000đ</p>
+                        </div>
+                        <p className="text-[10px] text-slate-500 italic mt-2">⚠️ Lưu ý: Nếu Argentina không vô địch, bạn sẽ mất 100.000đ tiền dự đoán của mình.</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Search & Teams Grid */}
+              <div className="space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                      <span>🏟️ DANH SÁCH ĐỘI TUYỂN</span>
+                    </h3>
+                    <p className="text-[12px] text-slate-400 mt-1">Chọn đội tuyển bạn dự đoán sẽ vô địch để đặt dự đoán (Tối thiểu 20.000đ).</p>
+                  </div>
+
+                  {/* Search input */}
+                  <div className="relative w-full md:w-80">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500">🔍</span>
+                    <input
+                      type="text"
+                      className="w-full bg-slate-900 border border-white/10 rounded-full pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:border-cyan-500 outline-none transition-all"
+                      placeholder="Tìm kiếm đội tuyển..."
+                      value={outrightSearch}
+                      onChange={(e) => setOutrightSearch(e.target.value)}
+                    />
+                    {outrightSearch && (
+                      <button onClick={() => setOutrightSearch('')} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-white text-xs">✕</button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {DC13_TEAMS.filter(t => t.name.toLowerCase().includes(outrightSearch.toLowerCase())).map(team => {
+                    const teamBets = outrightBets.filter(b => b.team_name === team.name);
+                    const teamTotalBet = teamBets.reduce((sum, b) => sum + b.amount, 0);
+
+                    return (
+                      <button
+                        key={team.name}
+                        disabled={isOutrightLocked}
+                        onClick={() => {
+                          if (!session) {
+                            setShowAuthModal(true);
+                          } else {
+                            setOutrightBettingOn(team);
+                            setOutrightAmount('');
+                          }
+                        }}
+                        className={`flex flex-col items-center p-4 rounded-2xl border bg-gradient-to-b from-white/[0.02] to-white/[0.04] text-center transition-all ${isOutrightLocked
+                          ? 'border-white/[0.03] opacity-60 cursor-not-allowed'
+                          : 'border-white/[0.08] hover:border-cyan-500/40 hover:bg-cyan-500/5 active:scale-[0.98]'
+                          }`}
+                      >
+                        {/* Flag image */}
+                        <div className="w-12 h-8 rounded-lg overflow-hidden border border-white/20 shadow-md mb-2.5 shrink-0 bg-slate-800">
+                          <img src={`https://flagcdn.com/w80/${team.code.toLowerCase()}.png`} className="w-full h-full object-cover" alt={team.name} />
+                        </div>
+
+                        <span className="text-xs font-black text-white uppercase tracking-tight line-clamp-1">{team.name}</span>
+
+                        {/* Bet Stats on Team */}
+                        <div className="mt-2 space-y-0.5">
+                          <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Đã dự đoán</span>
+                          <span className="block text-[11px] font-black text-cyan-400">
+                            {teamTotalBet > 0 ? `${(teamTotalBet).toLocaleString('vi-VN')}đ` : '0đ'}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 4. Bets list */}
+              <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-white/[0.08] rounded-3xl overflow-hidden shadow-[0_15px_30px_rgba(0,0,0,0.3)]">
+                <div className="px-6 py-5 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                      <span>📋 DANH SÁCH LƯỢT DỰ ĐOÁN CỦA CỘNG ĐỒNG</span>
+                      <span className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full">{outrightBets.length} lượt</span>
+                    </h3>
+                    <p className="text-[10px] text-slate-500 mt-0.5">Tất cả các lượt dự đoán của các thành viên.</p>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/5 text-[9px] font-black text-slate-500 uppercase tracking-widest bg-white/[0.01]">
+                        <th className="py-4 px-6">Người dự đoán</th>
+                        <th className="py-4 px-4">Đội lựa chọn</th>
+                        <th className="py-4 px-4 text-right">Tiền dự đoán</th>
+                        <th className="py-4 px-4 text-right">Tiền thắng dự kiến</th>
+                        <th className="py-4 px-4 text-right">Tổng thực nhận(gồm gốc)</th>
+                        <th className="py-4 px-6 text-right">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {outrightBets.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-12 text-center text-slate-500 text-xs font-bold uppercase tracking-wider">
+                            Chưa có lượt dự đoán vô địch nào được ghi nhận
+                          </td>
+                        </tr>
+                      ) : (
+                        outrightBets.map(bet => {
+                          const isOwnBet = user && bet.user_id === user.id;
+                          const teamBets = outrightBets.filter(b => b.team_name === bet.team_name);
+                          const teamTotalBet = teamBets.reduce((sum, b) => sum + b.amount, 0);
+
+                          // Winnings & payout calculations
+                          let estWinnings = 0;
+                          let estTotal = 0;
+                          let statusColor = 'text-cyan-400';
+
+                          if (outrightWinner) {
+                            if (bet.team_name === outrightWinner) {
+                              const winPool = outrightBets.filter(b => b.team_name === outrightWinner).reduce((sum, b) => sum + b.amount, 0);
+                              const netPool = totalOutrightPool - winPool;
+                              estWinnings = winPool > 0 ? (bet.amount * netPool) / winPool : 0;
+                              estTotal = bet.amount + estWinnings;
+                              statusColor = 'text-emerald-400 font-bold';
+                            } else {
+                              estWinnings = -bet.amount;
+                              estTotal = 0;
+                              statusColor = 'text-rose-400 font-bold';
+                            }
+                          } else {
+                            // Estimated winnings: bet * (totalPool - teamPool) / teamPool
+                            estWinnings = teamTotalBet > 0 ? (bet.amount * (totalOutrightPool - teamTotalBet)) / teamTotalBet : 0;
+                            estTotal = bet.amount + estWinnings;
+                            statusColor = 'text-cyan-400';
+                          }
+
+                          return (
+                            <tr key={bet.id} className={`text-xs transition-colors hover:bg-white/[0.02] ${isOwnBet ? 'bg-cyan-500/[0.02]' : ''}`}>
+                              <td className="py-4 px-6 font-bold text-white flex items-center gap-2">
+                                <span>{bet.user_name}</span>
+                                {isOwnBet && (
+                                  <span className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0">BẠN</span>
+                                )}
+                              </td>
+                              <td className="py-4 px-4 font-semibold text-slate-300">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-4 rounded overflow-hidden border border-white/20 shrink-0 bg-slate-800">
+                                    <img src={`https://flagcdn.com/w80/${getDC13TeamFlag(bet.team_name).toLowerCase()}.png`} className="w-full h-full object-cover" alt={bet.team_name} />
+                                  </div>
+                                  <span className="uppercase tracking-wide">{bet.team_name}</span>
+                                </div>
+                              </td>
+                              <td className="py-4 px-4 text-right font-mono font-bold text-slate-300">
+                                {bet.amount.toLocaleString('vi-VN')}đ
+                              </td>
+                              <td className="py-4 px-4 text-right font-mono">
+                                <span className={statusColor}>
+                                  {estWinnings >= 0 ? '+' : ''}{estWinnings.toLocaleString('vi-VN')}đ
+                                </span>
+                              </td>
+                              <td className="py-4 px-4 text-right font-mono font-black text-emerald-400">
+                                {estTotal.toLocaleString('vi-VN')}đ
+                              </td>
+                              <td className="py-4 px-6 text-right">
+                                {(isOwnBet || adminAuthed) && !isOutrightLocked && (
+                                  <div className="flex items-center justify-end gap-2">
+                                    <button
+                                      onClick={() => {
+                                        setEditingOutrightBet(bet);
+                                        setEditOutrightAmount(bet.amount);
+                                      }}
+                                      className="w-7 h-7 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center border border-white/5 transition-all text-[11px]"
+                                      title="Sửa lượng dự đoán"
+                                    >
+                                      ✏️
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteDC13OutrightBet(bet.id)}
+                                      className="w-7 h-7 bg-white/5 hover:bg-rose-500/10 hover:text-rose-400 rounded-lg flex items-center justify-center border border-white/5 transition-all text-[11px]"
+                                      title="Xóa lượt dự đoán"
+                                    >
+                                      🗑️
+                                    </button>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )
         )}
 
         {/* ═══════════════════════════════════════════════════════════════ */}
@@ -1405,7 +1976,7 @@ const DC13Page: React.FC = () => {
                   <div className="bg-slate-900/40 border border-white/[0.04] rounded-2xl p-4 hover:border-cyan-500/20 transition-all duration-300 shadow-sm">
                     <p className="text-sm font-black text-cyan-400 mb-1.5">🎯 CÁCH CHƠI ĐƠN GIẢN</p>
                     <p className="text-sm text-slate-400 font-semibold leading-relaxed">
-                      Người chơi chỉ cần chọn 1 trong 2 đội thắng (Đội A hoặc Đội B) cho mỗi trận đấu. Hệ thống không yêu cầu nhập số tiền cược. Đóng cược tự động trước giờ bóng lăn 30 phút.
+                      Người chơi chỉ cần chọn 1 trong 2 đội thắng (Đội A hoặc Đội B) cho mỗi trận đấu. Hệ thống không yêu cầu nhập số tiền dự đoán. Đóng dự đoán tự động trước giờ bóng lăn 30 phút.
                     </p>
                   </div>
                   <div className="bg-slate-900/40 border border-white/[0.04] rounded-2xl p-4 hover:border-rose-500/20 transition-all duration-300 shadow-sm">
@@ -1426,7 +1997,7 @@ const DC13Page: React.FC = () => {
                   2. Giải thưởng chung cuộc
                 </h3>
                 <p className="text-sm text-slate-400 font-bold italic pl-3.5">
-                  * Điều kiện nhận giải: Người chơi phải tham gia cược <span className="text-cyan-400 underline">tất cả các trận đấu</span> trong suốt mùa giải.
+                  * Điều kiện nhận giải: Người chơi phải tham gia dự đoán <span className="text-cyan-400 underline">tất cả các trận đấu</span> trong suốt mùa giải.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-3.5">
                   {/* Top Winners */}
@@ -1830,7 +2401,7 @@ const DC13Page: React.FC = () => {
                                 )}
                                 <button
                                   onClick={() => handleExportMatchBets(m)}
-                                  title="Xuất Excel cược trận này"
+                                  title="Xuất Excel dự đoán trận này"
                                   className="w-9 h-9 flex items-center justify-center bg-white/10 hover:bg-cyan-500 hover:text-white rounded-xl border border-white/10 transition-all text-xs"
                                 >
                                   📥
@@ -1855,6 +2426,64 @@ const DC13Page: React.FC = () => {
                       })
                     )}
                   </div>
+
+                  {/* Outright Admin Winner Selection Card */}
+                  <div className="bg-gradient-to-br from-[#121212] to-[#0a0a0a] border border-cyan-500/20 rounded-3xl p-6 shadow-xl space-y-4 mt-6">
+                    <h3 className="text-sm font-black text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+                      <span>🏆 Quản Lý Đội Vô Địch (Outright)</span>
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                      <div className="space-y-2">
+                        <label className={labelCls}>Chọn Đội Tuyển Vô Địch</label>
+                        <div className="flex gap-2">
+                          <select
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val) {
+                                if (window.confirm(`Bạn có chắc chắn muốn đặt ${val} là đội vô địch?`)) {
+                                  handleSetDC13OutrightWinner(val);
+                                }
+                              }
+                            }}
+                            value={outrightWinner || ''}
+                            className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-100 focus:border-cyan-500 outline-none"
+                          >
+                            <option value="">-- Chọn đội vô địch --</option>
+                            {DC13_TEAMS.map(team => (
+                              <option key={team.name} value={team.name}>{team.name}</option>
+                            ))}
+                          </select>
+
+                          {outrightWinner && (
+                            <button
+                              onClick={() => handleSetDC13OutrightWinner(null)}
+                              className="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 border border-rose-500/20 text-rose-400 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                            >
+                              Reset
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-500 italic">Đặt đội vô địch sẽ tự động tính toán người thắng/thua và chia quỹ dự đoán.</p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+                        <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Trạng thái hiện tại</span>
+                        {outrightWinner ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-5 rounded overflow-hidden border border-white/20 shrink-0 bg-slate-800">
+                              <img src={`https://flagcdn.com/w80/${getDC13TeamFlag(outrightWinner).toLowerCase()}.png`} className="w-full h-full object-cover" alt={outrightWinner} />
+                            </div>
+                            <span className="text-sm font-black text-emerald-400 uppercase">{outrightWinner}</span>
+                            <span className="text-[10px] font-bold text-slate-500">(Đã khóa & tính giá trị dự đoán)</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400 font-bold block">Chưa có đội vô địch. Đang chờ xác định...</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               )}
             </>
@@ -2025,6 +2654,201 @@ const DC13Page: React.FC = () => {
                   🤝 Hòa (không mất tiền)
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Outright Bet Placement Modal */}
+      {outrightBettingOn && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setOutrightBettingOn(null)} />
+          <div className="relative z-10 w-full max-w-md bg-[#1a1a1a] rounded-[32px] shadow-2xl border border-cyan-500/20 overflow-hidden animate-in zoom-in-95 duration-300">
+            {/* Header */}
+            <div className="relative bg-gradient-to-br from-cyan-500 to-teal-600 px-8 py-8 text-center">
+              <button onClick={() => setOutrightBettingOn(null)} className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors text-lg">✕</button>
+              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3 backdrop-blur-sm border border-white/30">🏆</div>
+              <h2 className="text-xl font-black text-white uppercase tracking-tight">Dự Đoán Đội Vô Địch</h2>
+              <p className="text-cyan-100 text-[12px] mt-2 opacity-80 uppercase font-bold tracking-widest">DC 13 • Outright Winner</p>
+            </div>
+
+            {/* Selected Team Info */}
+            <div className="px-8 pt-6 pb-2">
+              <div className="p-4 rounded-2xl bg-cyan-500/5 border border-cyan-500/10 flex items-center justify-center gap-4">
+                <div className="w-16 h-10 rounded-lg overflow-hidden border border-white/20 shadow-md shrink-0 bg-slate-800">
+                  <img src={`https://flagcdn.com/w160/${outrightBettingOn.code.toLowerCase()}.png`} className="w-full h-full object-cover" alt={outrightBettingOn.name} />
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Đội tuyển chọn</span>
+                  <span className="text-base font-black text-white uppercase truncate block">{outrightBettingOn.name}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Input field */}
+            <div className="px-8 py-4 space-y-4">
+              <div>
+                <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest">Số tiền dự đoán (đ)</label>
+                <input
+                  type="number"
+                  min={20000}
+                  step={10000}
+                  className="w-full bg-slate-900 border border-white/10 rounded-2xl px-4 py-3 text-white text-base focus:border-cyan-500 outline-none transition-all font-mono font-bold"
+                  placeholder="Ví dụ: 100000"
+                  value={outrightAmount}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setOutrightAmount(val === '' ? '' : Number(val));
+                  }}
+                />
+                <p className="text-[10px] text-slate-500 mt-1.5 italic">Dự đoán tối thiểu 20.000đ. Đội vô địch đúng sẽ chia toàn bộ quỹ của các đội thua.</p>
+              </div>
+
+              {/* Estimated Rewards display */}
+              {Number(outrightAmount) >= 20000 && (() => {
+                const refBet = Number(outrightAmount);
+                const teamPool = outrightBets.filter(b => b.team_name === outrightBettingOn.name).reduce((sum, b) => sum + b.amount, 0);
+                const totalPool = outrightBets.reduce((sum, b) => sum + b.amount, 0);
+                const newTotalPool = totalPool + refBet;
+                const newTeamPool = teamPool + refBet;
+                const estTotal = (refBet * newTotalPool) / newTeamPool;
+                const estWinnings = estTotal - refBet;
+
+                return (
+                  <div className="p-4 rounded-2xl bg-slate-950/60 border border-white/5 space-y-2 text-xs">
+                    <div className="flex justify-between items-center text-slate-400">
+                      <span>Tiền dự đoán (Gốc):</span>
+                      <span className="font-mono text-slate-200 font-bold">{refBet.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                    <div className="flex justify-between items-center text-cyan-400">
+                      <span>Tiền thắng chia quỹ dự kiến:</span>
+                      <span className="font-mono font-black">+{estWinnings.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                    <div className="border-t border-white/5 my-2 pt-2 flex justify-between items-center text-emerald-400 font-bold">
+                      <span>Tổng thực nhận dự kiến:</span>
+                      <span className="font-mono font-black text-sm">{estTotal.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                    <p className="text-[9px] text-slate-500 text-center italic mt-1">Lưu ý: Đây là số liệu dự kiến dựa trên quỹ hiện tại, có thể thay đổi khi có người chơi khác dự đoán.</p>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="px-8 pb-8 flex gap-3">
+              <button
+                onClick={() => setOutrightBettingOn(null)}
+                className="flex-1 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white text-xs font-black uppercase tracking-widest transition-all"
+              >
+                Hủy
+              </button>
+              <button
+                disabled={outrightSubmitting || !outrightAmount || Number(outrightAmount) < 20000}
+                onClick={handlePlaceDC13OutrightBet}
+                className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-xs font-black uppercase tracking-widest transition-all hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {outrightSubmitting ? 'Đang gửi...' : 'Xác Nhận'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Outright Edit Bet Modal */}
+      {editingOutrightBet && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setEditingOutrightBet(null)} />
+          <div className="relative z-10 w-full max-w-md bg-[#1a1a1a] rounded-[32px] shadow-2xl border border-cyan-500/20 overflow-hidden animate-in zoom-in-95 duration-300">
+            {/* Header */}
+            <div className="relative bg-gradient-to-br from-cyan-500 to-teal-600 px-8 py-8 text-center">
+              <button onClick={() => setEditingOutrightBet(null)} className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors text-lg">✕</button>
+              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3 backdrop-blur-sm border border-white/30">✏️</div>
+              <h2 className="text-xl font-black text-white uppercase tracking-tight">Sửa Lượt Dự Đoán</h2>
+              <p className="text-cyan-100 text-[12px] mt-2 opacity-80 uppercase font-bold tracking-widest">DC 13 • Chỉnh sửa giá trị dự đoán</p>
+            </div>
+
+            {/* Selected Team Info */}
+            <div className="px-8 pt-6 pb-2">
+              <div className="p-4 rounded-2xl bg-cyan-500/5 border border-cyan-500/10 flex items-center justify-center gap-4">
+                <div className="w-16 h-10 rounded-lg overflow-hidden border border-white/20 shadow-md shrink-0 bg-slate-800">
+                  <img src={`https://flagcdn.com/w160/${getDC13TeamFlag(editingOutrightBet.team_name).toLowerCase()}.png`} className="w-full h-full object-cover" alt={editingOutrightBet.team_name} />
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Đội tuyển đã chọn</span>
+                  <span className="text-base font-black text-white uppercase truncate block">{editingOutrightBet.team_name}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Input field */}
+            <div className="px-8 py-4 space-y-4">
+              <div>
+                <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest">Gía trị dự đoán mới (đ)</label>
+                <input
+                  type="number"
+                  min={20000}
+                  step={10000}
+                  className="w-full bg-slate-900 border border-white/10 rounded-2xl px-4 py-3 text-white text-base focus:border-cyan-500 outline-none transition-all font-mono font-bold"
+                  placeholder="Ví dụ: 100000"
+                  value={editOutrightAmount}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setEditOutrightAmount(val === '' ? '' : Number(val));
+                  }}
+                />
+                <p className="text-[10px] text-slate-500 mt-1.5 italic">Dự đoán tối thiểu 20.000đ.</p>
+              </div>
+
+              {/* Estimated Rewards display */}
+              {Number(editOutrightAmount) >= 20000 && (() => {
+                const refBet = Number(editOutrightAmount);
+                const oldAmount = editingOutrightBet.amount;
+                const diff = refBet - oldAmount;
+
+                const teamPool = outrightBets.filter(b => b.team_name === editingOutrightBet.team_name).reduce((sum, b) => sum + b.amount, 0);
+                const totalPool = outrightBets.reduce((sum, b) => sum + b.amount, 0);
+
+                const newTotalPool = totalPool + diff;
+                const newTeamPool = teamPool + diff;
+
+                const estTotal = newTeamPool > 0 ? (refBet * newTotalPool) / newTeamPool : refBet;
+                const estWinnings = estTotal - refBet;
+
+                return (
+                  <div className="p-4 rounded-2xl bg-slate-950/60 border border-white/5 space-y-2 text-xs">
+                    <div className="flex justify-between items-center text-slate-400">
+                      <span>Gía trị dự đoán mới (Gốc):</span>
+                      <span className="font-mono text-slate-200 font-bold">{refBet.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                    <div className="flex justify-between items-center text-cyan-400">
+                      <span>Tiền thắng chia quỹ dự kiến:</span>
+                      <span className="font-mono font-black">+{estWinnings.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                    <div className="border-t border-white/5 my-2 pt-2 flex justify-between items-center text-emerald-400 font-bold">
+                      <span>Tổng thực nhận dự kiến:</span>
+                      <span className="font-mono font-black text-sm">{estTotal.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                    <p className="text-[9px] text-slate-500 text-center italic mt-1">Dự tính dựa trên tổng quỹ dự đoán hiện tại nếu bạn đổi thành dự đoán mới.</p>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="px-8 pb-8 flex gap-3">
+              <button
+                onClick={() => setEditingOutrightBet(null)}
+                className="flex-1 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white text-xs font-black uppercase tracking-widest transition-all"
+              >
+                Hủy
+              </button>
+              <button
+                disabled={outrightSubmitting || !editOutrightAmount || Number(editOutrightAmount) < 20000}
+                onClick={handleUpdateDC13OutrightBet}
+                className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-xs font-black uppercase tracking-widest transition-all hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {outrightSubmitting ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+              </button>
             </div>
           </div>
         </div>
