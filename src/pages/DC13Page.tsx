@@ -517,13 +517,14 @@ const DC13Page: React.FC = () => {
     }
 
     const existingBet = bets.find(b => b.match_id === betMatch.id && b.user_id === user.id);
+    const chosenTeamName = chosenTeam === 'teamA' ? betMatch.team_a_name : betMatch.team_b_name;
 
     if (existingBet) {
       // Edit existing bet
       const { error } = await supabase
         .from('dc13_bets')
         .update({
-          chosen_team: chosenTeam,
+          chosen_team: chosenTeamName,
           user_name: displayName
         })
         .eq('id', existingBet.id);
@@ -538,7 +539,7 @@ const DC13Page: React.FC = () => {
         match_id: betMatch.id,
         user_id: user.id,
         user_name: displayName,
-        chosen_team: chosenTeam,
+        chosen_team: chosenTeamName,
         result: 'pending',
       });
 
@@ -599,20 +600,24 @@ const DC13Page: React.FC = () => {
         .eq('match_id', match.id)
         .eq('result', 'pending');
     } else {
-      // Ai chọn đúng = win, sai = loss
+      // Resolve team names
+      const winningTeamName = result === 'teamA' ? match.team_a_name : match.team_b_name;
+      const losingTeamName = result === 'teamA' ? match.team_b_name : match.team_a_name;
+
+      // Update winners: either 'teamA'/'teamB' or the actual team name
       await supabase
         .from('dc13_bets')
         .update({ result: 'win' })
         .eq('match_id', match.id)
-        .eq('chosen_team', result)
+        .in('chosen_team', [result, winningTeamName])
         .eq('result', 'pending');
 
-      const losingTeam = result === 'teamA' ? 'teamB' : 'teamA';
+      // Update losers: either 'teamA'/'teamB' or the actual team name
       await supabase
         .from('dc13_bets')
         .update({ result: 'loss' })
         .eq('match_id', match.id)
-        .eq('chosen_team', losingTeam)
+        .in('chosen_team', [result === 'teamA' ? 'teamB' : 'teamA', losingTeamName])
         .eq('result', 'pending');
     }
 
@@ -671,12 +676,16 @@ const DC13Page: React.FC = () => {
         const dc13Handicap = Number(payload.dc13_handicap || 0);
         const effectiveScore = (scoreA - scoreB) - dc13Handicap;
 
+        const match = matches.find(m => m.id === id);
+        const teamAName = match?.team_a_name || payload.team_a_name || '';
+        const teamBName = match?.team_b_name || payload.team_b_name || '';
+
         if (effectiveScore > 0) {
-          await supabase.from('dc13_bets').update({ result: 'win' }).eq('match_id', id).eq('chosen_team', 'teamA').eq('result', 'pending');
-          await supabase.from('dc13_bets').update({ result: 'loss' }).eq('match_id', id).eq('chosen_team', 'teamB').eq('result', 'pending');
+          await supabase.from('dc13_bets').update({ result: 'win' }).eq('match_id', id).in('chosen_team', ['teamA', teamAName]).eq('result', 'pending');
+          await supabase.from('dc13_bets').update({ result: 'loss' }).eq('match_id', id).in('chosen_team', ['teamB', teamBName]).eq('result', 'pending');
         } else if (effectiveScore < 0) {
-          await supabase.from('dc13_bets').update({ result: 'loss' }).eq('match_id', id).eq('chosen_team', 'teamA').eq('result', 'pending');
-          await supabase.from('dc13_bets').update({ result: 'win' }).eq('match_id', id).eq('chosen_team', 'teamB').eq('result', 'pending');
+          await supabase.from('dc13_bets').update({ result: 'loss' }).eq('match_id', id).in('chosen_team', ['teamA', teamAName]).eq('result', 'pending');
+          await supabase.from('dc13_bets').update({ result: 'win' }).eq('match_id', id).in('chosen_team', ['teamB', teamBName]).eq('result', 'pending');
         } else {
           await supabase.from('dc13_bets').update({ result: 'draw' }).eq('match_id', id).eq('result', 'pending');
         }
@@ -755,7 +764,9 @@ const DC13Page: React.FC = () => {
 
     matchBets.forEach(b => {
       const resolvedName = b.dc13_profiles?.full_name || b.user_name || 'N/A';
-      const chosenTeamName = b.chosen_team === 'teamA' ? match.team_a_name : match.team_b_name;
+      let chosenTeamName = b.chosen_team;
+      if (chosenTeamName === 'teamA') chosenTeamName = match.team_a_name;
+      else if (chosenTeamName === 'teamB') chosenTeamName = match.team_b_name;
       let statusStr = 'Đang chờ';
       if (b.result === 'win') statusStr = 'Thắng';
       else if (b.result === 'loss') statusStr = 'Thua';
@@ -788,7 +799,9 @@ const DC13Page: React.FC = () => {
       const matchName = `${match.team_a_name} vs ${match.team_b_name}`;
       const matchTime = new Date(match.start_time).toLocaleString('vi-VN');
       const resolvedName = b.dc13_profiles?.full_name || b.user_name || 'N/A';
-      const chosenTeamName = b.chosen_team === 'teamA' ? match.team_a_name : match.team_b_name;
+      let chosenTeamName = b.chosen_team;
+      if (chosenTeamName === 'teamA') chosenTeamName = match.team_a_name;
+      else if (chosenTeamName === 'teamB') chosenTeamName = match.team_b_name;
 
       let statusStr = 'Đang chờ';
       if (b.result === 'win') statusStr = 'Thắng';
@@ -895,9 +908,9 @@ const DC13Page: React.FC = () => {
         const handicap = match.dc13_handicap || 0;
         const effectiveScore = diff - handicap;
         if (effectiveScore > 0) {
-          effectiveResult = bet.chosen_team === 'teamA' ? 'win' : 'loss';
+          effectiveResult = (bet.chosen_team === 'teamA' || bet.chosen_team === match.team_a_name) ? 'win' : 'loss';
         } else if (effectiveScore < 0) {
-          effectiveResult = bet.chosen_team === 'teamB' ? 'win' : 'loss';
+          effectiveResult = (bet.chosen_team === 'teamB' || bet.chosen_team === match.team_b_name) ? 'win' : 'loss';
         } else {
           effectiveResult = 'draw';
         }
@@ -970,9 +983,9 @@ const DC13Page: React.FC = () => {
       const handicap = match.dc13_handicap || 0;
       const effectiveScore = diff - handicap;
       if (effectiveScore > 0) {
-        effectiveResult = bet.chosen_team === 'teamA' ? 'win' : 'loss';
+        effectiveResult = (bet.chosen_team === 'teamA' || bet.chosen_team === match.team_a_name) ? 'win' : 'loss';
       } else if (effectiveScore < 0) {
-        effectiveResult = bet.chosen_team === 'teamB' ? 'win' : 'loss';
+        effectiveResult = (bet.chosen_team === 'teamB' || bet.chosen_team === match.team_b_name) ? 'win' : 'loss';
       } else {
         effectiveResult = 'draw';
       }
@@ -1187,8 +1200,8 @@ const DC13Page: React.FC = () => {
                   const alreadyBet = myBetMatchIds.has(match.id);
                   const myBet = myBets.find(b => b.match_id === match.id);
                   const matchBets = bets.filter(b => b.match_id === match.id);
-                  const teamABets = matchBets.filter(b => b.chosen_team === 'teamA').length;
-                  const teamBBets = matchBets.filter(b => b.chosen_team === 'teamB').length;
+                  const teamABets = matchBets.filter(b => b.chosen_team === 'teamA' || b.chosen_team === match.team_a_name).length;
+                  const teamBBets = matchBets.filter(b => b.chosen_team === 'teamB' || b.chosen_team === match.team_b_name).length;
                   const computedResult = getMatchResult(match);
 
                   return (
@@ -1299,9 +1312,9 @@ const DC13Page: React.FC = () => {
                               const handicap = match.dc13_handicap || 0;
                               const effectiveScore = diff - handicap;
                               if (effectiveScore > 0) {
-                                effRes = myBet.chosen_team === 'teamA' ? 'win' : 'loss';
+                                effRes = (myBet.chosen_team === 'teamA' || myBet.chosen_team === match.team_a_name) ? 'win' : 'loss';
                               } else if (effectiveScore < 0) {
-                                effRes = myBet.chosen_team === 'teamB' ? 'win' : 'loss';
+                                effRes = (myBet.chosen_team === 'teamB' || myBet.chosen_team === match.team_b_name) ? 'win' : 'loss';
                               } else {
                                 effRes = 'draw';
                               }
@@ -1314,7 +1327,7 @@ const DC13Page: React.FC = () => {
                                     effRes === 'draw' ? 'bg-slate-500/10 border-slate-500/20 text-slate-400' :
                                       'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
                                   }`}>
-                                  Bạn chọn: <span className="font-black">{myBet.chosen_team === 'teamA' ? match.team_a_name : match.team_b_name}</span>
+                                  Bạn chọn: <span className="font-black">{myBet.chosen_team === 'teamA' ? match.team_a_name : myBet.chosen_team === 'teamB' ? match.team_b_name : myBet.chosen_team}</span>
                                   {effRes === 'win' && ' — ✅ THẮNG (0đ)'}
                                   {effRes === 'loss' && ` — ❌ THUA (-${PENALTY_AMOUNT.toLocaleString('vi-VN')}đ)`}
                                   {effRes === 'draw' && ' — 🤝 HÒA (0đ)'}
@@ -1361,8 +1374,8 @@ const DC13Page: React.FC = () => {
 
                       {/* Bet list for this match */}
                       {matchBets.length > 0 && (() => {
-                        const betsA = matchBets.filter(b => b.chosen_team === 'teamA');
-                        const betsB = matchBets.filter(b => b.chosen_team === 'teamB');
+                        const betsA = matchBets.filter(b => b.chosen_team === 'teamA' || b.chosen_team === match.team_a_name);
+                        const betsB = matchBets.filter(b => b.chosen_team === 'teamB' || b.chosen_team === match.team_b_name);
 
                         return (
                           <div className="px-5 pb-5 border-t border-white/5 pt-4">
