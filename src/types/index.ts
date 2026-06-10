@@ -26,6 +26,7 @@ export interface Match {
   dc13_status?: string;
   dc13_score_a?: number;
   dc13_score_b?: number;
+  dc13_handicap_set?: boolean;
 }
 
 export interface Bet {

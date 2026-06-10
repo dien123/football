@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Match } from '../types';
 import { supabase } from '../lib/supabase';
 import { AppContext } from '../App';
+import { calculateBetResult, getOutcomeLabel } from '../utils/betLogic';
 
 const AdminPage: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -187,6 +188,75 @@ const AdminPage: React.FC = () => {
       alert('Đã reset trận đấu thành công!');
     }
     fetchMatches();
+  };
+
+  const exportToCSV = (csvContent: string, fileName: string) => {
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportMatchBets = async (match: Match) => {
+    try {
+      const { data: matchBets, error } = await supabase
+        .from('bets')
+        .select('*')
+        .eq('match_id', match.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (!matchBets || matchBets.length === 0) {
+        alert('Trận đấu này chưa có ai dự đoán!');
+        return;
+      }
+
+      let csv = 'ID Lượt dự đoán,Tài Khoản,Lựa Chọn,Số Tiền,Tỷ Lệ Ăn,Kết Quả Bet,Thực Nhận (LN/TL),Thời Gian Dự Đoán\n';
+
+      matchBets.forEach(b => {
+        const isTeamA = b.option === 'teamA' || b.option === match.team_a_name;
+        const chosenTeamName = isTeamA ? match.team_a_name : match.team_b_name;
+        const rate = isTeamA ? match.rate_a : match.rate_b;
+
+        let statusStr = 'Đang chờ';
+        let payoutStr = '0';
+
+        if (match.status === 'finished') {
+          const res = calculateBetResult(
+            b.option,
+            b.amount,
+            match.score_a,
+            match.score_b,
+            {
+              handicap: match.handicap,
+              rateA: match.rate_a,
+              rateB: match.rate_b,
+              teamAName: match.team_a_name,
+              teamBName: match.team_b_name
+            }
+          );
+          statusStr = getOutcomeLabel(res.outcome);
+          payoutStr = res.payout > 0 ? `+${res.payout}` : `${res.payout}`;
+        }
+
+        const timeStr = new Date(b.created_at).toLocaleString('vi-VN');
+        const escapedName = b.user_name.includes(',') ? `"${b.user_name}"` : b.user_name;
+        const escapedTeamName = chosenTeamName.includes(',') ? `"${chosenTeamName}"` : chosenTeamName;
+
+        csv += `${b.id},${escapedName},${escapedTeamName},${b.amount},${rate}%,${statusStr},${payoutStr},${timeStr}\n`;
+      });
+
+      const fileName = `Bets_${match.team_a_name}_vs_${match.team_b_name}.csv`;
+      exportToCSV(csv, fileName);
+    } catch (err: any) {
+      alert('Lỗi xuất cược: ' + err.message);
+    }
   };
 
   const filteredMatches = matches.filter(m => {
@@ -389,8 +459,15 @@ const AdminPage: React.FC = () => {
                     {/* ACTIONS */}
                     <div className="flex gap-2 md:gap-3 justify-end md:justify-start shrink-0">
                       {localScores[m.id] && <button onClick={() => handleQuickUpdateResult(m)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-emerald-500 text-black rounded-full shadow-lg shadow-emerald-500/20 hover:scale-110 active:scale-95 transition-all text-[10px] md:text-xs">✅</button>}
-                      <button onClick={() => setEditingMatch(m)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full border border-white/10 transition-all text-[10px] md:text-xs">✏️</button>
-                      <button onClick={() => handleDeleteMatch(m.id)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-rose-500 hover:text-white rounded-full border border-white/10 transition-all text-[10px] md:text-xs">🗑️</button>
+                      <button onClick={() => setEditingMatch(m)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full border border-white/10 transition-all text-[10px] md:text-xs" title="Sửa trận đấu">✏️</button>
+                      <button
+                        onClick={() => handleExportMatchBets(m)}
+                        title="Xuất Excel cược trận này"
+                        className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-emerald-600 hover:text-white rounded-full border border-white/10 transition-all text-[10px] md:text-xs"
+                      >
+                        📥
+                      </button>
+                      <button onClick={() => handleDeleteMatch(m.id)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-rose-500 hover:text-white rounded-full border border-white/10 transition-all text-[10px] md:text-xs" title="Xóa trận đấu">🗑️</button>
                       {m.status === 'finished' && (
                         <button
                           onClick={() => handleResetMatch(m.id)}
