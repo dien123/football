@@ -1258,11 +1258,9 @@ const DC13Page: React.FC = () => {
                                 <span className="text-[9px] font-black text-rose-500/80 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/10 uppercase tracking-widest">Chưa có kèo</span>
                               ) : match.dc13_handicap === 0 || match.dc13_handicap === undefined ? (
                                 <span className="text-[9px] font-black text-slate-500 bg-white/5 px-2 py-0.5 rounded border border-white/5 uppercase tracking-widest">Đồng banh</span>
-                              ) : match.dc13_favorite_team === 'teamA' ? (
-                                <span className="text-[11px] font-black text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 uppercase tracking-widest">Chấp -{Math.abs(match.dc13_handicap)}</span>
-                              ) : (
+                              ) : match.dc13_favorite_team === 'teamB' ? (
                                 <span className="text-[11px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase tracking-widest">Được chấp +{Math.abs(match.dc13_handicap)}</span>
-                              )}
+                              ) : null}
                             </div>
                           </div>
 
@@ -1303,11 +1301,9 @@ const DC13Page: React.FC = () => {
                                 <span className="text-[9px] font-black text-rose-500/80 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/10 uppercase tracking-widest">Chưa có kèo</span>
                               ) : match.dc13_handicap === 0 || match.dc13_handicap === undefined ? (
                                 <span className="text-[9px] font-black text-slate-500 bg-white/5 px-2 py-0.5 rounded border border-white/5 uppercase tracking-widest">Đồng banh</span>
-                              ) : match.dc13_favorite_team === 'teamB' ? (
-                                <span className="text-[11px] font-black text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 uppercase tracking-widest">Chấp -{Math.abs(match.dc13_handicap)}</span>
-                              ) : (
+                              ) : match.dc13_favorite_team === 'teamA' ? (
                                 <span className="text-[11px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase tracking-widest">Được chấp +{Math.abs(match.dc13_handicap)}</span>
-                              )}
+                              ) : null}
                             </div>
                           </div>
                         </div>
@@ -2675,7 +2671,7 @@ const DC13Page: React.FC = () => {
                   </div>
                 )}
                 <span>
-                  {betMatch.team_a_name} {betMatch.dc13_handicap === 0 || betMatch.dc13_handicap === undefined ? '(0)' : betMatch.dc13_favorite_team === 'teamA' ? `(-${Math.abs(betMatch.dc13_handicap)})` : `(+${Math.abs(betMatch.dc13_handicap)})`}
+                  {betMatch.team_a_name} {betMatch.dc13_handicap === 0 || betMatch.dc13_handicap === undefined ? '(0)' : betMatch.dc13_favorite_team === 'teamB' ? `(+${Math.abs(betMatch.dc13_handicap)})` : ''}
                 </span>
               </button>
               <button
@@ -2688,7 +2684,7 @@ const DC13Page: React.FC = () => {
                   </div>
                 )}
                 <span>
-                  {betMatch.team_b_name} {betMatch.dc13_handicap === 0 || betMatch.dc13_handicap === undefined ? '(0)' : betMatch.dc13_favorite_team === 'teamB' ? `(-${Math.abs(betMatch.dc13_handicap)})` : `(+${Math.abs(betMatch.dc13_handicap)})`}
+                  {betMatch.team_b_name} {betMatch.dc13_handicap === 0 || betMatch.dc13_handicap === undefined ? '(0)' : betMatch.dc13_favorite_team === 'teamA' ? `(+${Math.abs(betMatch.dc13_handicap)})` : ''}
                 </span>
               </button>
             </div>
