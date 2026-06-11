@@ -1855,7 +1855,7 @@ const DC13Page: React.FC = () => {
                   </div>
                   <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl px-4 py-2 flex items-center gap-2 shadow-inner">
                     <span className="text-sm">💰</span>
-                    <span className="text-[10px] font-black text-cyan-400/80 uppercase tracking-wider">Tổng quỹ phạt thu (IC nhận):</span>
+                    <span className="text-[12px] font-black text-cyan-400/80 uppercase tracking-wider">Tổng quỹ phạt thu (IC nhận):</span>
                     <span className="text-base font-extrabold text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.4)]">
                       {playerStats.reduce((sum, p) => sum + Math.abs(p.total_penalty), 0).toLocaleString('vi-VN')}đ
                     </span>
@@ -1954,7 +1954,7 @@ const DC13Page: React.FC = () => {
                   <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-[9px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5 bg-slate-900/10">
+                        <tr className="text-[11px] font-black text-slate-300 uppercase tracking-widest border-b border-white/5 bg-slate-900/10">
                           <th className="py-3 px-5 text-left">#</th>
                           <th className="py-3 px-5 text-left">Người chơi</th>
                           <th className="py-3 px-5 text-center">Tổng bet</th>
@@ -2124,7 +2124,7 @@ const DC13Page: React.FC = () => {
                     <p className="text-lg font-black text-amber-400 mb-2.5 flex items-center gap-1.5 uppercase tracking-wider">
                       🍺 Nâng Ly Bia, Trao Gắn Kết!
                     </p>
-                    <p className="text-base text-slate-300 font-bold leading-relaxed">
+                    <p className="text-base text-slate-100 font-bold leading-relaxed">
                       Toàn bộ số quỹ còn lại sau khi trừ đi phần thưởng cho các cao thủ sẽ được "trưng dụng triệt để" để tổ chức một bữa nâng ly nhậu hoành tráng 🍻 hoặc order nước ngọt, trà sữa tràn trề 🥤 cho toàn thể anh chị em đã tham gia dự đoán!
                     </p>
                     <p className="text-base text-amber-300/80 font-black mt-3 italic">
