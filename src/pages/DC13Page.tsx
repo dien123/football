@@ -1115,7 +1115,7 @@ const DC13Page: React.FC = () => {
                   </div>
                   <div className="bg-slate-950/40 px-4 py-2 rounded-2xl border border-white/[0.03]">
                     <p className="text-xl font-extrabold text-rose-400 drop-shadow-[0_0_8px_rgba(251,113,133,0.4)]">
-                      {(-myBetsWithResult.filter(b => b.effectiveResult === 'loss').length * PENALTY_AMOUNT).toLocaleString('vi-VN')}đ
+                      {(-myBetsWithResult.filter(b => b.effectiveResult === 'loss').length * PENALTY_AMOUNT).toLocaleString('vi-VN')} điểm
                     </p>
                     <p className="text-[10px] font-black text-slate-500 uppercase mt-0.5 tracking-wider">Tổng phạt</p>
                   </div>
@@ -1304,6 +1304,52 @@ const DC13Page: React.FC = () => {
                               ) : match.dc13_favorite_team === 'teamA' ? (
                                 <span className="text-[11px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase tracking-widest">Được chấp +{Math.abs(match.dc13_handicap)}</span>
                               ) : null}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Real-time Match Betting Statistics */}
+                        <div className="mt-4 bg-slate-900/40 backdrop-blur-md border border-white/[0.05] rounded-2xl p-4 shadow-lg relative overflow-hidden">
+                          <div className="absolute top-0 left-0 w-full h-[1.5px] bg-gradient-to-r from-indigo-500 via-emerald-500 to-rose-500" />
+
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg shrink-0">📊</span>
+                              <div>
+                                <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-200 leading-tight">
+                                  Thống kê lượng Dự đoán
+                                </h3>
+                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Cập nhật thời gian thực</p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 font-mono sm:justify-end">
+                              <div>
+                                <p className="text-[8px] font-black text-slate-500 uppercase mb-0.5 tracking-wider font-sans">Tổng lượt cược</p>
+                                <p className="text-xs font-black text-indigo-400">{(teamABets + teamBBets)} lượt</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Distribution Bar */}
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between text-[9px] font-black uppercase tracking-wider">
+                              <span className="text-indigo-400 truncate max-w-[48%]">
+                                {match.team_a_name}: {teamABets} lượt ({(teamABets + teamBBets) > 0 ? Math.round((teamABets / (teamABets + teamBBets)) * 100) : 0}%)
+                              </span>
+                              <span className="text-rose-400 truncate max-w-[48%] text-right">
+                                {match.team_b_name}: {teamBBets} lượt ({(teamABets + teamBBets) > 0 ? Math.round((teamBBets / (teamABets + teamBBets)) * 100) : 0}%)
+                              </span>
+                            </div>
+                            <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden flex p-0.5 border border-white/5">
+                              <div
+                                className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-l-full transition-all duration-500"
+                                style={{ width: `${(teamABets + teamBBets) > 0 ? (teamABets / (teamABets + teamBBets)) * 100 : 50}%` }}
+                              />
+                              <div
+                                className="h-full bg-gradient-to-r from-rose-400 to-rose-600 rounded-r-full transition-all duration-500"
+                                style={{ width: `${(teamABets + teamBBets) > 0 ? (teamABets / (teamABets + teamBBets)) * 100 : 50}%` }}
+                              />
                             </div>
                           </div>
                         </div>
@@ -1508,10 +1554,10 @@ const DC13Page: React.FC = () => {
                   <div>
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Tổng quỹ dự đoán vô địch</span>
                     <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-400">
-                      {totalOutrightPool.toLocaleString('vi-VN')}đ
+                      {totalOutrightPool.toLocaleString('vi-VN')} điểm
                     </span>
                     <span className="block text-[10px] text-slate-500 mt-1">
-                      Quỹ chia (thua): {netOutrightPool.toLocaleString('vi-VN')}đ
+                      Quỹ chia (thua): {netOutrightPool.toLocaleString('vi-VN')} điểm
                     </span>
                   </div>
                   <div className="text-3xl">💰</div>
@@ -1522,7 +1568,7 @@ const DC13Page: React.FC = () => {
                   <div>
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Bạn đã dự đoán vô địch</span>
                     <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">
-                      {myOutrightBets.reduce((sum, b) => sum + b.amount, 0).toLocaleString('vi-VN')}đ
+                      {myOutrightBets.reduce((sum, b) => sum + b.amount, 0).toLocaleString('vi-VN')} điểm
                     </span>
                   </div>
                   <div className="text-3xl">🎟️</div>
@@ -1676,10 +1722,10 @@ const DC13Page: React.FC = () => {
                           }
                         }}
                         className={`flex flex-col items-center p-4 rounded-2xl border bg-gradient-to-b from-white/[0.02] to-white/[0.04] text-center transition-all ${isOutrightLocked
-                            ? 'border-white/[0.03] opacity-60 cursor-not-allowed'
-                            : hasOwnBetOnTeam
-                              ? 'border-emerald-500/40 bg-emerald-500/5 cursor-not-allowed'
-                              : 'border-white/[0.08] hover:border-cyan-500/40 hover:bg-cyan-500/5 active:scale-[0.98]'
+                          ? 'border-white/[0.03] opacity-60 cursor-not-allowed'
+                          : hasOwnBetOnTeam
+                            ? 'border-emerald-500/40 bg-emerald-500/5 cursor-not-allowed'
+                            : 'border-white/[0.08] hover:border-cyan-500/40 hover:bg-cyan-500/5 active:scale-[0.98]'
                           }`}
                       >
                         {/* Flag image */}
@@ -1699,7 +1745,7 @@ const DC13Page: React.FC = () => {
                             <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Đã dự đoán</span>
                           )}
                           <span className="block text-[11px] font-black text-cyan-400">
-                            {teamTotalBet > 0 ? `${(teamTotalBet).toLocaleString('vi-VN')}đ` : '0đ'}
+                            {teamTotalBet > 0 ? `${(teamTotalBet).toLocaleString('vi-VN')} điểm` : '0 điểm'}
                           </span>
                         </div>
                       </button>
@@ -1797,15 +1843,15 @@ const DC13Page: React.FC = () => {
                                 </div>
                               </td>
                               <td className="py-4 px-4 text-right font-mono font-bold text-slate-300">
-                                {bet.amount.toLocaleString('vi-VN')}đ
+                                {bet.amount.toLocaleString('vi-VN')} điểm
                               </td>
                               <td className="py-4 px-4 text-right font-mono">
                                 <span className={statusColor}>
-                                  {estWinnings >= 0 ? '+' : ''}{estWinnings.toLocaleString('vi-VN')}đ
+                                  {estWinnings >= 0 ? '+' : ''}{estWinnings.toLocaleString('vi-VN')} điểm
                                 </span>
                               </td>
                               <td className="py-4 px-4 text-right font-mono font-black text-emerald-400">
-                                {estTotal.toLocaleString('vi-VN')}đ
+                                {estTotal.toLocaleString('vi-VN')} điểm
                               </td>
                               <td className="py-4 px-6 text-right">
                                 {(isOwnBet || adminAuthed) && !isOutrightLocked && (
@@ -1853,7 +1899,7 @@ const DC13Page: React.FC = () => {
                     <span className="text-sm">💰</span>
                     <span className="text-[12px] font-black text-cyan-400/80 uppercase tracking-wider">Tổng quỹ phạt thu (IC nhận):</span>
                     <span className="text-base font-extrabold text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.4)]">
-                      {playerStats.reduce((sum, p) => sum + Math.abs(p.total_penalty), 0).toLocaleString('vi-VN')}đ
+                      {playerStats.reduce((sum, p) => sum + Math.abs(p.total_penalty), 0).toLocaleString('vi-VN')} điểm
                     </span>
                   </div>
                 </div>
@@ -1862,7 +1908,7 @@ const DC13Page: React.FC = () => {
                   {/* Hạng Nhất */}
                   <div className="bg-gradient-to-b from-amber-500/15 via-amber-600/5 to-slate-950/20 border border-amber-500/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(245,158,11,0.08)] hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
-                      <p className="text-[11px] font-black text-amber-400/80 uppercase tracking-wider flex items-center gap-1.5">🥇 GIẢI NHẤT (300K)</p>
+                      <p className="text-[11px] font-black text-amber-400/80 uppercase tracking-wider flex items-center gap-1.5">🥇 GIẢI NHẤT (300K điểm)</p>
                       <p className="text-sm font-black text-white mt-1.5 tracking-wide">
                         {prizeStandings.first ? prizeStandings.first.user_name : 'Chưa có'}
                       </p>
@@ -1875,7 +1921,7 @@ const DC13Page: React.FC = () => {
                   {/* Hạng Nhì */}
                   <div className="bg-gradient-to-b from-slate-300/15 via-slate-400/5 to-slate-950/20 border border-slate-400/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(148,163,184,0.08)] hover:border-slate-300 hover:shadow-[0_0_30px_rgba(148,163,184,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
-                      <p className="text-[11px] font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">🥈 GIẢI NHÌ (200K)</p>
+                      <p className="text-[11px] font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">🥈 GIẢI NHÌ (200K điểm)</p>
                       <p className="text-sm font-black text-white mt-1.5 tracking-wide">
                         {prizeStandings.second ? prizeStandings.second.user_name : 'Chưa có'}
                       </p>
@@ -1888,7 +1934,7 @@ const DC13Page: React.FC = () => {
                   {/* Hạng Ba */}
                   <div className="bg-gradient-to-b from-amber-850/20 via-amber-900/5 to-slate-950/20 border border-amber-900/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(120,53,4,0.08)] hover:border-amber-700 hover:shadow-[0_0_30px_rgba(120,53,4,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
-                      <p className="text-[11px] font-black text-amber-600 uppercase tracking-wider flex items-center gap-1.5">🥉 GIẢI BA (100K)</p>
+                      <p className="text-[11px] font-black text-amber-600 uppercase tracking-wider flex items-center gap-1.5">🥉 GIẢI BA (100K điểm)</p>
                       <p className="text-sm font-black text-white mt-1.5 tracking-wide">
                         {prizeStandings.third ? prizeStandings.third.user_name : 'Chưa có'}
                       </p>
@@ -1901,7 +1947,7 @@ const DC13Page: React.FC = () => {
                   {/* Mâm Xôi Vàng */}
                   <div className="bg-gradient-to-b from-rose-500/15 via-rose-600/5 to-slate-950/20 border border-rose-500/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(244,63,94,0.08)] hover:border-rose-400 hover:shadow-[0_0_30px_rgba(244,63,94,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
-                      <p className="text-[10px] font-black text-rose-400 uppercase tracking-wider flex items-center gap-1.5">🍋 MÂM XÔI VÀNG (100K)</p>
+                      <p className="text-[10px] font-black text-rose-400 uppercase tracking-wider flex items-center gap-1.5">🍋 MÂM XÔI VÀNG (100K điểm)</p>
                       <p className="text-sm font-black text-white mt-1.5 tracking-wide">
                         {prizeStandings.raspberry ? prizeStandings.raspberry.user_name : 'Chưa có'}
                       </p>
@@ -1960,7 +2006,7 @@ const DC13Page: React.FC = () => {
                               <td className="py-3.5 px-5 text-center font-black text-rose-400">{p.losses}</td>
                               <td className="py-3.5 px-5 text-center font-bold text-slate-500">{p.pending}</td>
                               <td className={`py-3.5 px-5 text-right font-black ${p.total_penalty < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
-                                {p.total_penalty === 0 ? '0đ' : `${p.total_penalty.toLocaleString('vi-VN')}đ`}
+                                {p.total_penalty === 0 ? '0 điểm' : `${p.total_penalty.toLocaleString('vi-VN')} điểm`}
                               </td>
                             </tr>
                           );
@@ -1992,7 +2038,7 @@ const DC13Page: React.FC = () => {
                           </div>
                           <div className="text-right shrink-0">
                             <p className={`text-sm font-black ${p.total_penalty < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
-                              {p.total_penalty === 0 ? '0đ' : `${p.total_penalty.toLocaleString('vi-VN')}đ`}
+                              {p.total_penalty === 0 ? '0 điểm' : `${p.total_penalty.toLocaleString('vi-VN')} điểm`}
                             </p>
                             <p className="text-[8px] text-slate-500 font-bold">{p.total_bets} trận</p>
                           </div>
@@ -2031,11 +2077,11 @@ const DC13Page: React.FC = () => {
                     </p>
                   </div>
                   <div className="bg-slate-900/40 border border-white/[0.04] rounded-2xl p-4 hover:border-rose-500/20 transition-all duration-300 shadow-sm">
-                    <p className="text-sm font-black text-rose-400 mb-1.5">💸 PHẠT TIỀN THUA CUỢC</p>
+                    <p className="text-sm font-black text-rose-400 mb-1.5">💸 PHẠT ĐIỂM THUA CUỢC</p>
                     <ul className="text-sm text-slate-400 font-semibold leading-relaxed list-disc pl-4 space-y-1">
-                      <li>Mỗi trận đoán <span className="text-rose-400 font-black">Sai (Thua)</span>: Phạt <span className="text-rose-400 font-black">-{PENALTY_AMOUNT.toLocaleString('vi-VN')}đ</span>.</li>
-                      <li>Đoán <span className="text-emerald-400 font-black">Đúng (Thắng)</span>: <span className="text-emerald-400 font-black">0đ</span> (thắng không được tiền, nhưng không bị trừ phạt).</li>
-                      <li>Trận đấu kết quả <span className="text-slate-300 font-bold">Hòa</span>: <span className="text-slate-300 font-bold">0đ</span> (không mất tiền phạt).</li>
+                      <li>Mỗi trận đoán <span className="text-rose-400 font-black">Sai (Thua)</span>: Phạt <span className="text-rose-400 font-black">-{PENALTY_AMOUNT.toLocaleString('vi-VN')} điểm</span>.</li>
+                      <li>Đoán <span className="text-emerald-400 font-black">Đúng (Thắng)</span>: <span className="text-emerald-400 font-black">0 điểm</span> (thắng không được điểm, nhưng không bị trừ phạt).</li>
+                      <li>Trận đấu kết quả <span className="text-slate-300 font-bold">Hòa</span>: <span className="text-slate-300 font-bold">0 điểm</span> (không mất điểm phạt).</li>
                     </ul>
                   </div>
                 </div>
@@ -2057,15 +2103,15 @@ const DC13Page: React.FC = () => {
                     <div className="space-y-3 border-b border-white/5 pb-3">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-slate-300">🥇 Giải Nhất:</span>
-                        <span className="font-black text-cyan-300 text-sm">300.000đ</span>
+                        <span className="font-black text-cyan-300 text-sm">300.000 điểm</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-slate-300">🥈 Giải Nhì:</span>
-                        <span className="font-black text-cyan-300 text-sm">200.000đ</span>
+                        <span className="font-black text-cyan-300 text-sm">200.000 điểm</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-slate-300">🥉 Giải Ba:</span>
-                        <span className="font-black text-cyan-300 text-sm">100.000đ</span>
+                        <span className="font-black text-cyan-300 text-sm">100.000 điểm</span>
                       </div>
                     </div>
                     <p className="text-[12px] text-slate-500 font-bold leading-normal">
@@ -2083,7 +2129,7 @@ const DC13Page: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between text-xs border-t border-white/5 pt-3">
                       <span className="font-bold text-rose-300">🎁 Phần thưởng:</span>
-                      <span className="font-black text-rose-400 text-sm">100.000đ</span>
+                      <span className="font-black text-rose-400 text-sm">100.000 điểm</span>
                     </div>
                   </div>
                 </div>
@@ -2704,7 +2750,7 @@ const DC13Page: React.FC = () => {
               <button onClick={() => { setShowBetModal(false); setBetMatch(null); }} className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors text-lg">✕</button>
               <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3 backdrop-blur-sm border border-white/30">🎯</div>
               <h2 className="text-xl font-black text-white uppercase tracking-tight">Chọn Đội</h2>
-              <p className="text-cyan-100 text-[14px] mt-2 opacity-80 uppercase font-bold tracking-widest">DC 13 • Thua -{PENALTY_AMOUNT.toLocaleString('vi-VN')}đ</p>
+              <p className="text-cyan-100 text-[14px] mt-2 opacity-80 uppercase font-bold tracking-widest">DC 13 • Thua -{PENALTY_AMOUNT.toLocaleString('vi-VN')} điểm</p>
             </div>
 
             {/* Match info */}
@@ -2723,7 +2769,7 @@ const DC13Page: React.FC = () => {
             <div className="px-8 py-3">
               <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10">
                 <p className="text-[14px] text-slate-400 font-bold text-center">
-                  ⚠️ Thua = <span className="text-rose-400 font-black">-{PENALTY_AMOUNT.toLocaleString('vi-VN')}đ</span> • Thắng = <span className="text-emerald-400 font-black">0đ</span>
+                  ⚠️ Thua = <span className="text-rose-400 font-black">-{PENALTY_AMOUNT.toLocaleString('vi-VN')} điểm</span> • Thắng = <span className="text-emerald-400 font-black">0 điểm</span>
                 </p>
               </div>
             </div>
@@ -2900,16 +2946,16 @@ const DC13Page: React.FC = () => {
                 return (
                   <div className="p-4 rounded-2xl bg-slate-950/60 border border-white/5 space-y-2 text-xs">
                     <div className="flex justify-between items-center text-slate-400">
-                      <span>Tiền dự đoán (Gốc):</span>
-                      <span className="font-mono text-slate-200 font-bold">20.000đ</span>
+                      <span>Điểm dự đoán (Gốc):</span>
+                      <span className="font-mono text-slate-200 font-bold">20.000 điểm</span>
                     </div>
                     <div className="flex justify-between items-center text-cyan-400">
-                      <span>Tiền thắng chia quỹ dự kiến:</span>
-                      <span className="font-mono font-black">+{Math.round(estWinnings).toLocaleString('vi-VN')}đ</span>
+                      <span>Điểm thắng chia quỹ dự kiến:</span>
+                      <span className="font-mono font-black">+{Math.round(estWinnings).toLocaleString('vi-VN')} điểm</span>
                     </div>
                     <div className="border-t border-white/5 my-2 pt-2 flex justify-between items-center text-emerald-400 font-bold">
                       <span>Tổng thực nhận dự kiến:</span>
-                      <span className="font-mono font-black text-sm">{Math.round(estTotal).toLocaleString('vi-VN')}đ</span>
+                      <span className="font-mono font-black text-sm">{Math.round(estTotal).toLocaleString('vi-VN')} điểm</span>
                     </div>
                     <p className="text-[9px] text-slate-500 text-center italic mt-1">Lưu ý: Đây là số liệu dự kiến nếu đội tuyển này vô địch, dựa trên số lượng cược hiện tại.</p>
                   </div>
@@ -2966,7 +3012,7 @@ const DC13Page: React.FC = () => {
             {/* Input field */}
             <div className="px-8 py-4 space-y-4">
               <div>
-                <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest">Gía trị dự đoán mới (đ)</label>
+                <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest">Gía trị dự đoán mới (điểm)</label>
                 <input
                   type="number"
                   min={20000}
@@ -2979,7 +3025,7 @@ const DC13Page: React.FC = () => {
                     setEditOutrightAmount(val === '' ? '' : Number(val));
                   }}
                 />
-                <p className="text-[10px] text-slate-500 mt-1.5 italic">Dự đoán tối thiểu 20.000đ.</p>
+                <p className="text-[10px] text-slate-500 mt-1.5 italic">Dự đoán tối thiểu 20.000 điểm.</p>
               </div>
 
               {/* Estimated Rewards display */}
@@ -3001,15 +3047,15 @@ const DC13Page: React.FC = () => {
                   <div className="p-4 rounded-2xl bg-slate-950/60 border border-white/5 space-y-2 text-xs">
                     <div className="flex justify-between items-center text-slate-400">
                       <span>Gía trị dự đoán mới (Gốc):</span>
-                      <span className="font-mono text-slate-200 font-bold">{refBet.toLocaleString('vi-VN')}đ</span>
+                      <span className="font-mono text-slate-200 font-bold">{refBet.toLocaleString('vi-VN')} điểm</span>
                     </div>
                     <div className="flex justify-between items-center text-cyan-400">
-                      <span>Tiền thắng chia quỹ dự kiến:</span>
-                      <span className="font-mono font-black">+{estWinnings.toLocaleString('vi-VN')}đ</span>
+                      <span>Điểm thắng chia quỹ dự kiến:</span>
+                      <span className="font-mono font-black">+{estWinnings.toLocaleString('vi-VN')} điểm</span>
                     </div>
                     <div className="border-t border-white/5 my-2 pt-2 flex justify-between items-center text-emerald-400 font-bold">
                       <span>Tổng thực nhận dự kiến:</span>
-                      <span className="font-mono font-black text-sm">{estTotal.toLocaleString('vi-VN')}đ</span>
+                      <span className="font-mono font-black text-sm">{estTotal.toLocaleString('vi-VN')} điểm</span>
                     </div>
                     <p className="text-[9px] text-slate-500 text-center italic mt-1">Dự tính dựa trên tổng quỹ dự đoán hiện tại nếu bạn đổi thành dự đoán mới.</p>
                   </div>
