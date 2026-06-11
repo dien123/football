@@ -1638,7 +1638,7 @@ const DC13Page: React.FC = () => {
                     <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
                       <span>🏟️ DANH SÁCH ĐỘI TUYỂN</span>
                     </h3>
-                    <p className="text-[12px] text-slate-400 mt-1">Chọn đội tuyển bạn dự đoán sẽ vô địch để đặt dự đoán (Tối thiểu 20.000đ).</p>
+                    <p className="text-[12px] text-slate-400 mt-1">Chọn đội tuyển bạn dự đoán sẽ vô địch để đặt dự đoán (20.000đ).</p>
                   </div>
 
                   {/* Search input */}
@@ -1675,13 +1675,12 @@ const DC13Page: React.FC = () => {
                             setOutrightBettingOn(team);
                           }
                         }}
-                        className={`flex flex-col items-center p-4 rounded-2xl border bg-gradient-to-b from-white/[0.02] to-white/[0.04] text-center transition-all ${
-                          isOutrightLocked
+                        className={`flex flex-col items-center p-4 rounded-2xl border bg-gradient-to-b from-white/[0.02] to-white/[0.04] text-center transition-all ${isOutrightLocked
                             ? 'border-white/[0.03] opacity-60 cursor-not-allowed'
                             : hasOwnBetOnTeam
                               ? 'border-emerald-500/40 bg-emerald-500/5 cursor-not-allowed'
                               : 'border-white/[0.08] hover:border-cyan-500/40 hover:bg-cyan-500/5 active:scale-[0.98]'
-                        }`}
+                          }`}
                       >
                         {/* Flag image */}
                         <div className="w-12 h-8 rounded-lg overflow-hidden border border-white/20 shadow-md mb-2.5 shrink-0 bg-slate-800">
