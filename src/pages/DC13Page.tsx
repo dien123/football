@@ -969,21 +969,10 @@ const DC13Page: React.FC = () => {
       return b.total_bets - a.total_bets;
     });
 
-    const getEligibleOrLeader = (list: PlayerStats[], rankIndex: number) => {
-      const eligibleList = list.filter(p => p.total_bets > 20);
-      if (eligibleList.length > rankIndex) {
-        return { player: eligibleList[rankIndex], qualified: true };
-      }
-      if (list.length > rankIndex) {
-        return { player: list[rankIndex], qualified: false };
-      }
-      return null;
-    };
-
-    const first = getEligibleOrLeader(sortedByWins, 0);
-    const second = getEligibleOrLeader(sortedByWins, 1);
-    const third = getEligibleOrLeader(sortedByWins, 2);
-    const raspberry = getEligibleOrLeader(sortedByLosses, 0);
+    const first = sortedByWins.length > 0 ? sortedByWins[0] : null;
+    const second = sortedByWins.length > 1 ? sortedByWins[1] : null;
+    const third = sortedByWins.length > 2 ? sortedByWins[2] : null;
+    const raspberry = sortedByLosses.length > 0 ? sortedByLosses[0] : null;
 
     return { first, second, third, raspberry };
   })();
@@ -1868,74 +1857,54 @@ const DC13Page: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Hạng Nhất */}
-                  <div className="bg-gradient-to-b from-amber-500/15 via-amber-600/5 to-slate-950/20 border border-amber-500/30 rounded-2xl p-4 flex flex-col justify-between min-h-[110px] shadow-[0_0_25px_rgba(245,158,11,0.08)] hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.18)] hover:scale-[1.02] transition-all duration-300">
+                  <div className="bg-gradient-to-b from-amber-500/15 via-amber-600/5 to-slate-950/20 border border-amber-500/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(245,158,11,0.08)] hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
                       <p className="text-[11px] font-black text-amber-400/80 uppercase tracking-wider flex items-center gap-1.5">🥇 GIẢI NHẤT (300K)</p>
                       <p className="text-sm font-black text-white mt-1.5 tracking-wide">
-                        {prizeStandings.first ? prizeStandings.first.player.user_name : 'Chưa có'}
+                        {prizeStandings.first ? prizeStandings.first.user_name : 'Chưa có'}
                       </p>
                     </div>
-                    <div className="flex items-center justify-between mt-2.5 text-[10px] font-bold">
-                      <span className="text-slate-400">{prizeStandings.first ? `${prizeStandings.first.player.wins} trận thắng` : ''}</span>
-                      {prizeStandings.first && (
-                        <span className={`px-2 py-0.5 rounded-md font-black text-[9px] ${prizeStandings.first.qualified ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
-                          {prizeStandings.first.qualified ? '✓ Đủ ĐK' : `Cần bet ${prizeStandings.first.player.total_bets}/20`}
-                        </span>
-                      )}
+                    <div className="flex items-center justify-between mt-2 text-[10px] font-bold">
+                      <span className="text-slate-400">{prizeStandings.first ? `${prizeStandings.first.wins} trận thắng` : ''}</span>
                     </div>
                   </div>
 
                   {/* Hạng Nhì */}
-                  <div className="bg-gradient-to-b from-slate-300/15 via-slate-400/5 to-slate-950/20 border border-slate-400/30 rounded-2xl p-4 flex flex-col justify-between min-h-[110px] shadow-[0_0_25px_rgba(148,163,184,0.08)] hover:border-slate-300 hover:shadow-[0_0_30px_rgba(148,163,184,0.18)] hover:scale-[1.02] transition-all duration-300">
+                  <div className="bg-gradient-to-b from-slate-300/15 via-slate-400/5 to-slate-950/20 border border-slate-400/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(148,163,184,0.08)] hover:border-slate-300 hover:shadow-[0_0_30px_rgba(148,163,184,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
                       <p className="text-[11px] font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">🥈 GIẢI NHÌ (200K)</p>
                       <p className="text-sm font-black text-white mt-1.5 tracking-wide">
-                        {prizeStandings.second ? prizeStandings.second.player.user_name : 'Chưa có'}
+                        {prizeStandings.second ? prizeStandings.second.user_name : 'Chưa có'}
                       </p>
                     </div>
-                    <div className="flex items-center justify-between mt-2.5 text-[10px] font-bold">
-                      <span className="text-slate-400">{prizeStandings.second ? `${prizeStandings.second.player.wins} trận thắng` : ''}</span>
-                      {prizeStandings.second && (
-                        <span className={`px-2 py-0.5 rounded-md font-black text-[9px] ${prizeStandings.second.qualified ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
-                          {prizeStandings.second.qualified ? '✓ Đủ ĐK' : `Cần bet ${prizeStandings.second.player.total_bets}/20`}
-                        </span>
-                      )}
+                    <div className="flex items-center justify-between mt-2 text-[10px] font-bold">
+                      <span className="text-slate-400">{prizeStandings.second ? `${prizeStandings.second.wins} trận thắng` : ''}</span>
                     </div>
                   </div>
 
                   {/* Hạng Ba */}
-                  <div className="bg-gradient-to-b from-amber-850/20 via-amber-900/5 to-slate-950/20 border border-amber-900/30 rounded-2xl p-4 flex flex-col justify-between min-h-[110px] shadow-[0_0_25px_rgba(120,53,4,0.08)] hover:border-amber-700 hover:shadow-[0_0_30px_rgba(120,53,4,0.18)] hover:scale-[1.02] transition-all duration-300">
+                  <div className="bg-gradient-to-b from-amber-850/20 via-amber-900/5 to-slate-950/20 border border-amber-900/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(120,53,4,0.08)] hover:border-amber-700 hover:shadow-[0_0_30px_rgba(120,53,4,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
                       <p className="text-[11px] font-black text-amber-600 uppercase tracking-wider flex items-center gap-1.5">🥉 GIẢI BA (100K)</p>
                       <p className="text-sm font-black text-white mt-1.5 tracking-wide">
-                        {prizeStandings.third ? prizeStandings.third.player.user_name : 'Chưa có'}
+                        {prizeStandings.third ? prizeStandings.third.user_name : 'Chưa có'}
                       </p>
                     </div>
-                    <div className="flex items-center justify-between mt-2.5 text-[10px] font-bold">
-                      <span className="text-slate-400">{prizeStandings.third ? `${prizeStandings.third.player.wins} trận thắng` : ''}</span>
-                      {prizeStandings.third && (
-                        <span className={`px-2 py-0.5 rounded-md font-black text-[9px] ${prizeStandings.third.qualified ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
-                          {prizeStandings.third.qualified ? '✓ Đủ ĐK' : `Cần bet ${prizeStandings.third.player.total_bets}/20`}
-                        </span>
-                      )}
+                    <div className="flex items-center justify-between mt-2 text-[10px] font-bold">
+                      <span className="text-slate-400">{prizeStandings.third ? `${prizeStandings.third.wins} trận thắng` : ''}</span>
                     </div>
                   </div>
 
                   {/* Mâm Xôi Vàng */}
-                  <div className="bg-gradient-to-b from-rose-500/15 via-rose-600/5 to-slate-950/20 border border-rose-500/30 rounded-2xl p-4 flex flex-col justify-between min-h-[110px] shadow-[0_0_25px_rgba(244,63,94,0.08)] hover:border-rose-400 hover:shadow-[0_0_30px_rgba(244,63,94,0.18)] hover:scale-[1.02] transition-all duration-300">
+                  <div className="bg-gradient-to-b from-rose-500/15 via-rose-600/5 to-slate-950/20 border border-rose-500/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(244,63,94,0.08)] hover:border-rose-400 hover:shadow-[0_0_30px_rgba(244,63,94,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
                       <p className="text-[10px] font-black text-rose-400 uppercase tracking-wider flex items-center gap-1.5">🍋 MÂM XÔI VÀNG (100K)</p>
                       <p className="text-sm font-black text-white mt-1.5 tracking-wide">
-                        {prizeStandings.raspberry ? prizeStandings.raspberry.player.user_name : 'Chưa có'}
+                        {prizeStandings.raspberry ? prizeStandings.raspberry.user_name : 'Chưa có'}
                       </p>
                     </div>
-                    <div className="flex items-center justify-between mt-2.5 text-[10px] font-bold">
-                      <span className="text-slate-400">{prizeStandings.raspberry ? `${prizeStandings.raspberry.player.losses} trận thua` : ''}</span>
-                      {prizeStandings.raspberry && (
-                        <span className={`px-2 py-0.5 rounded-md font-black text-[9px] ${prizeStandings.raspberry.qualified ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
-                          {prizeStandings.raspberry.qualified ? '✓ Đủ ĐK' : `Cần bet ${prizeStandings.raspberry.player.total_bets}/20`}
-                        </span>
-                      )}
+                    <div className="flex items-center justify-between mt-2 text-[10px] font-bold">
+                      <span className="text-slate-400">{prizeStandings.raspberry ? `${prizeStandings.raspberry.losses} trận thua` : ''}</span>
                     </div>
                   </div>
                 </div>
