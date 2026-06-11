@@ -955,12 +955,16 @@ const DC13Page: React.FC = () => {
 
   // ─── Prize Predictions Calculation ──────────────────────────────────────────
   const prizeStandings = (() => {
-    const sortedByWins = [...playerStats].sort((a, b) => {
+    // Only rank players who have at least 1 win for wins prizes
+    const playersWithWins = playerStats.filter(p => p.wins > 0);
+    const sortedByWins = [...playersWithWins].sort((a, b) => {
       if (b.wins !== a.wins) return b.wins - a.wins;
       return b.total_bets - a.total_bets;
     });
 
-    const sortedByLosses = [...playerStats].sort((a, b) => {
+    // Only rank players who have at least 1 loss for losses prizes
+    const playersWithLosses = playerStats.filter(p => p.losses > 0);
+    const sortedByLosses = [...playersWithLosses].sort((a, b) => {
       if (b.losses !== a.losses) return b.losses - a.losses;
       return b.total_bets - a.total_bets;
     });
