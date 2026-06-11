@@ -225,6 +225,9 @@ const DC13Page: React.FC = () => {
   const [adminPin, setAdminPin] = useState('');
   const [adminPinError, setAdminPinError] = useState('');
   const [editingMatch, setEditingMatch] = useState<Partial<Match> | null>(null);
+  const [dc13KeoType, setDc13KeoType] = useState<'unset' | 'draw' | 'handicap'>('unset');
+  const [handicapInputA, setHandicapInputA] = useState<string>('');
+  const [handicapInputB, setHandicapInputB] = useState<string>('');
   const [isAddingMatch, setIsAddingMatch] = useState(false);
   const [resultModal, setResultModal] = useState<Match | null>(null);
   const [resultScoreA, setResultScoreA] = useState<number>(0);
@@ -652,7 +655,6 @@ const DC13Page: React.FC = () => {
       if (payload.dc13_status === 'scheduled') {
         payload.dc13_score_a = 0;
         payload.dc13_score_b = 0;
-        await supabase.from('dc13_bets').delete().eq('match_id', id);
       }
       const { error: err } = await supabase.from('matches').update(payload).eq('id', id);
       error = err;
@@ -699,6 +701,9 @@ const DC13Page: React.FC = () => {
 
       setEditingMatch(null);
       setIsAddingMatch(false);
+      setDc13KeoType('unset');
+      setHandicapInputA('');
+      setHandicapInputB('');
       fetchMatches();
       fetchBets();
       alert('Đã lưu thành công!');
@@ -2183,7 +2188,24 @@ const DC13Page: React.FC = () => {
                       <button onClick={() => setAdminAuthed(false)} className="px-5 py-2 bg-white/10 hover:bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest transition-all">
                         Thoát
                       </button>
-                      <button onClick={() => { setIsAddingMatch(true); setEditingMatch({ status: 'scheduled', dc13_status: 'scheduled', dc13_score_a: 0, dc13_score_b: 0, dc13_handicap: 0, dc13_favorite_team: 'teamA' }); }} className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-cyan-900/40">
+                      <button
+                        onClick={() => {
+                          setIsAddingMatch(true);
+                          setEditingMatch({
+                            status: 'scheduled',
+                            dc13_status: 'scheduled',
+                            dc13_score_a: 0,
+                            dc13_score_b: 0,
+                            dc13_handicap: 0,
+                            dc13_favorite_team: 'teamA',
+                            dc13_handicap_set: false
+                          });
+                          setDc13KeoType('unset');
+                          setHandicapInputA('');
+                          setHandicapInputB('');
+                        }}
+                        className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-cyan-900/40"
+                      >
                         + Thêm Trận
                       </button>
                     </div>
@@ -2255,17 +2277,14 @@ const DC13Page: React.FC = () => {
                           <label className={labelCls}>Kèo cược DC13</label>
                           <select
                             className={inputCls}
-                            value={
-                              !editingMatch?.dc13_handicap_set
-                                ? 'unset'
-                                : editingMatch?.dc13_handicap === 0
-                                ? 'draw'
-                                : 'handicap'
-                            }
+                            value={dc13KeoType}
                             onChange={e => {
                               if (!editingMatch) return;
-                              const val = e.target.value;
+                              const val = e.target.value as 'unset' | 'draw' | 'handicap';
+                              setDc13KeoType(val);
                               if (val === 'unset') {
+                                setHandicapInputA('');
+                                setHandicapInputB('');
                                 setEditingMatch({
                                   ...editingMatch,
                                   dc13_handicap_set: false,
@@ -2273,6 +2292,8 @@ const DC13Page: React.FC = () => {
                                   dc13_favorite_team: 'teamA'
                                 });
                               } else if (val === 'draw') {
+                                setHandicapInputA('');
+                                setHandicapInputB('');
                                 setEditingMatch({
                                   ...editingMatch,
                                   dc13_handicap_set: true,
@@ -2280,10 +2301,18 @@ const DC13Page: React.FC = () => {
                                   dc13_favorite_team: 'teamA'
                                 });
                               } else {
+                                const initialHandicap = editingMatch.dc13_handicap || 0.5;
+                                if (initialHandicap < 0 || editingMatch.dc13_favorite_team === 'teamB') {
+                                  setHandicapInputA(String(Math.abs(initialHandicap)));
+                                  setHandicapInputB('');
+                                } else {
+                                  setHandicapInputA('');
+                                  setHandicapInputB(String(Math.abs(initialHandicap)));
+                                }
                                 setEditingMatch({
                                   ...editingMatch,
                                   dc13_handicap_set: true,
-                                  dc13_handicap: editingMatch.dc13_handicap || 0.5,
+                                  dc13_handicap: initialHandicap,
                                   dc13_favorite_team: editingMatch.dc13_favorite_team || 'teamA'
                                 });
                               }
@@ -2294,18 +2323,21 @@ const DC13Page: React.FC = () => {
                             <option value="handicap">⚽ Có kèo chấp (Nhập tỷ lệ)</option>
                           </select>
                         </div>
-                        {editingMatch?.dc13_handicap_set && editingMatch?.dc13_handicap !== 0 && (
+                        {dc13KeoType === 'handicap' && (
                           <>
                             <div>
                               <label className={labelCls}>Kèo được chấp - {editingMatch?.team_a_name || 'Đội A'}</label>
                               <input
                                 type="number"
-                                step="0.5"
+                                step="0.25"
                                 className={inputCls}
                                 placeholder="Trống = Cửa Trên (0)"
-                                value={(editingMatch?.dc13_handicap !== undefined && (editingMatch.dc13_handicap < 0 || editingMatch.dc13_favorite_team === 'teamB') && editingMatch.dc13_handicap !== 0) ? Math.abs(editingMatch.dc13_handicap) : ''}
+                                value={handicapInputA}
                                 onChange={e => {
-                                  const val = parseFloat(e.target.value);
+                                  const valStr = e.target.value;
+                                  setHandicapInputA(valStr);
+                                  setHandicapInputB('');
+                                  const val = parseFloat(valStr);
                                   if (isNaN(val) || val === 0) {
                                     setEditingMatch({
                                       ...editingMatch,
@@ -2326,12 +2358,15 @@ const DC13Page: React.FC = () => {
                               <label className={labelCls}>Kèo được chấp - {editingMatch?.team_b_name || 'Đội B'}</label>
                               <input
                                 type="number"
-                                step="0.5"
+                                step="0.25"
                                 className={inputCls}
                                 placeholder="Trống = Cửa Trên (0)"
-                                value={(editingMatch?.dc13_handicap !== undefined && editingMatch.dc13_handicap > 0 && editingMatch.dc13_favorite_team === 'teamA') ? Math.abs(editingMatch.dc13_handicap) : ''}
+                                value={handicapInputB}
                                 onChange={e => {
-                                  const val = parseFloat(e.target.value);
+                                  const valStr = e.target.value;
+                                  setHandicapInputB(valStr);
+                                  setHandicapInputA('');
+                                  const val = parseFloat(valStr);
                                   if (isNaN(val) || val === 0) {
                                     setEditingMatch({
                                       ...editingMatch,
@@ -2375,6 +2410,9 @@ const DC13Page: React.FC = () => {
                                 await handleResetMatchDirect(editingMatch.id);
                                 setIsAddingMatch(false);
                                 setEditingMatch(null);
+                                setDc13KeoType('unset');
+                                setHandicapInputA('');
+                                setHandicapInputB('');
                               }
                             }}
                             className="px-6 bg-amber-500/10 hover:bg-amber-500 border border-amber-500/20 text-amber-400 hover:text-white py-4 rounded-xl font-black uppercase text-xs tracking-widest transition-all"
@@ -2382,7 +2420,16 @@ const DC13Page: React.FC = () => {
                             Reset Trận Đấu
                           </button>
                         )}
-                        <button onClick={() => { setIsAddingMatch(false); setEditingMatch(null); }} className="px-8 bg-white/5 py-4 rounded-xl font-black uppercase text-xs tracking-widest transition-all hover:bg-white/10">
+                        <button
+                          onClick={() => {
+                            setIsAddingMatch(false);
+                            setEditingMatch(null);
+                            setDc13KeoType('unset');
+                            setHandicapInputA('');
+                            setHandicapInputB('');
+                          }}
+                          className="px-8 bg-white/5 py-4 rounded-xl font-black uppercase text-xs tracking-widest transition-all hover:bg-white/10"
+                        >
                           Hủy
                         </button>
                       </div>
@@ -2529,7 +2576,32 @@ const DC13Page: React.FC = () => {
                                 >
                                   📥
                                 </button>
-                                <button onClick={() => setEditingMatch(m)} className="w-9 h-9 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-xl border border-white/10 transition-all text-xs">✏️</button>
+                                <button
+                                  onClick={() => {
+                                    setEditingMatch(m);
+                                    if (!m.dc13_handicap_set) {
+                                      setDc13KeoType('unset');
+                                      setHandicapInputA('');
+                                      setHandicapInputB('');
+                                    } else if (m.dc13_handicap === 0 || m.dc13_handicap === undefined) {
+                                      setDc13KeoType('draw');
+                                      setHandicapInputA('');
+                                      setHandicapInputB('');
+                                    } else {
+                                      setDc13KeoType('handicap');
+                                      if (m.dc13_handicap < 0 || m.dc13_favorite_team === 'teamB') {
+                                        setHandicapInputA(String(Math.abs(m.dc13_handicap)));
+                                        setHandicapInputB('');
+                                      } else {
+                                        setHandicapInputA('');
+                                        setHandicapInputB(String(Math.abs(m.dc13_handicap)));
+                                      }
+                                    }
+                                  }}
+                                  className="w-9 h-9 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-xl border border-white/10 transition-all text-xs"
+                                >
+                                  ✏️
+                                </button>
                                 <button onClick={() => handleDeleteMatch(m.id)} className="w-9 h-9 flex items-center justify-center bg-white/10 hover:bg-rose-500 hover:text-white rounded-xl border border-white/10 transition-all text-xs">🗑️</button>
                                 {mStatus !== 'finished' && (
                                   <select
