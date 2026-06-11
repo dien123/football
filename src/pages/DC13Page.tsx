@@ -2112,6 +2112,27 @@ const DC13Page: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Fund Usage Section */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse" />
+                  3. Quỹ Nhậu & Nước uống liên hoan 🍻
+                </h3>
+                <div className="pl-3.5">
+                  <div className="bg-gradient-to-br from-amber-950/35 via-amber-900/10 to-transparent border border-amber-500/20 rounded-2xl p-5 hover:border-amber-400/40 transition-all duration-300 shadow-[0_4px_20px_rgba(245,158,11,0.1)] hover:shadow-[0_4px_25px_rgba(245,158,11,0.2)]">
+                    <p className="text-lg font-black text-amber-400 mb-2.5 flex items-center gap-1.5 uppercase tracking-wider">
+                      🍺 Nâng Ly Bia, Trao Gắn Kết!
+                    </p>
+                    <p className="text-base text-slate-300 font-bold leading-relaxed">
+                      Toàn bộ số quỹ còn lại sau khi trừ đi phần thưởng cho các cao thủ sẽ được "trưng dụng triệt để" để tổ chức một bữa nâng ly nhậu hoành tráng 🍻 hoặc order nước ngọt, trà sữa tràn trề 🥤 cho toàn thể anh chị em đã tham gia dự đoán!
+                    </p>
+                    <p className="text-base text-amber-300/80 font-black mt-3 italic">
+                      * Quỹ nhiều nhậu to, quỹ ít nhậu nhỏ, quan trọng nhất là tinh thần vui vẻ bên nhau sau những trận cầu rực lửa! 🎉🥂
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
