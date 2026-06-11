@@ -182,7 +182,6 @@ const DC13Page: React.FC = () => {
   const [outrightBets, setOutrightBets] = useState<any[]>([]);
   const [outrightWinner, setOutrightWinner] = useState<string | null>(null);
   const [outrightBettingOn, setOutrightBettingOn] = useState<any | null>(null);
-  const [outrightAmount, setOutrightAmount] = useState<number | ''>('');
   const [outrightSubmitting, setOutrightSubmitting] = useState(false);
   const [editingOutrightBet, setEditingOutrightBet] = useState<any | null>(null);
   const [editOutrightAmount, setEditOutrightAmount] = useState<number | ''>('');
@@ -374,9 +373,10 @@ const DC13Page: React.FC = () => {
       if (!user) setShowAuthModal(true);
       return;
     }
-    const betVal = Number(outrightAmount);
-    if (!betVal || betVal < 20000) {
-      alert('Số tiền tối thiểu là 20.000đ');
+    const alreadyBet = outrightBets.some(b => b.user_id === user.id && b.team_name === outrightBettingOn.name);
+    if (alreadyBet) {
+      alert(`Bạn đã dự đoán đội ${outrightBettingOn.name} rồi!`);
+      setOutrightBettingOn(null);
       return;
     }
     setOutrightSubmitting(true);
@@ -387,14 +387,13 @@ const DC13Page: React.FC = () => {
         user_id: user.id,
         user_name: pName,
         team_name: outrightBettingOn.name,
-        amount: betVal,
+        amount: 20000,
         created_at: new Date().toISOString()
       }]);
 
       if (error) throw error;
       alert(`Đã gửi dự đoán thành công!`);
       setOutrightBettingOn(null);
-      setOutrightAmount('');
       fetchDC13OutrightData();
     } catch (err: any) {
       alert('Lỗi: ' + err.message);
@@ -846,9 +845,11 @@ const DC13Page: React.FC = () => {
 
       if (outrightWinner) {
         if (b.team_name === outrightWinner) {
-          const winPool = outrightBets.filter(x => x.team_name === outrightWinner).reduce((sum, x) => sum + x.amount, 0);
+          const winBets = outrightBets.filter(x => x.team_name === outrightWinner);
+          const winCount = winBets.length;
+          const winPool = winBets.reduce((sum, x) => sum + x.amount, 0);
           const netPool = totalOutrightPool - winPool;
-          estWinnings = winPool > 0 ? (b.amount * netPool) / winPool : 0;
+          estWinnings = winCount > 0 ? netPool / winCount : 0;
           estTotal = b.amount + estWinnings;
           statusStr = 'Thắng';
         } else {
@@ -858,8 +859,9 @@ const DC13Page: React.FC = () => {
         }
       } else {
         const teamBets = outrightBets.filter(x => x.team_name === b.team_name);
+        const teamCount = teamBets.length;
         const teamTotalBet = teamBets.reduce((sum, x) => sum + x.amount, 0);
-        estWinnings = teamTotalBet > 0 ? (b.amount * (totalOutrightPool - teamTotalBet)) / teamTotalBet : 0;
+        estWinnings = teamCount > 0 ? (totalOutrightPool - teamTotalBet) / teamCount : 0;
         estTotal = b.amount + estWinnings;
         statusStr = 'Chờ kết quả (Dự kiến)';
       }
@@ -1561,7 +1563,7 @@ const DC13Page: React.FC = () => {
                 </div>
 
                 <p className="text-base text-slate-300 leading-relaxed mt-2 font-medium">
-                  Đặt dự đoán cho đội bạn tin là nhà vô địch. Hệ thống sử dụng hình thức <strong className="text-cyan-400">dự đoán chia quỹ (Pool Betting)</strong>: Người dự đoán sai sẽ mất tiền, toàn bộ số tiền đó được chia cho những người dự đoán đúng theo tỷ lệ tiền dự đoán của họ.
+                  Đặt dự đoán cho đội bạn tin là nhà vô địch. Mỗi lượt dự đoán vô địch được cố định ở mức <strong className="text-cyan-400">20.000đ</strong>. Người dự đoán sai sẽ mất tiền cược gốc, toàn bộ số tiền thua đó được chia đều theo đầu người cho những người dự đoán đúng.
                 </p>
 
                 {showOutrightRules && (
@@ -1573,26 +1575,26 @@ const DC13Page: React.FC = () => {
                       <div className="flex gap-3 items-start">
                         <div className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-[10px] font-black text-cyan-400 shrink-0 mt-0.5">1</div>
                         <div>
-                          <p className="text-xs font-black text-slate-200">Tổng Quỹ (A)</p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">Tổng tiền dự đoán của tất cả mọi người (bao gồm cả bạn).</p>
+                          <p className="text-xs font-black text-slate-200">Xác định Quỹ Thua (Losing Pool)</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">Tổng số tiền cược của tất cả những người dự đoán sai đội vô địch.</p>
                         </div>
                       </div>
 
                       <div className="flex gap-3 items-start">
                         <div className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-[10px] font-black text-cyan-400 shrink-0 mt-0.5">2</div>
                         <div>
-                          <p className="text-xs font-black text-slate-200">Quỹ Người Thắng (B)</p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">Tổng tiền dự đoán của tất cả những ai đoán đúng đội vô địch.</p>
+                          <p className="text-xs font-black text-slate-200">Xác định Số Người Thắng (N)</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">Tổng số người chơi dự đoán chính xác đội vô địch.</p>
                         </div>
                       </div>
 
                       <div className="flex gap-3 items-start">
                         <div className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-[10px] font-black text-cyan-400 shrink-0 mt-0.5">3</div>
                         <div>
-                          <p className="text-xs font-black text-slate-200">Cách tính tiền thắng của bạn</p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">Tiền thắng = Tiền dự đoán của bạn × Quỹ những người thua (A - B) / Quỹ người thắng (B).</p>
+                          <p className="text-xs font-black text-slate-200">Cách tính tiền nhận của bạn</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">Mỗi người thắng nhận lại 20.000đ cược gốc + phần chia đều từ Quỹ Thua.</p>
                           <div className="bg-slate-900/60 p-2.5 rounded-xl border border-white/5 mt-2 font-mono text-[11px] text-cyan-300">
-                            Tiền thắng = dự đoán của bạn × (Tổng Quỹ - Quỹ Thắng) / Quỹ Thắng
+                            Tiền thắng = Quỹ Thua / N
                           </div>
                         </div>
                       </div>
@@ -1605,24 +1607,24 @@ const DC13Page: React.FC = () => {
                       </h4>
 
                       <div className="space-y-2.5 text-xs text-slate-300">
-                        <p>Giả sử cả làng dự đoán vô địch như sau:</p>
+                        <p>Giả sử có tổng cộng 50 người tham gia dự đoán vô địch:</p>
                         <ul className="list-disc pl-4 space-y-1 text-slate-400">
-                          <li>Tổng số tiền dự đoán của cả làng là <strong className="text-slate-200">1.300.000đ</strong></li>
-                          <li>Tổng tiền dự đoán vào Argentina (Đội vô địch) là <strong className="text-slate-200">500.000đ</strong></li>
-                          <li>Quỹ của các đội thua bị mất là: <strong className="text-slate-200">1.300.000đ - 500.000đ = 800.000đ</strong></li>
+                          <li>Có <strong className="text-slate-200">10 người</strong> dự đoán đúng Argentina vô địch.</li>
+                          <li>Có <strong className="text-slate-200">40 người</strong> dự đoán sai.</li>
+                          <li>Tổng Quỹ Thua là: <strong className="text-slate-200">40 người × 20.000đ = 800.000đ</strong></li>
                         </ul>
 
                         <div className="border-t border-white/5 my-2.5" />
 
-                        <p className="font-bold text-slate-200">Nếu bạn dự đoán 100.000đ vào Argentina:</p>
+                        <p className="font-bold text-slate-200">Mỗi người dự đoán đúng Argentina nhận được:</p>
                         <div className="space-y-1.5 pl-2 border-l-2 border-cyan-500/40">
-                          <p>• Tiền thắng bạn nhận được từ quỹ thua:</p>
-                          <p className="font-black text-cyan-400 text-sm">100.000đ × 800.000đ / 500.000đ = 160.000đ</p>
+                          <p>• Tiền thắng chia đều:</p>
+                          <p className="font-black text-cyan-400 text-sm">800.000đ (Quỹ Thua) / 10 người = 80.000đ</p>
 
-                          <p className="mt-1">• Tổng thực nhận bạn mang về (bao gồm gốc):</p>
-                          <p className="font-black text-emerald-400 text-sm">100.000đ (gốc) + 160.000đ (thắng) = 260.000đ</p>
+                          <p className="mt-1">• Tổng thực nhận mang về (bao gồm gốc):</p>
+                          <p className="font-black text-emerald-400 text-sm">20.000đ (gốc) + 80.000đ (thắng) = 100.000đ</p>
                         </div>
-                        <p className="text-[10px] text-slate-500 italic mt-2">⚠️ Lưu ý: Nếu Argentina không vô địch, bạn sẽ mất 100.000đ tiền dự đoán của mình.</p>
+                        <p className="text-[10px] text-slate-500 italic mt-2">⚠️ Lưu ý: Nếu dự đoán sai, bạn sẽ mất hoàn toàn 20.000đ cược gốc của mình.</p>
                       </div>
                     </div>
                   </div>
@@ -1660,23 +1662,26 @@ const DC13Page: React.FC = () => {
                   {DC13_TEAMS.filter(t => t.name.toLowerCase().includes(outrightSearch.toLowerCase())).map(team => {
                     const teamBets = outrightBets.filter(b => b.team_name === team.name);
                     const teamTotalBet = teamBets.reduce((sum, b) => sum + b.amount, 0);
+                    const hasOwnBetOnTeam = user && outrightBets.some(b => b.user_id === user.id && b.team_name === team.name);
 
                     return (
                       <button
                         key={team.name}
-                        disabled={isOutrightLocked}
+                        disabled={isOutrightLocked || !!hasOwnBetOnTeam}
                         onClick={() => {
                           if (!session) {
                             setShowAuthModal(true);
                           } else {
                             setOutrightBettingOn(team);
-                            setOutrightAmount('');
                           }
                         }}
-                        className={`flex flex-col items-center p-4 rounded-2xl border bg-gradient-to-b from-white/[0.02] to-white/[0.04] text-center transition-all ${isOutrightLocked
-                          ? 'border-white/[0.03] opacity-60 cursor-not-allowed'
-                          : 'border-white/[0.08] hover:border-cyan-500/40 hover:bg-cyan-500/5 active:scale-[0.98]'
-                          }`}
+                        className={`flex flex-col items-center p-4 rounded-2xl border bg-gradient-to-b from-white/[0.02] to-white/[0.04] text-center transition-all ${
+                          isOutrightLocked
+                            ? 'border-white/[0.03] opacity-60 cursor-not-allowed'
+                            : hasOwnBetOnTeam
+                              ? 'border-emerald-500/40 bg-emerald-500/5 cursor-not-allowed'
+                              : 'border-white/[0.08] hover:border-cyan-500/40 hover:bg-cyan-500/5 active:scale-[0.98]'
+                        }`}
                       >
                         {/* Flag image */}
                         <div className="w-12 h-8 rounded-lg overflow-hidden border border-white/20 shadow-md mb-2.5 shrink-0 bg-slate-800">
@@ -1687,7 +1692,13 @@ const DC13Page: React.FC = () => {
 
                         {/* Bet Stats on Team */}
                         <div className="mt-2 space-y-0.5">
-                          <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Đã dự đoán</span>
+                          {hasOwnBetOnTeam ? (
+                            <span className="block text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center justify-center gap-1">
+                              <span>✓</span> Bạn đã chọn
+                            </span>
+                          ) : (
+                            <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Đã dự đoán</span>
+                          )}
                           <span className="block text-[11px] font-black text-cyan-400">
                             {teamTotalBet > 0 ? `${(teamTotalBet).toLocaleString('vi-VN')}đ` : '0đ'}
                           </span>
@@ -1741,6 +1752,7 @@ const DC13Page: React.FC = () => {
                         outrightBets.map(bet => {
                           const isOwnBet = user && bet.user_id === user.id;
                           const teamBets = outrightBets.filter(b => b.team_name === bet.team_name);
+                          const teamCount = teamBets.length;
                           const teamTotalBet = teamBets.reduce((sum, b) => sum + b.amount, 0);
 
                           // Winnings & payout calculations
@@ -1750,9 +1762,11 @@ const DC13Page: React.FC = () => {
 
                           if (outrightWinner) {
                             if (bet.team_name === outrightWinner) {
-                              const winPool = outrightBets.filter(b => b.team_name === outrightWinner).reduce((sum, b) => sum + b.amount, 0);
+                              const winBets = outrightBets.filter(b => b.team_name === outrightWinner);
+                              const winCount = winBets.length;
+                              const winPool = winBets.reduce((sum, b) => sum + b.amount, 0);
                               const netPool = totalOutrightPool - winPool;
-                              estWinnings = winPool > 0 ? (bet.amount * netPool) / winPool : 0;
+                              estWinnings = winCount > 0 ? netPool / winCount : 0;
                               estTotal = bet.amount + estWinnings;
                               statusColor = 'text-emerald-400 font-bold';
                             } else {
@@ -1761,8 +1775,8 @@ const DC13Page: React.FC = () => {
                               statusColor = 'text-rose-400 font-bold';
                             }
                           } else {
-                            // Estimated winnings: bet * (totalPool - teamPool) / teamPool
-                            estWinnings = teamTotalBet > 0 ? (bet.amount * (totalOutrightPool - teamTotalBet)) / teamTotalBet : 0;
+                            // Estimated winnings: (totalPool - teamPool) / teamCount
+                            estWinnings = teamCount > 0 ? (totalOutrightPool - teamTotalBet) / teamCount : 0;
                             estTotal = bet.amount + estWinnings;
                             statusColor = 'text-cyan-400';
                           }
@@ -1797,16 +1811,6 @@ const DC13Page: React.FC = () => {
                               <td className="py-4 px-6 text-right">
                                 {(isOwnBet || adminAuthed) && !isOutrightLocked && (
                                   <div className="flex items-center justify-end gap-2">
-                                    <button
-                                      onClick={() => {
-                                        setEditingOutrightBet(bet);
-                                        setEditOutrightAmount(bet.amount);
-                                      }}
-                                      className="w-7 h-7 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center border border-white/5 transition-all text-[11px]"
-                                      title="Sửa lượng dự đoán"
-                                    >
-                                      ✏️
-                                    </button>
                                     <button
                                       onClick={() => handleDeleteDC13OutrightBet(bet.id)}
                                       className="w-7 h-7 bg-white/5 hover:bg-rose-500/10 hover:text-rose-400 rounded-lg flex items-center justify-center border border-white/5 transition-all text-[11px]"
@@ -2878,46 +2882,37 @@ const DC13Page: React.FC = () => {
             <div className="px-8 py-4 space-y-4">
               <div>
                 <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest">Số tiền dự đoán (đ)</label>
-                <input
-                  type="number"
-                  min={20000}
-                  step={10000}
-                  className="w-full bg-slate-900 border border-white/10 rounded-2xl px-4 py-3 text-white text-base focus:border-cyan-500 outline-none transition-all font-mono font-bold"
-                  placeholder="Ví dụ: 100000"
-                  value={outrightAmount}
-                  onChange={e => {
-                    const val = e.target.value;
-                    setOutrightAmount(val === '' ? '' : Number(val));
-                  }}
-                />
-                <p className="text-[10px] text-slate-500 mt-1.5 italic">Dự đoán tối thiểu 20.000đ. Đội vô địch đúng sẽ chia toàn bộ quỹ của các đội thua.</p>
+                <div className="w-full bg-slate-900 border border-white/10 rounded-2xl px-4 py-3.5 text-white font-mono font-bold flex justify-between items-center">
+                  <span>Số tiền cược cố định:</span>
+                  <span className="text-cyan-400 text-lg">20.000đ</span>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-1.5 italic">Mỗi lượt dự đoán vô địch được cố định là 20.000đ theo luật chơi mới.</p>
               </div>
 
               {/* Estimated Rewards display */}
-              {Number(outrightAmount) >= 20000 && (() => {
-                const refBet = Number(outrightAmount);
-                const teamPool = outrightBets.filter(b => b.team_name === outrightBettingOn.name).reduce((sum, b) => sum + b.amount, 0);
-                const totalPool = outrightBets.reduce((sum, b) => sum + b.amount, 0);
-                const newTotalPool = totalPool + refBet;
-                const newTeamPool = teamPool + refBet;
-                const estTotal = (refBet * newTotalPool) / newTeamPool;
-                const estWinnings = estTotal - refBet;
+              {(() => {
+                const teamBetsCount = outrightBets.filter(b => b.team_name === outrightBettingOn.name).length;
+                const newTeamBetsCount = teamBetsCount + 1;
+                const totalBetsCount = outrightBets.length;
+                const newTotalBetsCount = totalBetsCount + 1;
+                const estWinnings = newTeamBetsCount > 0 ? (20000 * (newTotalBetsCount - newTeamBetsCount)) / newTeamBetsCount : 0;
+                const estTotal = 20000 + estWinnings;
 
                 return (
                   <div className="p-4 rounded-2xl bg-slate-950/60 border border-white/5 space-y-2 text-xs">
                     <div className="flex justify-between items-center text-slate-400">
                       <span>Tiền dự đoán (Gốc):</span>
-                      <span className="font-mono text-slate-200 font-bold">{refBet.toLocaleString('vi-VN')}đ</span>
+                      <span className="font-mono text-slate-200 font-bold">20.000đ</span>
                     </div>
                     <div className="flex justify-between items-center text-cyan-400">
                       <span>Tiền thắng chia quỹ dự kiến:</span>
-                      <span className="font-mono font-black">+{estWinnings.toLocaleString('vi-VN')}đ</span>
+                      <span className="font-mono font-black">+{Math.round(estWinnings).toLocaleString('vi-VN')}đ</span>
                     </div>
                     <div className="border-t border-white/5 my-2 pt-2 flex justify-between items-center text-emerald-400 font-bold">
                       <span>Tổng thực nhận dự kiến:</span>
-                      <span className="font-mono font-black text-sm">{estTotal.toLocaleString('vi-VN')}đ</span>
+                      <span className="font-mono font-black text-sm">{Math.round(estTotal).toLocaleString('vi-VN')}đ</span>
                     </div>
-                    <p className="text-[9px] text-slate-500 text-center italic mt-1">Lưu ý: Đây là số liệu dự kiến dựa trên quỹ hiện tại, có thể thay đổi khi có người chơi khác dự đoán.</p>
+                    <p className="text-[9px] text-slate-500 text-center italic mt-1">Lưu ý: Đây là số liệu dự kiến nếu đội tuyển này vô địch, dựa trên số lượng cược hiện tại.</p>
                   </div>
                 );
               })()}
@@ -2932,7 +2927,7 @@ const DC13Page: React.FC = () => {
                 Hủy
               </button>
               <button
-                disabled={outrightSubmitting || !outrightAmount || Number(outrightAmount) < 20000}
+                disabled={outrightSubmitting}
                 onClick={handlePlaceDC13OutrightBet}
                 className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-xs font-black uppercase tracking-widest transition-all hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
