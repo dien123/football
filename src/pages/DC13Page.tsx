@@ -580,7 +580,7 @@ const DC13Page: React.FC = () => {
   };
 
   // ─── Admin: Set result for a match ──────────────────────────────────────────
-  const handleSetResult = async (match: Match, result: string, scoreA: number, scoreB: number) => {
+  const handleSetResult = async (match: Match, scoreA: number, scoreB: number) => {
     // Validate scores
     if (scoreA < 0 || scoreB < 0) {
       alert('Tỷ số không được âm!');
@@ -598,34 +598,20 @@ const DC13Page: React.FC = () => {
       return;
     }
 
-    // Calculate bet results in DB
-    if (result === 'draw') {
-      // Hòa: tất cả bet = pending -> draw (no penalty)
-      await supabase
-        .from('dc13_bets')
-        .update({ result: 'draw' })
-        .eq('match_id', match.id)
-        .eq('result', 'pending');
+    const dc13Handicap = Number(match.dc13_handicap || 0);
+    const effectiveScore = (scoreA - scoreB) - dc13Handicap;
+    const teamAName = match.team_a_name;
+    const teamBName = match.team_b_name;
+
+    // Calculate and update bet results in DB (without restricting to 'pending' in case of corrections)
+    if (effectiveScore > 0) {
+      await supabase.from('dc13_bets').update({ result: 'win' }).eq('match_id', match.id).in('chosen_team', ['teamA', teamAName]);
+      await supabase.from('dc13_bets').update({ result: 'loss' }).eq('match_id', match.id).in('chosen_team', ['teamB', teamBName]);
+    } else if (effectiveScore < 0) {
+      await supabase.from('dc13_bets').update({ result: 'loss' }).eq('match_id', match.id).in('chosen_team', ['teamA', teamAName]);
+      await supabase.from('dc13_bets').update({ result: 'win' }).eq('match_id', match.id).in('chosen_team', ['teamB', teamBName]);
     } else {
-      // Resolve team names
-      const winningTeamName = result === 'teamA' ? match.team_a_name : match.team_b_name;
-      const losingTeamName = result === 'teamA' ? match.team_b_name : match.team_a_name;
-
-      // Update winners: either 'teamA'/'teamB' or the actual team name
-      await supabase
-        .from('dc13_bets')
-        .update({ result: 'win' })
-        .eq('match_id', match.id)
-        .in('chosen_team', [result, winningTeamName])
-        .eq('result', 'pending');
-
-      // Update losers: either 'teamA'/'teamB' or the actual team name
-      await supabase
-        .from('dc13_bets')
-        .update({ result: 'loss' })
-        .eq('match_id', match.id)
-        .in('chosen_team', [result === 'teamA' ? 'teamB' : 'teamA', losingTeamName])
-        .eq('result', 'pending');
+      await supabase.from('dc13_bets').update({ result: 'draw' }).eq('match_id', match.id);
     }
 
     setResultModal(null);
@@ -688,13 +674,13 @@ const DC13Page: React.FC = () => {
         const teamBName = match?.team_b_name || payload.team_b_name || '';
 
         if (effectiveScore > 0) {
-          await supabase.from('dc13_bets').update({ result: 'win' }).eq('match_id', id).in('chosen_team', ['teamA', teamAName]).eq('result', 'pending');
-          await supabase.from('dc13_bets').update({ result: 'loss' }).eq('match_id', id).in('chosen_team', ['teamB', teamBName]).eq('result', 'pending');
+          await supabase.from('dc13_bets').update({ result: 'win' }).eq('match_id', id).in('chosen_team', ['teamA', teamAName]);
+          await supabase.from('dc13_bets').update({ result: 'loss' }).eq('match_id', id).in('chosen_team', ['teamB', teamBName]);
         } else if (effectiveScore < 0) {
-          await supabase.from('dc13_bets').update({ result: 'loss' }).eq('match_id', id).in('chosen_team', ['teamA', teamAName]).eq('result', 'pending');
-          await supabase.from('dc13_bets').update({ result: 'win' }).eq('match_id', id).in('chosen_team', ['teamB', teamBName]).eq('result', 'pending');
+          await supabase.from('dc13_bets').update({ result: 'loss' }).eq('match_id', id).in('chosen_team', ['teamA', teamAName]);
+          await supabase.from('dc13_bets').update({ result: 'win' }).eq('match_id', id).in('chosen_team', ['teamB', teamBName]);
         } else {
-          await supabase.from('dc13_bets').update({ result: 'draw' }).eq('match_id', id).eq('result', 'pending');
+          await supabase.from('dc13_bets').update({ result: 'draw' }).eq('match_id', id);
         }
       }
 
@@ -903,8 +889,11 @@ const DC13Page: React.FC = () => {
     const scoreA = match.dc13_score_a ?? 0;
     const scoreB = match.dc13_score_b ?? 0;
     if (status !== 'finished') return null;
-    if (scoreA > scoreB) return 'teamA';
-    if (scoreB > scoreA) return 'teamB';
+    
+    const handicap = match.dc13_handicap || 0;
+    const effectiveScore = (scoreA - scoreB) - handicap;
+    if (effectiveScore > 0) return 'teamA';
+    if (effectiveScore < 0) return 'teamB';
     return 'draw';
   };
 
@@ -2860,36 +2849,43 @@ const DC13Page: React.FC = () => {
               {/* Divider */}
               <div className="border-t border-white/5" />
 
-              {/* Result Buttons */}
-              <div className="space-y-3">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 text-center">Đội nào thắng?</p>
-                <button
-                  onClick={() => handleSetResult(resultModal, 'teamA', resultScoreA, resultScoreB)}
-                  className="w-full py-4 rounded-2xl bg-white/5 hover:bg-cyan-600 border border-white/10 hover:border-cyan-500 text-white font-black uppercase tracking-widest text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-3"
-                >
-                  {resultModal.team_a_code && (
-                    <div className="w-8 h-6 rounded overflow-hidden border border-white/20">
-                      <img src={`https://flagcdn.com/w80/${resultModal.team_a_code.toLowerCase()}.png`} className="w-full h-full object-cover" />
+              {/* Result Preview & Confirm */}
+              <div className="space-y-4">
+                {(() => {
+                  const handicapVal = resultModal.dc13_handicap || 0;
+                  const favoriteTeamName = handicapVal > 0 ? resultModal.team_a_name : (handicapVal < 0 ? resultModal.team_b_name : '');
+                  const handicapText = handicapVal === 0 ? 'Đồng banh (0)' : `${favoriteTeamName} chấp ${Math.abs(handicapVal)}`;
+
+                  const effectiveScore = (resultScoreA - resultScoreB) - handicapVal;
+                  let predictedWinnerStr = '';
+                  let predictedWinnerColor = '';
+                  if (effectiveScore > 0) {
+                    predictedWinnerStr = `${resultModal.team_a_name} thắng kèo`;
+                    predictedWinnerColor = 'text-emerald-400';
+                  } else if (effectiveScore < 0) {
+                    predictedWinnerStr = `${resultModal.team_b_name} thắng kèo`;
+                    predictedWinnerColor = 'text-emerald-400';
+                  } else {
+                    predictedWinnerStr = 'Hòa kèo (0 điểm)';
+                    predictedWinnerColor = 'text-slate-400';
+                  }
+
+                  return (
+                    <div className="p-4 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition-all text-center bg-slate-900/50 border-white/5">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kèo trận đấu</p>
+                      <p className="text-xs font-bold text-white">{handicapText}</p>
+                      <div className="w-full border-t border-white/5 my-1.5" />
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kết quả kèo dự kiến</p>
+                      <p className={`text-sm font-black uppercase tracking-tight ${predictedWinnerColor}`}>{predictedWinnerStr}</p>
                     </div>
-                  )}
-                  {resultModal.team_a_name} Thắng
-                </button>
+                  );
+                })()}
+
                 <button
-                  onClick={() => handleSetResult(resultModal, 'teamB', resultScoreA, resultScoreB)}
-                  className="w-full py-4 rounded-2xl bg-white/5 hover:bg-cyan-600 border border-white/10 hover:border-cyan-500 text-white font-black uppercase tracking-widest text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+                  onClick={() => handleSetResult(resultModal, resultScoreA, resultScoreB)}
+                  className="w-full py-4 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-black uppercase tracking-widest text-xs transition-all active:scale-[0.98] border border-cyan-500/20 shadow-[0_0_12px_rgba(6,182,212,0.2)]"
                 >
-                  {resultModal.team_b_code && (
-                    <div className="w-8 h-6 rounded overflow-hidden border border-white/20">
-                      <img src={`https://flagcdn.com/w80/${resultModal.team_b_code.toLowerCase()}.png`} className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  {resultModal.team_b_name} Thắng
-                </button>
-                <button
-                  onClick={() => handleSetResult(resultModal, 'draw', resultScoreA, resultScoreB)}
-                  className="w-full py-4 rounded-2xl bg-white/5 hover:bg-slate-600 border border-white/10 hover:border-slate-500 text-white font-black uppercase tracking-widest text-xs transition-all active:scale-[0.98]"
-                >
-                  🤝 Hòa (không mất tiền)
+                  Xác nhận kết quả
                 </button>
               </div>
             </div>
