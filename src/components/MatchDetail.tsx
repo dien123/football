@@ -366,7 +366,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
 
             <div className="flex items-center gap-8 font-mono">
               <div className="text-center md:text-right">
-                <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Tổng tiền cược</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Tổng dự đoán</p>
                 <p className="text-2xl font-black text-emerald-400">
                   {formatVND(totalPool)}
                 </p>
@@ -409,7 +409,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
           <div className="flex items-center gap-2.5 mb-3 border-b border-indigo-500/10 pb-2.5">
             <span className="text-xl">🛡️</span>
             <h3 className="text-xs font-black uppercase tracking-wider text-indigo-300">
-              Quy định & Thể lệ đặt cược trận đấu
+              Quy định & Thể lệ dự đoán trận đấu
             </h3>
           </div>
 
