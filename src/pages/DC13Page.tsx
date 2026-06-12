@@ -261,11 +261,24 @@ const DC13Page: React.FC = () => {
         return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime();
       });
 
-      const startingDate = wcDates.find(d => {
-        const [day, month] = d.split('/').map(Number);
-        return day === 12 && month === 6;
-      }) || wcDates[0];
+      const today = new Date();
+      const parsedDates = wcDates.map(dStr => {
+        const [d, m, y] = dStr.split('/').map(Number);
+        return { str: dStr, date: new Date(y, m - 1, d) };
+      });
 
+      let startingDateObj = parsedDates.find(item =>
+        item.date.getDate() === today.getDate() &&
+        item.date.getMonth() === today.getMonth() &&
+        item.date.getFullYear() === today.getFullYear()
+      );
+
+      if (!startingDateObj) {
+        const todayReset = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        startingDateObj = parsedDates.find(item => item.date >= todayReset);
+      }
+
+      const startingDate = startingDateObj?.str || wcDates[wcDates.length - 1] || wcDates[0];
       setSelectedDate(startingDate);
     }
   }, [matches, selectedDate]);
