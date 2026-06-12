@@ -64,8 +64,8 @@ const isDC13BettingLocked = (match: Match): boolean => {
   const status = match.dc13_status || match.status || 'scheduled';
   if (status === 'finished') return true;
   if (!match.dc13_handicap_set) return true; // Khóa cược nếu chưa set kèo
-  if (match.betting_open === true) return false;
-  if (match.betting_open === false) return true;
+  if (match.dc13_betting_open === true) return false;
+  if (match.dc13_betting_open === false) return true;
   const LOCK_MINUTES = 30;
   const now = Date.now();
   const kick = new Date(match.start_time).getTime();
@@ -746,7 +746,7 @@ const DC13Page: React.FC = () => {
     let value: boolean | null = null;
     if (status === 'open') value = true;
     else if (status === 'closed') value = false;
-    const { error } = await supabase.from('matches').update({ betting_open: value }).eq('id', matchId);
+    const { error } = await supabase.from('matches').update({ dc13_betting_open: value }).eq('id', matchId);
     if (!error) fetchMatches();
     else alert(`Lỗi: ${error.message}`);
   };
@@ -2648,7 +2648,7 @@ const DC13Page: React.FC = () => {
                                 <button onClick={() => handleDeleteMatch(m.id)} className="w-9 h-9 flex items-center justify-center bg-white/10 hover:bg-rose-500 hover:text-white rounded-xl border border-white/10 transition-all text-xs">🗑️</button>
                                 {mStatus !== 'finished' && (
                                   <select
-                                    value={m.betting_open === true ? 'open' : (m.betting_open === false ? 'closed' : 'auto')}
+                                    value={m.dc13_betting_open === true ? 'open' : (m.dc13_betting_open === false ? 'closed' : 'auto')}
                                     onChange={(e) => handleUpdateBettingStatus(m.id, e.target.value)}
                                     className="bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-[9px] font-black text-slate-300 focus:border-cyan-500 outline-none cursor-pointer h-9"
                                   >
