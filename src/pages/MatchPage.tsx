@@ -475,7 +475,7 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
                     <div className="text-center md:text-right">
                       <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Tổng tiền cược</p>
                       <p className="text-2xl font-black text-emerald-400">
-                        {bets.reduce((sum, b) => sum + b.amount, 0).toLocaleString("vi-VN")}đ
+                        {bets.reduce((sum, b) => sum + b.amount, 0).toLocaleString("vi-VN")}
                       </p>
                     </div>
                     <div className="w-[1px] h-8 bg-white/10" />
@@ -490,10 +490,10 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
                 <div className="space-y-2">
                   <div className="flex justify-between text-[11px] font-black uppercase tracking-wider">
                     <span className="text-indigo-400">
-                      {match.team_a_name}: {bets.filter(b => b.option === match.team_a_name || b.option === "teamA").reduce((sum, b) => sum + b.amount, 0).toLocaleString("vi-VN")}đ ({bets.reduce((sum, b) => sum + b.amount, 0) > 0 ? Math.round((bets.filter(b => b.option === match.team_a_name || b.option === "teamA").reduce((sum, b) => sum + b.amount, 0) / bets.reduce((sum, b) => sum + b.amount, 0)) * 100) : 0}%)
+                      {match.team_a_name}: {bets.filter(b => b.option === match.team_a_name || b.option === "teamA").reduce((sum, b) => sum + b.amount, 0).toLocaleString("vi-VN")} ({bets.reduce((sum, b) => sum + b.amount, 0) > 0 ? Math.round((bets.filter(b => b.option === match.team_a_name || b.option === "teamA").reduce((sum, b) => sum + b.amount, 0) / bets.reduce((sum, b) => sum + b.amount, 0)) * 100) : 0}%)
                     </span>
                     <span className="text-rose-400">
-                      {match.team_b_name}: {bets.filter(b => b.option === match.team_b_name || b.option === "teamB").reduce((sum, b) => sum + b.amount, 0).toLocaleString("vi-VN")}đ ({bets.reduce((sum, b) => sum + b.amount, 0) > 0 ? Math.round((bets.filter(b => b.option === match.team_b_name || b.option === "teamB").reduce((sum, b) => sum + b.amount, 0) / bets.reduce((sum, b) => sum + b.amount, 0)) * 100) : 0}%)
+                      {match.team_b_name}: {bets.filter(b => b.option === match.team_b_name || b.option === "teamB").reduce((sum, b) => sum + b.amount, 0).toLocaleString("vi-VN")} ({bets.reduce((sum, b) => sum + b.amount, 0) > 0 ? Math.round((bets.filter(b => b.option === match.team_b_name || b.option === "teamB").reduce((sum, b) => sum + b.amount, 0) / bets.reduce((sum, b) => sum + b.amount, 0)) * 100) : 0}%)
                     </span>
                   </div>
                   <div className="h-3 w-full bg-slate-950/80 rounded-full overflow-hidden flex p-0.5 border border-white/5">
@@ -522,7 +522,7 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
                         return (
                           <div key={idx} className="flex items-center justify-between text-[13px] animate-fade-in group/bet">
                             <span className="text-slate-300 font-bold truncate">{bet.user_name} {isOwner && "(Bạn)"}</span>
-                            <span className="text-emerald-400 font-mono font-bold">{bet.amount.toLocaleString("vi-VN")}đ</span>
+                            <span className="text-emerald-400 font-mono font-bold">{bet.amount.toLocaleString("vi-VN")}</span>
                           </div>
                         );
                       })
@@ -544,7 +544,7 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
                         return (
                           <div key={idx} className="flex items-center justify-between text-[13px] animate-fade-in group/bet">
                             <span className="text-slate-300 font-bold truncate">{bet.user_name} {isOwner && "(Bạn)"}</span>
-                            <span className="text-emerald-400 font-mono font-bold">{bet.amount.toLocaleString("vi-VN")}đ</span>
+                            <span className="text-emerald-400 font-mono font-bold">{bet.amount.toLocaleString("vi-VN")}</span>
                           </div>
                         );
                       })

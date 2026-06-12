@@ -64,7 +64,7 @@ const BetModal: React.FC<BetModalProps> = ({
     if (!userName.trim()) newErrors.userName = 'Vui lòng nhập tên người dùng.';
     const amount = parseVND(amountRaw);
     if (!amountRaw || isNaN(amount) || amount < 50000) {
-      newErrors.amount = 'Số tiền phải là số nguyên tối thiểu 50.000đ.';
+      newErrors.amount = 'Số tiền phải là số nguyên tối thiểu 50.000.';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -194,7 +194,7 @@ const BetModal: React.FC<BetModalProps> = ({
 
           <div>
             <label htmlFor="bet-amount" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">
-              Số tiền cược (vnđ) {initialUserName && <span className="lowercase font-medium text-slate-600 ml-1">(@{initialUserName})</span>}
+              Số tiền cược {initialUserName && <span className="lowercase font-medium text-slate-600 ml-1">(@{initialUserName})</span>}
             </label>
             <input
               ref={amountInputRef}
@@ -202,7 +202,7 @@ const BetModal: React.FC<BetModalProps> = ({
               type="text"
               value={amountDisplay}
               onChange={handleAmountChange}
-              placeholder="Tối thiểu 50.000đ"
+              placeholder="Tối thiểu 50.000"
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none transition-colors"
             />
             {errors.amount && <p className="text-rose-400 text-[10px] font-bold mt-2">⚠️ {errors.amount}</p>}

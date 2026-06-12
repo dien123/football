@@ -1,5 +1,5 @@
 export const formatVND = (amount: number): string => {
-  return amount.toLocaleString('vi-VN') + 'đ';
+  return amount.toLocaleString('vi-VN');
 };
 
 export const parseVND = (str: string): number => {

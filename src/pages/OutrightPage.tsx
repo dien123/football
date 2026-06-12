@@ -168,7 +168,7 @@ export default function OutrightPage() {
     }
     const betVal = Number(amount);
     if (!betVal || betVal < 20000) {
-      alert('Số tiền tối thiểu là 20.000đ');
+      alert('Số tiền tối thiểu là 20.000');
       return;
     }
     setSubmitting(true);
@@ -211,7 +211,7 @@ export default function OutrightPage() {
     if (!editingBet) return;
     const betVal = Number(editAmount);
     if (!betVal || betVal < 20000) {
-      alert('Số tiền tối thiểu là 20.000đ');
+      alert('Số tiền tối thiểu là 20.000');
       return;
     }
     setSubmitting(true);
@@ -295,7 +295,7 @@ export default function OutrightPage() {
           <div className="mt-8 flex items-center justify-center gap-8">
             <div className="text-center">
               <p className="text-[14px] font-black text-slate-500 uppercase mb-1">Tổng quỹ cược</p>
-              <p className="text-5xl font-black text-emerald-400 font-mono">{totalPool.toLocaleString('vi-VN')}đ</p>
+              <p className="text-5xl font-black text-emerald-400 font-mono">{totalPool.toLocaleString('vi-VN')}</p>
             </div>
             <div className="w-[1px] h-10 bg-white/10" />
             <div className="text-center">
@@ -380,7 +380,7 @@ export default function OutrightPage() {
                     </div>
 
                     <div className="space-y-4">
-                      <p className="text-xs text-slate-400 font-bold">Giả sử bạn đưa ra dự đoán với số tiền <span className="text-white font-black font-mono">100.000đ</span>:</p>
+                      <p className="text-xs text-slate-400 font-bold">Giả sử bạn đưa ra dự đoán với số tiền <span className="text-white font-black font-mono">100.000</span>:</p>
 
                       <div className="space-y-3 font-mono text-xs">
                         {Object.entries(TIER_ODDS).map(([tierName, odds]) => {
@@ -400,7 +400,7 @@ export default function OutrightPage() {
                                 <span className={`w-2.5 h-2.5 rounded-full ${currentConfig.color} ${currentConfig.animate}`} />
                                 <span className="font-black text-white">{tierName} (Odds {odds.toFixed(1)})</span>
                               </div>
-                              <span className="text-emerald-400 font-black text-[13px]">Nhận về: {Math.round(estReturn).toLocaleString('vi-VN')} đ</span>
+                              <span className="text-emerald-400 font-black text-[13px]">Nhận về: {Math.round(estReturn).toLocaleString('vi-VN')}</span>
                             </div>
                           );
                         })}
@@ -492,7 +492,7 @@ export default function OutrightPage() {
                           </h3>
                           <div className="mt-2 pt-2 border-t border-white/5 w-full text-center">
                             <p className="text-[14px] font-black text-emerald-400">
-                              {teamTotal.toLocaleString("vi-VN")}đ
+                              {teamTotal.toLocaleString("vi-VN")}
                             </p>
                             {(() => {
                               const currentOdds = getTeamOdds(opt.name);
@@ -724,7 +724,7 @@ export default function OutrightPage() {
                   </div>
                   <div className="flex items-baseline gap-3 justify-center mb-4">
                     <span className="text-5xl font-black text-emerald-400 font-mono">{Math.round(getEstPrize(bettingOn.name, amount)).toLocaleString('vi-VN')}</span>
-                    <span className="text-2xl text-emerald-600/50 font-black">đ</span>
+                    <span className="text-2xl text-emerald-600/50 font-black"></span>
                   </div>
                 </div>
 
@@ -760,7 +760,7 @@ export default function OutrightPage() {
                             <span className="font-bold text-slate-300 group-hover:text-indigo-400 transition-colors uppercase">{b.user_name}</span>
                           </td>
                           <td className="py-4 text-right">
-                            <span className="font-black text-emerald-400 font-mono">{b.amount.toLocaleString('vi-VN')}đ</span>
+                            <span className="font-black text-emerald-400 font-mono">{b.amount.toLocaleString('vi-VN')}</span>
                           </td>
                         </tr>
                       ))
@@ -809,20 +809,20 @@ export default function OutrightPage() {
               <div className="space-y-6">
                 <div>
                   <div className="flex justify-between mb-3">
-                    <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest">Số tiền cược mới (đ)</label>
+                    <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest">Số tiền cược mới</label>
                     <span className="text-[11px] font-bold text-slate-400">
-                      Cũ: {editingBet.amount.toLocaleString('vi-VN')}đ
+                      Cũ: {editingBet.amount.toLocaleString('vi-VN')}
                     </span>
                   </div>
                   <input
                     type="number"
                     value={editAmount}
                     onChange={(e) => setEditAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="Nhập số tiền (tối thiểu 20.000đ)..."
+                    placeholder="Nhập số tiền (tối thiểu 20.000)..."
                     className="w-full bg-black border border-white/10 rounded-3xl px-8 py-5 text-xl font-black text-center text-white focus:border-amber-500 transition-all font-mono"
                   />
                   {editAmount !== '' && Number(editAmount) > 0 && Number(editAmount) < 20000 && (
-                    <p className="text-rose-400 text-[11px] font-bold mt-2 text-center">⚠ Mức cược tối thiểu là 20.000đ</p>
+                    <p className="text-rose-400 text-[11px] font-bold mt-2 text-center">⚠ Mức cược tối thiểu là 20.000</p>
                   )}
                   <div className="grid grid-cols-5 gap-3 mt-4">
                     {[20000, 50000, 100000, 200000, 500000].map(val => (

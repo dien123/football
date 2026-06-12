@@ -1380,9 +1380,9 @@ const DC13Page: React.FC = () => {
                                       'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
                                   }`}>
                                   Bạn chọn: <span className="font-black">{myBet.chosen_team === 'teamA' ? match.team_a_name : myBet.chosen_team === 'teamB' ? match.team_b_name : myBet.chosen_team}</span>
-                                  {effRes === 'win' && ' — ✅ THẮNG (0đ)'}
-                                  {effRes === 'loss' && ` — ❌ THUA (-${PENALTY_AMOUNT.toLocaleString('vi-VN')}đ)`}
-                                  {effRes === 'draw' && ' — 🤝 HÒA (0đ)'}
+                                  {effRes === 'win' && ' — ✅ THẮNG (0 điểm)'}
+                                  {effRes === 'loss' && ` — ❌ THUA (-${PENALTY_AMOUNT.toLocaleString('vi-VN')} điểm)`}
+                                  {effRes === 'draw' && ' — 🤝 HÒA (0 điểm)'}
                                   {effRes === 'pending' && ' — ⏳ Đang chờ kết quả'}
                                 </div>
                                 {!locked && (
@@ -2211,7 +2211,7 @@ const DC13Page: React.FC = () => {
                       <div>
                         <h2 className="text-lg font-black uppercase tracking-tight italic text-cyan-400">Quản Lý DC 13</h2>
                         <p className="text-[12px] text-slate-500 font-bold mt-0.5">
-                          Tổng quỹ thu: <span className="text-cyan-400 font-black">{playerStats.reduce((sum, p) => sum + Math.abs(p.total_penalty), 0).toLocaleString('vi-VN')}đ</span>
+                          Tổng quỹ phạt thu: <span className="text-cyan-400 font-black">{playerStats.reduce((sum, p) => sum + Math.abs(p.total_penalty), 0).toLocaleString('vi-VN')} điểm</span>
                         </p>
                       </div>
                     </div>
