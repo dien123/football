@@ -473,14 +473,14 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
 
                   <div className="flex items-center gap-8 font-mono">
                     <div className="text-center md:text-right">
-                      <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Tổng tiền cược</p>
+                      <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Tổng giá trị</p>
                       <p className="text-2xl font-black text-emerald-400">
                         {bets.reduce((sum, b) => sum + b.amount, 0).toLocaleString("vi-VN")}
                       </p>
                     </div>
                     <div className="w-[1px] h-8 bg-white/10" />
                     <div className="text-center md:text-left">
-                      <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Tổng lượt cược</p>
+                      <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Tổng lượt dự đoán</p>
                       <p className="text-2xl font-black text-indigo-400">{bets.length} lượt</p>
                     </div>
                   </div>

@@ -482,7 +482,7 @@ const ResultsPage: React.FC = () => {
                   <span className="col-span-2">Người chơi</span>
                   <span className="col-span-3">Lựa chọn</span>
                   <span className="col-span-3">Đội thắng</span>
-                  <span className="col-span-2 text-right">Tiền cược</span>
+                  <span className="col-span-2 text-right">Gía trị</span>
                   <span className="col-span-2 text-right">Kết quả</span>
                 </div>
                 <div className="divide-y divide-white/5">
