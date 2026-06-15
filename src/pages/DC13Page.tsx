@@ -857,7 +857,7 @@ const DC13Page: React.FC = () => {
       let estWinnings = 0;
       let estTotal = 0;
 
-      if (outrightWinner) {
+      if (outrightWinner && outrightWinner !== '__LOCKED__') {
         if (b.team_name === outrightWinner) {
           const winBets = outrightBets.filter(x => x.team_name === outrightWinner);
           const winCount = winBets.length;
@@ -1076,18 +1076,14 @@ const DC13Page: React.FC = () => {
 
   // ─── Outright Pool Derived Variables ───────────────────────────────────────
   const totalOutrightPool = outrightBets.reduce((sum, b) => sum + b.amount, 0);
-  const winnerOutrightPool = outrightWinner
+  const winnerOutrightPool = (outrightWinner && outrightWinner !== '__LOCKED__')
     ? outrightBets.filter(b => b.team_name === outrightWinner).reduce((sum, b) => sum + b.amount, 0)
     : 0;
   const netOutrightPool = totalOutrightPool - winnerOutrightPool;
 
   const myOutrightBets = user ? outrightBets.filter(b => b.user_id === user.id) : [];
 
-  const isOutrightLocked = matches.some(m => {
-    const s = m.dc13_status || m.status || 'scheduled';
-    const isLive = s === 'live' || (s !== 'finished' && new Date(m.start_time) <= new Date());
-    return isLive || s === 'finished';
-  }) || !!outrightWinner;
+  const isOutrightLocked = !!outrightWinner;
 
   // ─── Styles ────────────────────────────────────────────────────────────────
   const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-cyan-500 outline-none transition-all";
@@ -1666,7 +1662,7 @@ const DC13Page: React.FC = () => {
                 <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-white/5 rounded-3xl p-6 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
                   <div>
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Đội vô địch chính thức</span>
-                    {outrightWinner ? (
+                    {outrightWinner && outrightWinner !== '__LOCKED__' ? (
                       <div className="flex items-center gap-2 mt-1">
                         <div className="w-8 h-5 rounded overflow-hidden border border-white/20 shrink-0 bg-slate-800">
                           <img src={`https://flagcdn.com/w80/${getDC13TeamFlag(outrightWinner).toLowerCase()}.png`} className="w-full h-full object-cover" alt={outrightWinner} />
@@ -1893,7 +1889,7 @@ const DC13Page: React.FC = () => {
                           let estTotal = 0;
                           let statusColor = 'text-cyan-400';
 
-                          if (outrightWinner) {
+                          if (outrightWinner && outrightWinner !== '__LOCKED__') {
                             if (bet.team_name === outrightWinner) {
                               const winBets = outrightBets.filter(b => b.team_name === outrightWinner);
                               const winCount = winBets.length;
@@ -2774,8 +2770,8 @@ const DC13Page: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                       <div className="space-y-2">
-                        <label className={labelCls}>Chọn Đội Tuyển Vô Địch</label>
-                        <div className="flex gap-2">
+                        <label className={labelCls}>Chọn Đội Tuyển Vô Địch / Khóa cược</label>
+                        <div className="flex gap-2 flex-wrap sm:flex-nowrap">
                           <select
                             onChange={(e) => {
                               const val = e.target.value;
@@ -2785,8 +2781,8 @@ const DC13Page: React.FC = () => {
                                 }
                               }
                             }}
-                            value={outrightWinner || ''}
-                            className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-100 focus:border-cyan-500 outline-none"
+                            value={outrightWinner && outrightWinner !== '__LOCKED__' ? outrightWinner : ''}
+                            className="flex-1 min-w-[150px] bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-100 focus:border-cyan-500 outline-none"
                           >
                             <option value="">-- Chọn đội vô địch --</option>
                             {DC13_TEAMS.map(team => (
@@ -2794,30 +2790,52 @@ const DC13Page: React.FC = () => {
                             ))}
                           </select>
 
-                          {outrightWinner && (
+                          {isOutrightLocked ? (
                             <button
-                              onClick={() => handleSetDC13OutrightWinner(null)}
-                              className="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 border border-rose-500/20 text-rose-400 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                              onClick={() => {
+                                if (window.confirm('Bạn có muốn mở khóa cổng nhận cược vô địch?')) {
+                                  handleSetDC13OutrightWinner(null);
+                                }
+                              }}
+                              className="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/20 text-emerald-400 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shrink-0"
                             >
-                              Reset
+                              🔓 Mở khóa cổng nhận cược
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                if (window.confirm('Bạn có chắc chắn muốn khóa cổng nhận cược vô địch?')) {
+                                  handleSetDC13OutrightWinner('__LOCKED__');
+                                }
+                              }}
+                              className="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 border border-rose-500/20 text-rose-400 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shrink-0"
+                            >
+                              🔒 Khóa cổng nhận cược
                             </button>
                           )}
                         </div>
-                        <p className="text-[10px] text-slate-500 italic">Đặt đội vô địch sẽ tự động tính toán người thắng/thua và chia quỹ dự đoán.</p>
+                        <p className="text-[10px] text-slate-500 italic">Đặt đội vô địch hoặc khóa cược sẽ dừng cổng nhận cược. Đóng/mở khóa cổng nhận cược bất kỳ lúc nào.</p>
                       </div>
 
                       <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
                         <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Trạng thái hiện tại</span>
                         {outrightWinner ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-5 rounded overflow-hidden border border-white/20 shrink-0 bg-slate-800">
-                              <img src={`https://flagcdn.com/w80/${getDC13TeamFlag(outrightWinner).toLowerCase()}.png`} className="w-full h-full object-cover" alt={outrightWinner} />
+                          outrightWinner === '__LOCKED__' ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-black text-amber-500 uppercase">🔒 Cổng nhận cược đã khóa</span>
+                              <span className="text-[10px] font-bold text-slate-500">(Chưa chọn đội vô địch)</span>
                             </div>
-                            <span className="text-sm font-black text-emerald-400 uppercase">{outrightWinner}</span>
-                            <span className="text-[10px] font-bold text-slate-500">(Đã khóa & tính giá trị dự đoán)</span>
-                          </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-5 rounded overflow-hidden border border-white/20 shrink-0 bg-slate-800">
+                                <img src={`https://flagcdn.com/w80/${getDC13TeamFlag(outrightWinner).toLowerCase()}.png`} className="w-full h-full object-cover" alt={outrightWinner} />
+                              </div>
+                              <span className="text-sm font-black text-emerald-400 uppercase">{outrightWinner}</span>
+                              <span className="text-[10px] font-bold text-slate-500">(Đội vô địch chính thức)</span>
+                            </div>
+                          )
                         ) : (
-                          <span className="text-xs text-slate-400 font-bold block">Chưa có đội vô địch. Đang chờ xác định...</span>
+                          <span className="text-xs text-emerald-400 font-bold block">🟢 Cổng nhận cược đang mở...</span>
                         )}
                       </div>
                     </div>
