@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useContext } from 'react';
 import { Match, Bet } from '../types';
 import { supabase } from '../lib/supabase';
 import { formatVND } from '../utils/format';
 import { calculateBetResult, getOutcomeColorCls, getOutcomeLabel } from '../utils/betLogic';
+import { AppContext } from '../App';
 
 const ResultsPage: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -10,9 +11,23 @@ const ResultsPage: React.FC = () => {
   const [bets, setBets] = useState<Bet[]>([]); // Bets for specific selected match
   const [allBets, setAllBets] = useState<Bet[]>([]); // ALL bets for ALL finished matches
   const [selectedLossUser, setSelectedLossUser] = useState<any>(null);
+  const [refunds, setRefunds] = useState<any[]>([]);
+
+  const ctx = useContext(AppContext);
+  const isAdmin = ctx?.isAdminAuthenticated || false;
+
+  const fetchRefunds = async () => {
+    const { data, error } = await supabase
+      .from('refunds')
+      .select('*');
+    if (!error && data) {
+      setRefunds(data);
+    }
+  };
 
   useEffect(() => {
     fetchFinishedMatches();
+    fetchRefunds();
   }, []);
 
   const fetchFinishedMatches = async () => {
@@ -198,9 +213,19 @@ const ResultsPage: React.FC = () => {
 
     // For each user, calculate streaks
     Object.entries(userBets).forEach(([userName, betsList]) => {
+      // Find this user's refunds to reset their current streak check
+      const userRefunds = refunds.filter(r => r.user_name === userName);
+      const lastRefund = userRefunds.length > 0
+        ? userRefunds.sort((a, b) => new Date(b.refunded_at).getTime() - new Date(a.refunded_at).getTime())[0]
+        : null;
+      const lastRefundTime = lastRefund ? new Date(lastRefund.refunded_at).getTime() : 0;
+
       // Group this user's bets by match_id
       const betsByMatch: Record<string, { match: Match; bets: Bet[] }> = {};
       betsList.forEach(bet => {
+        // Skip bets that were placed before the last refund reset
+        if (new Date(bet.created_at).getTime() <= lastRefundTime) return;
+
         const match = matches.find(m => m.id === bet.match_id);
         if (!match) return;
         if (!betsByMatch[bet.match_id]) {
@@ -288,7 +313,7 @@ const ResultsPage: React.FC = () => {
       if (b.currentStreak !== a.currentStreak) return b.currentStreak - a.currentStreak;
       return b.maxStreak - a.maxStreak;
     });
-  }, [allBets, matches]);
+  }, [allBets, matches, refunds]);
 
   return (
     <div className="min-h-screen relative overflow-hidden text-white pb-12">
@@ -413,11 +438,35 @@ const ResultsPage: React.FC = () => {
                               </div>
                             </div>
 
-                            <div className="text-right">
+                            <div className="text-right flex flex-col items-end">
                               {refundAmount > 0 ? (
                                 <>
                                   <p className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Đủ ĐK Hoàn</p>
                                   <p className="text-sm font-black text-white mt-0.5 font-mono">{formatVND(refundAmount)}</p>
+                                  {isAdmin && (
+                                    <button
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        if (window.confirm(`Xác nhận đã hoàn tiền bảo hiểm ${formatVND(refundAmount)} cho ${streak.name}?`)) {
+                                          const { error } = await supabase
+                                            .from('refunds')
+                                            .insert({
+                                              user_name: streak.name,
+                                              amount: refundAmount
+                                            });
+                                          if (error) {
+                                            alert(`Lỗi hoàn tiền: ${error.message}`);
+                                          } else {
+                                            alert(`Đã hoàn tiền thành công cho ${streak.name}!`);
+                                            fetchRefunds();
+                                          }
+                                        }
+                                      }}
+                                      className="mt-2 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border border-emerald-500/20"
+                                    >
+                                      ✓ Đã hoàn
+                                    </button>
+                                  )}
                                 </>
                               ) : streak.currentStreak >= 3 ? (
                                 <>
@@ -449,6 +498,52 @@ const ResultsPage: React.FC = () => {
                   </div>
                 )}
               </div>
+
+              {/* Refunded Users List */}
+              <div className="mt-8 pt-6 border-t border-white/5">
+                <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <span>🟢</span> Danh sách thành viên đã nhận hoàn voucher bảo hiểm
+                </p>
+
+                {refunds.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {[...refunds].sort((a, b) => new Date(b.refunded_at).getTime() - new Date(a.refunded_at).getTime()).map(refund => (
+                      <div
+                        key={refund.id}
+                        className="bg-emerald-950/10 border border-emerald-500/10 rounded-2xl p-3.5 flex items-center justify-between text-xs transition-transform hover:scale-[1.02]"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[10px] font-black text-emerald-400">
+                            ✓
+                          </div>
+                          <div>
+                            <p className="font-black text-slate-200">{refund.user_name}</p>
+                            <p className="text-[9px] text-slate-500 mt-0.5">
+                              {new Date(refund.refunded_at).toLocaleString('vi-VN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="inline-block px-2 py-0.5 rounded text-[8px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
+                            Đã Hoàn
+                          </span>
+                          <p className="text-xs font-black font-mono text-emerald-400 mt-1">{formatVND(refund.amount)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white/[0.01] border border-dashed border-white/5 rounded-2xl py-6 text-center text-slate-600 font-bold text-[10px] uppercase tracking-widest">
+                    Chưa có lịch sử hoàn tiền bảo hiểm!
+                  </div>
+                )}
+              </div>
             </div>
           </section>
 
@@ -459,22 +554,41 @@ const ResultsPage: React.FC = () => {
               {selectedMatchId === 'all' ? 'Tổng hợp toàn bộ giải đấu' : 'Chi tiết trận đấu'}
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02]">
-                <p className="text-3xl font-black text-white">{results.betResults.length}</p>
-                <p className="text-[10px] text-slate-500 mt-1 uppercase font-black">Tổng lượt cược</p>
-              </div>
-              <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02]">
-                <p className="text-3xl font-black text-emerald-400">{results.totalWinners}</p>
-                <p className="text-[10px] text-slate-500 mt-1 uppercase font-black">Số lượt Thắng</p>
-              </div>
-              <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02]">
-                <p className={`text-xl font-black font-mono ${results.totalPayout >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {results.totalPayout > 0 ? '+' : ''}{formatVND(results.totalPayout)}
-                </p>
-                <p className="text-[10px] text-slate-500 mt-1 uppercase font-black">Lời/Lãi Khách</p>
-              </div>
-            </div>
+            {(() => {
+              const totalRefunded = refunds.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+              const houseBalance = -results.totalPayout - (selectedMatchId === 'all' ? totalRefunded : 0);
+
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02]">
+                    <p className="text-2xl md:text-3xl font-black text-white">{results.betResults.length}</p>
+                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Tổng lượt cược</p>
+                  </div>
+                  <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02]">
+                    <p className="text-2xl md:text-3xl font-black text-emerald-400">{results.totalWinners}</p>
+                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Số lượt Thắng</p>
+                  </div>
+                  <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02]">
+                    <p className={`text-xl md:text-2xl font-black font-mono ${results.totalPayout >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {results.totalPayout > 0 ? '+' : ''}{formatVND(results.totalPayout)}
+                    </p>
+                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Lời/Lãi Khách</p>
+                  </div>
+                  <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02] relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-rose-500 to-amber-500" />
+                    <p className={`text-xl md:text-2xl font-black font-mono ${houseBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {houseBalance > 0 ? '+' : ''}{formatVND(houseBalance)}
+                    </p>
+                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Tổng Quỹ Thu Chi</p>
+                    {selectedMatchId === 'all' && totalRefunded > 0 && (
+                      <p className="text-[8px] text-slate-600 font-bold mt-0.5 uppercase">
+                        (Đã hoàn: {formatVND(totalRefunded)})
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="bg-[#222] rounded-2xl border border-white/5 overflow-hidden shadow-2xl overflow-x-auto">
               <div className="min-w-[750px]">
@@ -705,12 +819,39 @@ const ResultsPage: React.FC = () => {
                   <p className="text-[11px] font-bold text-slate-500">Chưa đạt chuỗi thua 3 trận</p>
                 )}
               </div>
-              <button
-                onClick={() => setSelectedLossUser(null)}
-                className="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-md shadow-rose-900/30"
-              >
-                Đóng
-              </button>
+              <div className="flex items-center gap-3">
+                {isAdmin && getRefundAmount(selectedLossUser.currentStreak, selectedLossUser.currentTotalAmount) > 0 && (
+                  <button
+                    onClick={async () => {
+                      const refundAmt = getRefundAmount(selectedLossUser.currentStreak, selectedLossUser.currentTotalAmount);
+                      if (window.confirm(`Xác nhận đã hoàn tiền bảo hiểm ${formatVND(refundAmt)} cho ${selectedLossUser.name}?`)) {
+                        const { error } = await supabase
+                          .from('refunds')
+                          .insert({
+                            user_name: selectedLossUser.name,
+                            amount: refundAmt
+                          });
+                        if (error) {
+                          alert(`Lỗi hoàn tiền: ${error.message}`);
+                        } else {
+                          alert(`Đã hoàn tiền thành công cho ${selectedLossUser.name}!`);
+                          setSelectedLossUser(null);
+                          fetchRefunds();
+                        }
+                      }
+                    }}
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-md shadow-emerald-950/40 border border-emerald-500/20"
+                  >
+                    Xác nhận hoàn
+                  </button>
+                )}
+                <button
+                  onClick={() => setSelectedLossUser(null)}
+                  className="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-md shadow-rose-900/30"
+                >
+                  Đóng
+                </button>
+              </div>
             </div>
           </div>
         </div>
