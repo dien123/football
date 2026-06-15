@@ -10,7 +10,7 @@ interface MatchCardProps {
 }
 
 const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin, customClass }) => {
-  const isLive = match.status === 'live';
+  const isLive = match.status === 'live' || (match.status !== 'finished' && new Date(match.start_time) <= new Date());
   const isFinished = match.status === 'finished';
 
   // Real-time lock: re-evaluate every 30 seconds
@@ -80,8 +80,8 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onBet, isAdmin, customClas
         </div>
 
         <div className="flex flex-col items-center">
-          <span className={`text-xl font-black transition-colors ${match.status === 'finished' ? 'text-emerald-400' : 'text-slate-600 group-hover:text-emerald-500'}`}>
-            {match.status === 'scheduled' ? '🏆' : `${match.score_a} : ${match.score_b}`}
+          <span className={`text-xl font-black transition-colors ${isFinished ? 'text-emerald-400' : 'text-slate-600 group-hover:text-emerald-500'}`}>
+            {(match.status === 'scheduled' && !isLive) ? '🏆' : `${match.score_a} : ${match.score_b}`}
           </span>
         </div>
 

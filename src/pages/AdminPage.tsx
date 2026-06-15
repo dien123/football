@@ -8,7 +8,7 @@ const AdminPage: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [editingMatch, setEditingMatch] = useState<Partial<Match> | null>(null);
   const [isAdding, setIsAdding] = useState(false);
-  const [filter, setFilter] = useState<'date' | 'live' | 'all'>('date');
+  const [filter, setFilter] = useState<'date' | 'unplayed' | 'live' | 'all'>('date');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [localScores, setLocalScores] = useState<Record<string, { a: number, b: number }>>({});
   const [activeTab, setActiveTab] = useState<'matches' | 'outright'>('matches');
@@ -281,6 +281,10 @@ const AdminPage: React.FC = () => {
     if (m.id === 'WORLD_CUP_2026_WINNER_REF') return false;
     if (filter === 'live') return m.status === 'live';
     if (filter === 'date' && selectedDate) return new Date(m.start_time).toLocaleDateString('vi-VN') === selectedDate;
+    if (filter === 'unplayed' && selectedDate) {
+      const matchDate = new Date(m.start_time).toLocaleDateString('vi-VN');
+      return matchDate === selectedDate && m.status === 'scheduled';
+    }
     return true;
   });
 
@@ -333,6 +337,7 @@ const AdminPage: React.FC = () => {
               <div className="flex items-center gap-2 md:gap-4">
                 <div className="flex p-1 bg-black/40 rounded-full border border-white/5">
                   <button onClick={() => setFilter('date')} className={`px-3 md:px-5 py-2 rounded-full text-[9px] font-black uppercase ${filter === 'date' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}>THEO NGÀY</button>
+                  <button onClick={() => setFilter('unplayed')} className={`px-3 md:px-5 py-2 rounded-full text-[9px] font-black uppercase ${filter === 'unplayed' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}>CHƯA ĐÁ</button>
                   <button onClick={() => setFilter('live')} className={`px-3 md:px-5 py-2 rounded-full text-[9px] font-black uppercase ${filter === 'live' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}>ĐANG ĐÁ</button>
                   <button onClick={() => setFilter('all')} className={`px-3 md:px-5 py-2 rounded-full text-[9px] font-black uppercase ${filter === 'all' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}>TẤT CẢ</button>
                 </div>
@@ -340,15 +345,18 @@ const AdminPage: React.FC = () => {
               </div>
 
               {/* Date scroller row */}
-              <div className="flex-1 flex items-center gap-2 md:gap-3 relative overflow-hidden group">
+              <div className={`flex-1 flex items-center gap-2 md:gap-3 relative overflow-hidden group ${(filter !== 'date' && filter !== 'unplayed') ? 'invisible pointer-events-none' : ''}`}>
                 <button onClick={() => scrollerRef.current?.scrollBy({ left: -150, behavior: 'smooth' })} className="p-1 opacity-40 hover:opacity-100 transition-opacity shrink-0">◀</button>
                 <div ref={scrollerRef} className="flex gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-1">
-                  {uniqueDates.map(d => (
-                    <button key={d} onClick={() => { setSelectedDate(d); setFilter('date'); }} className={`min-w-[55px] md:min-w-[65px] h-12 md:h-14 rounded-xl md:rounded-2xl flex flex-col items-center justify-center transition-all border ${selectedDate === d && filter === 'date' ? 'bg-emerald-600 border-emerald-500 shadow-lg shadow-emerald-900/40' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
-                      <span className="text-[7px] font-black opacity-60 uppercase mb-0.5">{getWeekday(d)}</span>
-                      <span className="text-xs md:text-sm font-black">{d.split('/')[0]}</span>
-                    </button>
-                  ))}
+                  {uniqueDates.map(d => {
+                    const isActive = selectedDate === d && (filter === 'date' || filter === 'unplayed');
+                    return (
+                      <button key={d} onClick={() => { setSelectedDate(d); }} className={`min-w-[55px] md:min-w-[65px] h-12 md:h-14 rounded-xl md:rounded-2xl flex flex-col items-center justify-center transition-all border ${isActive ? 'bg-emerald-600 border-emerald-500 shadow-lg shadow-emerald-900/40' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
+                        <span className="text-[7px] font-black opacity-60 uppercase mb-0.5">{getWeekday(d)}</span>
+                        <span className="text-xs md:text-sm font-black">{d.split('/')[0]}</span>
+                      </button>
+                    );
+                  })}
                 </div>
                 <button onClick={() => scrollerRef.current?.scrollBy({ left: 150, behavior: 'smooth' })} className="p-1 opacity-40 hover:opacity-100 transition-opacity shrink-0">▶</button>
               </div>
@@ -450,67 +458,71 @@ const AdminPage: React.FC = () => {
 
             {/* MATCH LIST */}
             <div className="grid grid-cols-1 gap-4">
-              {filteredMatches.map(m => (
-                <div key={m.id} className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl md:rounded-[35px] p-4 md:p-6 group hover:bg-white/[0.08] transition-all">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-8">
-                    <div className="flex items-center gap-3 md:gap-5">
-                      {/* FLAGS & SCORE VERTICAL */}
-                      <div className="flex items-center gap-2 md:gap-3">
-                        <div className="w-10 h-10 md:w-14 md:h-14 bg-black/40 rounded-xl md:rounded-2xl overflow-hidden border border-white/10 group-hover:scale-105 transition-transform shrink-0"><img src={`https://flagcdn.com/w160/${m.team_a_code?.toLowerCase()}.png`} className="w-full h-full object-cover" /></div>
-                        <div className="flex flex-col gap-1 items-center bg-black/60 p-1 md:p-1.5 rounded-lg md:rounded-xl border border-white/10 min-w-[28px] md:min-w-[32px]">
-                          <input type="number" className="w-7 md:w-8 h-5 md:h-6 bg-transparent text-[10px] md:text-[11px] font-black text-emerald-400 text-center outline-none" value={localScores[m.id]?.a ?? m.score_a} onChange={e => setLocalScores({ ...localScores, [m.id]: { a: parseInt(e.target.value), b: localScores[m.id]?.b ?? m.score_b } })} />
-                          <div className="w-3 md:w-4 h-[1px] bg-white/10" />
-                          <input type="number" className="w-7 md:w-8 h-5 md:h-6 bg-transparent text-[10px] md:text-[11px] font-black text-emerald-400 text-center outline-none" value={localScores[m.id]?.b ?? m.score_b} onChange={e => setLocalScores({ ...localScores, [m.id]: { a: localScores[m.id]?.a ?? m.score_a, b: parseInt(e.target.value) } })} />
+              {filteredMatches.map(m => {
+                const isLive = m.status === 'live' || (m.status !== 'finished' && new Date(m.start_time) <= new Date());
+                const mStatus = isLive ? 'live' : m.status;
+                return (
+                  <div key={m.id} className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl md:rounded-[35px] p-4 md:p-6 group hover:bg-white/[0.08] transition-all">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-8">
+                      <div className="flex items-center gap-3 md:gap-5">
+                        {/* FLAGS & SCORE VERTICAL */}
+                        <div className="flex items-center gap-2 md:gap-3">
+                          <div className="w-10 h-10 md:w-14 md:h-14 bg-black/40 rounded-xl md:rounded-2xl overflow-hidden border border-white/10 group-hover:scale-105 transition-transform shrink-0"><img src={`https://flagcdn.com/w160/${m.team_a_code?.toLowerCase()}.png`} className="w-full h-full object-cover" /></div>
+                          <div className="flex flex-col gap-1 items-center bg-black/60 p-1 md:p-1.5 rounded-lg md:rounded-xl border border-white/10 min-w-[28px] md:min-w-[32px]">
+                            <input type="number" className="w-7 md:w-8 h-5 md:h-6 bg-transparent text-[10px] md:text-[11px] font-black text-emerald-400 text-center outline-none" value={localScores[m.id]?.a ?? m.score_a} onChange={e => setLocalScores({ ...localScores, [m.id]: { a: parseInt(e.target.value), b: localScores[m.id]?.b ?? m.score_b } })} />
+                            <div className="w-3 md:w-4 h-[1px] bg-white/10" />
+                            <input type="number" className="w-7 md:w-8 h-5 md:h-6 bg-transparent text-[10px] md:text-[11px] font-black text-emerald-400 text-center outline-none" value={localScores[m.id]?.b ?? m.score_b} onChange={e => setLocalScores({ ...localScores, [m.id]: { a: localScores[m.id]?.a ?? m.score_a, b: parseInt(e.target.value) } })} />
+                          </div>
+                          <div className="w-10 h-10 md:w-14 md:h-14 bg-black/40 rounded-xl md:rounded-2xl overflow-hidden border border-white/10 group-hover:scale-105 transition-transform shrink-0"><img src={`https://flagcdn.com/w160/${m.team_b_code?.toLowerCase()}.png`} className="w-full h-full object-cover" /></div>
                         </div>
-                        <div className="w-10 h-10 md:w-14 md:h-14 bg-black/40 rounded-xl md:rounded-2xl overflow-hidden border border-white/10 group-hover:scale-105 transition-transform shrink-0"><img src={`https://flagcdn.com/w160/${m.team_b_code?.toLowerCase()}.png`} className="w-full h-full object-cover" /></div>
-                      </div>
-                      {/* TEAM INFO */}
-                      <div className="min-w-0">
-                        <h3 className="text-xs md:text-base font-black text-white group-hover:text-emerald-400 transition-colors uppercase italic tracking-tight truncate">{m.team_a_name} <span className="text-[9px] md:text-[10px] opacity-40 mx-0.5 md:mx-1">vs</span> {m.team_b_name}</h3>
-                        <div className="flex flex-wrap items-center gap-1.5 md:gap-4 mt-1 md:mt-1.5">
-                          <span className="text-[8px] md:text-[9px] font-black text-indigo-400 bg-indigo-500/10 px-2 md:px-3 py-0.5 md:py-1 rounded-full border border-indigo-500/20 uppercase tracking-widest">KÈO: {m.handicap}</span>
-                          <span className={`text-[8px] md:text-[9px] font-black px-2 md:px-3 py-0.5 md:py-1 rounded-full uppercase tracking-widest ${m.status === 'live' ? 'bg-rose-500 text-white animate-pulse' : 'bg-slate-800 text-slate-500'}`}>{m.status}</span>
-                          <span className="text-[8px] md:text-[9px] font-black text-slate-500 italic tracking-widest opacity-60">{new Date(m.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
+                        {/* TEAM INFO */}
+                        <div className="min-w-0">
+                          <h3 className="text-xs md:text-base font-black text-white group-hover:text-emerald-400 transition-colors uppercase italic tracking-tight truncate">{m.team_a_name} <span className="text-[9px] md:text-[10px] opacity-40 mx-0.5 md:mx-1">vs</span> {m.team_b_name}</h3>
+                          <div className="flex flex-wrap items-center gap-1.5 md:gap-4 mt-1 md:mt-1.5">
+                            <span className="text-[8px] md:text-[9px] font-black text-indigo-400 bg-indigo-500/10 px-2 md:px-3 py-0.5 md:py-1 rounded-full border border-indigo-500/20 uppercase tracking-widest">KÈO: {m.handicap}</span>
+                            <span className={`text-[8px] md:text-[9px] font-black px-2 md:px-3 py-0.5 md:py-1 rounded-full uppercase tracking-widest ${isLive ? 'bg-rose-500 text-white animate-pulse' : 'bg-slate-800 text-slate-500'}`}>{mStatus}</span>
+                            <span className="text-[8px] md:text-[9px] font-black text-slate-500 italic tracking-widest opacity-60">{new Date(m.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    {/* ACTIONS */}
-                    <div className="flex gap-2 md:gap-3 justify-end md:justify-start shrink-0">
-                      {localScores[m.id] && <button onClick={() => handleQuickUpdateResult(m)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-emerald-500 text-black rounded-full shadow-lg shadow-emerald-500/20 hover:scale-110 active:scale-95 transition-all text-[10px] md:text-xs">✅</button>}
-                      <button onClick={() => setEditingMatch(m)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full border border-white/10 transition-all text-[10px] md:text-xs" title="Sửa trận đấu">✏️</button>
-                      <button
-                        onClick={() => handleExportMatchBets(m)}
-                        title="Xuất Excel cược trận này"
-                        className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-emerald-600 hover:text-white rounded-full border border-white/10 transition-all text-[10px] md:text-xs"
-                      >
-                        📥
-                      </button>
-                      <button onClick={() => handleDeleteMatch(m.id)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-rose-500 hover:text-white rounded-full border border-white/10 transition-all text-[10px] md:text-xs" title="Xóa trận đấu">🗑️</button>
-                      {m.status === 'finished' && (
+                      {/* ACTIONS */}
+                      <div className="flex gap-2 md:gap-3 justify-end md:justify-start shrink-0">
+                        {localScores[m.id] && <button onClick={() => handleQuickUpdateResult(m)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-emerald-500 text-black rounded-full shadow-lg shadow-emerald-500/20 hover:scale-110 active:scale-95 transition-all text-[10px] md:text-xs">✅</button>}
+                        <button onClick={() => setEditingMatch(m)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full border border-white/10 transition-all text-[10px] md:text-xs" title="Sửa trận đấu">✏️</button>
                         <button
-                          onClick={() => handleResetMatch(m.id)}
-                          className="px-3 bg-amber-500/10 hover:bg-amber-500 border border-amber-500/20 text-amber-400 hover:text-white rounded-full text-[9px] md:text-[11px] font-black uppercase tracking-widest transition-all"
+                          onClick={() => handleExportMatchBets(m)}
+                          title="Xuất Excel cược trận này"
+                          className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-emerald-600 hover:text-white rounded-full border border-white/10 transition-all text-[10px] md:text-xs"
                         >
-                          Reset
+                          📥
                         </button>
-                      )}
-                      {m.status !== 'finished' && (
-                        <div className="flex items-center">
-                          <select
-                            value={m.betting_open === true ? 'open' : (m.betting_open === false ? 'closed' : 'auto')}
-                            onChange={(e) => handleUpdateBettingStatus(m.id, e.target.value)}
-                            className="bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-[9px] md:text-[11px] font-black text-slate-300 focus:border-emerald-500 outline-none cursor-pointer hover:border-white/20 transition-colors h-9 md:h-11"
+                        <button onClick={() => handleDeleteMatch(m.id)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-rose-500 hover:text-white rounded-full border border-white/10 transition-all text-[10px] md:text-xs" title="Xóa trận đấu">🗑️</button>
+                        {m.status === 'finished' && (
+                          <button
+                            onClick={() => handleResetMatch(m.id)}
+                            className="px-3 bg-amber-500/10 hover:bg-amber-500 border border-amber-500/20 text-amber-400 hover:text-white rounded-full text-[9px] md:text-[11px] font-black uppercase tracking-widest transition-all"
                           >
-                            <option value="auto">🔄 Tự động (30m)</option>
-                            <option value="open">🟢 Mở cược (Ghi đè)</option>
-                            <option value="closed">🔴 Đóng cược (Ghi đè)</option>
-                          </select>
-                        </div>
-                      )}
+                            Reset
+                          </button>
+                        )}
+                        {m.status !== 'finished' && (
+                          <div className="flex items-center">
+                            <select
+                              value={m.betting_open === true ? 'open' : (m.betting_open === false ? 'closed' : 'auto')}
+                              onChange={(e) => handleUpdateBettingStatus(m.id, e.target.value)}
+                              className="bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-[9px] md:text-[11px] font-black text-slate-300 focus:border-emerald-500 outline-none cursor-pointer hover:border-white/20 transition-colors h-9 md:h-11"
+                            >
+                              <option value="auto">🔄 Tự động (30m)</option>
+                              <option value="open">🟢 Mở cược (Ghi đè)</option>
+                              <option value="closed">🔴 Đóng cược (Ghi đè)</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ) : (

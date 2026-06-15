@@ -91,6 +91,7 @@ export interface DC13Bet {
   chosen_team: string;   // 'teamA' | 'teamB'
   result: string;        // 'pending' | 'win' | 'loss'
   created_at: string;
+  isVirtual?: boolean;
   dc13_profiles?: {
     full_name: string;
   } | null;

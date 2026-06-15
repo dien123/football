@@ -16,7 +16,7 @@ const MatchPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<BetOption>('teamA');
-  const [filter, setFilter] = useState('date');
+  const [filter, setFilter] = useState<'date' | 'unplayed' | 'live' | 'all'>('date');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [editingBet, setEditingBet] = useState<any | null>(null);
@@ -192,9 +192,16 @@ const MatchPage: React.FC = () => {
     const isWC = m.league !== 'TIP Futsal league';
     if (!isWC) return false;
 
-    if (filter === 'live') return m.status === 'live';
+    const isLive = m.status === 'live' || (m.status !== 'finished' && new Date(m.start_time) <= new Date());
+    const isUnplayed = m.status === 'scheduled' && new Date(m.start_time) > new Date();
+
+    if (filter === 'live') return isLive;
     if (filter === 'date' && selectedDate) {
       return new Date(m.start_time).toLocaleDateString('vi-VN') === selectedDate;
+    }
+    if (filter === 'unplayed' && selectedDate) {
+      const matchDate = new Date(m.start_time).toLocaleDateString('vi-VN');
+      return matchDate === selectedDate && isUnplayed;
     }
     if (filter === 'all') return true;
     return true;
@@ -262,6 +269,12 @@ const MatchPage: React.FC = () => {
                       Theo Ngày
                     </button>
                     <button
+                      onClick={() => setFilter('unplayed')}
+                      className={`px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${filter === 'unplayed' ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-900/40' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                    >
+                      Chưa Đá
+                    </button>
+                    <button
                       onClick={() => setFilter('live')}
                       className={`px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${filter === 'live' ? 'bg-rose-600 text-white shadow-xl animate-pulse' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
                     >
@@ -276,7 +289,7 @@ const MatchPage: React.FC = () => {
                   </div>
 
                   {/* Date Scroller */}
-                  {filter === 'date' && (
+                  {(filter === 'date' || filter === 'unplayed') && (
                     <div className="flex-1 flex items-center gap-2.5 w-full max-w-3xl min-w-0">
                       <button
                         onClick={scrollPrev}

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
-import { Match, DC13Bet } from '../types';
+import React, { useState, useEffect, useContext, useCallback, useRef, useMemo } from 'react';
+import { Match, DC13Bet, DC13Profile } from '../types';
 import { supabase } from '../lib/supabase';
 import { AppContext } from '../App';
 import DC13AuthModal from '../components/DC13AuthModal';
@@ -175,6 +175,7 @@ const DC13Page: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'matches' | 'stats' | 'rules' | 'admin' | 'outright'>('matches');
   const [matches, setMatches] = useState<Match[]>([]);
   const [bets, setBets] = useState<DC13Bet[]>([]);
+  const [profiles, setProfiles] = useState<DC13Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [cardsLoading, setCardsLoading] = useState(false);
 
@@ -189,7 +190,7 @@ const DC13Page: React.FC = () => {
   const [showOutrightRules, setShowOutrightRules] = useState(false);
 
   // Date Filtering
-  const [filter, setFilter] = useState<'date' | 'live' | 'all'>('date');
+  const [filter, setFilter] = useState<'date' | 'live' | 'all' | 'unplayed'>('date');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const scrollerRef = useRef<HTMLDivElement>(null);
   const adminScrollerRef = useRef<HTMLDivElement>(null);
@@ -204,7 +205,7 @@ const DC13Page: React.FC = () => {
     }, 350);
   };
 
-  const handleFilterChange = (newFilter: 'date' | 'live' | 'all') => {
+  const handleFilterChange = (newFilter: 'date' | 'live' | 'all' | 'unplayed') => {
     if (newFilter === filter) return;
     setCardsLoading(true);
     setFilter(newFilter);
@@ -315,10 +316,17 @@ const DC13Page: React.FC = () => {
     }
   }, []);
 
+  const fetchProfiles = useCallback(async () => {
+    const { data } = await supabase
+      .from('dc13_profiles')
+      .select('*');
+    if (data) setProfiles(data as DC13Profile[]);
+  }, []);
+
   useEffect(() => {
     setLoading(true);
-    Promise.all([fetchMatches(), fetchBets(), fetchDC13OutrightData()]).finally(() => setLoading(false));
-  }, [fetchMatches, fetchBets, fetchDC13OutrightData]);
+    Promise.all([fetchMatches(), fetchBets(), fetchDC13OutrightData(), fetchProfiles()]).finally(() => setLoading(false));
+  }, [fetchMatches, fetchBets, fetchDC13OutrightData, fetchProfiles]);
 
   // Real-time changes listener
   useEffect(() => {
@@ -763,7 +771,7 @@ const DC13Page: React.FC = () => {
   };
 
   const handleExportMatchBets = (match: Match) => {
-    const matchBets = bets.filter(b => b.match_id === match.id);
+    const matchBets = resolvedBets.filter(b => b.match_id === match.id);
     if (matchBets.length === 0) {
       alert('Trận đấu này chưa có ai dự đoán!');
       return;
@@ -773,6 +781,7 @@ const DC13Page: React.FC = () => {
 
     matchBets.forEach(b => {
       const resolvedName = b.dc13_profiles?.full_name || b.user_name || 'N/A';
+      const displayName = b.isVirtual ? `${resolvedName} (Mặc định)` : resolvedName;
       let chosenTeamName = b.chosen_team;
       if (chosenTeamName === 'teamA') chosenTeamName = match.team_a_name;
       else if (chosenTeamName === 'teamB') chosenTeamName = match.team_b_name;
@@ -783,7 +792,7 @@ const DC13Page: React.FC = () => {
 
       const timeStr = new Date(b.created_at).toLocaleString('vi-VN');
 
-      const escapedName = resolvedName.includes(',') ? `"${resolvedName}"` : resolvedName;
+      const escapedName = displayName.includes(',') ? `"${displayName}"` : displayName;
       const escapedTeamName = chosenTeamName.includes(',') ? `"${chosenTeamName}"` : chosenTeamName;
 
       csv += `${b.id},${b.user_name},${escapedName},${escapedTeamName},${statusStr},${timeStr}\n`;
@@ -794,20 +803,21 @@ const DC13Page: React.FC = () => {
   };
 
   const handleExportAllBets = () => {
-    if (bets.length === 0) {
+    if (resolvedBets.length === 0) {
       alert('Không có dữ liệu dự đoán nào!');
       return;
     }
 
     let csv = 'Trận Đấu,Thời Gian Trận Đấu,ID Lượt dự đoán,Tài Khoản,Họ Tên Đầy Đủ,Đội Chọn,Kết Quả Bet,Thời Gian Dự Đoán\n';
 
-    bets.forEach(b => {
+    resolvedBets.forEach(b => {
       const match = matches.find(m => m.id === b.match_id);
       if (!match) return;
 
       const matchName = `${match.team_a_name} vs ${match.team_b_name}`;
       const matchTime = new Date(match.start_time).toLocaleString('vi-VN');
       const resolvedName = b.dc13_profiles?.full_name || b.user_name || 'N/A';
+      const displayName = b.isVirtual ? `${resolvedName} (Mặc định)` : resolvedName;
       let chosenTeamName = b.chosen_team;
       if (chosenTeamName === 'teamA') chosenTeamName = match.team_a_name;
       else if (chosenTeamName === 'teamB') chosenTeamName = match.team_b_name;
@@ -820,7 +830,7 @@ const DC13Page: React.FC = () => {
       const timeStr = new Date(b.created_at).toLocaleString('vi-VN');
 
       const escapedMatchName = matchName.includes(',') ? `"${matchName}"` : matchName;
-      const escapedName = resolvedName.includes(',') ? `"${resolvedName}"` : resolvedName;
+      const escapedName = displayName.includes(',') ? `"${displayName}"` : displayName;
       const escapedTeamName = chosenTeamName.includes(',') ? `"${chosenTeamName}"` : chosenTeamName;
 
       csv += `${escapedMatchName},${matchTime},${b.id},${b.user_name},${escapedName},${escapedTeamName},${statusStr},${timeStr}\n`;
@@ -890,9 +900,17 @@ const DC13Page: React.FC = () => {
   };
 
   const filteredMatches = matches.filter(m => {
-    if (filter === 'live') return (m.dc13_status || 'scheduled') === 'live';
+    const dc13Status = m.dc13_status || m.status || 'scheduled';
+    const isLive = dc13Status === 'live' || (dc13Status !== 'finished' && new Date(m.start_time) <= new Date());
+    const isUnplayed = dc13Status === 'scheduled' && new Date(m.start_time) > new Date();
+
+    if (filter === 'live') return isLive;
     if (filter === 'date' && selectedDate) {
       return new Date(m.start_time).toLocaleDateString('vi-VN') === selectedDate;
+    }
+    if (filter === 'unplayed' && selectedDate) {
+      const matchDate = new Date(m.start_time).toLocaleDateString('vi-VN');
+      return matchDate === selectedDate && isUnplayed;
     }
     return true; // 'all'
   });
@@ -910,10 +928,53 @@ const DC13Page: React.FC = () => {
     return 'draw';
   };
 
+  // ─── Resolved Bets with Underdog Fallback for Forgotten Bets ────────────────
+  const resolvedBets = useMemo(() => {
+    const list = [...bets];
+    
+    // Threshold start time: 2026-06-15T11:00:00Z (18:00:00+07:00)
+    const threshold = new Date('2026-06-15T11:00:00Z').getTime();
+    
+    // Compile active player user_ids who have ever placed a bet in DC13
+    const activePlayerIds = new Set(bets.map(b => b.user_id));
+    
+    matches.forEach(match => {
+      // Rule applies if match has locked betting AND starts on or after threshold
+      const matchStartTime = new Date(match.start_time).getTime();
+      if (isDC13BettingLocked(match) && matchStartTime >= threshold) {
+        // Find who has bet on this match
+        const bettedUserIds = new Set(bets.filter(b => b.match_id === match.id).map(b => b.user_id));
+        
+        // For each active player who forgot to bet
+        profiles.forEach(profile => {
+          if (activePlayerIds.has(profile.id) && !bettedUserIds.has(profile.id)) {
+            // Determine underdog team
+            const favorite = match.dc13_favorite_team || 'teamA';
+            const underdogTeamName = favorite === 'teamA' ? match.team_b_name : match.team_a_name;
+            
+            // Add virtual bet
+            list.push({
+              id: `virtual-${match.id}-${profile.id}`,
+              match_id: match.id,
+              user_id: profile.id,
+              user_name: profile.full_name,
+              chosen_team: underdogTeamName,
+              result: 'pending', // Will be calculated dynamically if finished
+              created_at: match.start_time,
+              isVirtual: true
+            } as any);
+          }
+        });
+      }
+    });
+    
+    return list;
+  }, [bets, profiles, matches]);
+
   // ─── Stats Calculation ─────────────────────────────────────────────────────
   const playerStats: PlayerStats[] = (() => {
     const map: Record<string, PlayerStats> = {};
-    bets.forEach(bet => {
+    resolvedBets.forEach(bet => {
       const match = matches.find(m => m.id === bet.match_id);
       let effectiveResult = bet.result;
 
@@ -984,7 +1045,7 @@ const DC13Page: React.FC = () => {
   })();
 
   // ─── My bets with effective results computed ──────────────────────────────
-  const myBetsWithResult = user ? bets.filter(b => b.user_id === user.id).map(bet => {
+  const myBetsWithResult = user ? resolvedBets.filter(b => b.user_id === user.id).map(bet => {
     const match = matches.find(m => m.id === bet.match_id);
     let effectiveResult = bet.result;
 
@@ -1004,7 +1065,7 @@ const DC13Page: React.FC = () => {
     return { ...bet, effectiveResult };
   }) : [];
 
-  const myBets = user ? bets.filter(b => b.user_id === user.id) : [];
+  const myBets = user ? resolvedBets.filter(b => b.user_id === user.id) : [];
   const myBetMatchIds = new Set(myBets.map(b => b.match_id));
 
   // ─── Outright Pool Derived Variables ───────────────────────────────────────
@@ -1016,7 +1077,11 @@ const DC13Page: React.FC = () => {
 
   const myOutrightBets = user ? outrightBets.filter(b => b.user_id === user.id) : [];
 
-  const isOutrightLocked = matches.some(m => (m.dc13_status || m.status || 'scheduled') === 'live' || (m.dc13_status || m.status || 'scheduled') === 'finished') || !!outrightWinner;
+  const isOutrightLocked = matches.some(m => {
+    const s = m.dc13_status || m.status || 'scheduled';
+    const isLive = s === 'live' || (s !== 'finished' && new Date(m.start_time) <= new Date());
+    return isLive || s === 'finished';
+  }) || !!outrightWinner;
 
   // ─── Styles ────────────────────────────────────────────────────────────────
   const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-cyan-500 outline-none transition-all";
@@ -1137,6 +1202,12 @@ const DC13Page: React.FC = () => {
                   Theo Ngày
                 </button>
                 <button
+                  onClick={() => handleFilterChange('unplayed')}
+                  className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border ${filter === 'unplayed' ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white border-cyan-400/30 shadow-[0_4px_15px_rgba(6,182,212,0.4)]' : 'border-transparent text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10'}`}
+                >
+                  Chưa Đá
+                </button>
+                <button
                   onClick={() => handleFilterChange('live')}
                   className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border ${filter === 'live' ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white border-rose-400/30 shadow-[0_4px_15px_rgba(244,63,94,0.4)] animate-pulse' : 'border-transparent text-slate-400 hover:text-rose-400 hover:bg-rose-500/10'}`}
                 >
@@ -1150,8 +1221,8 @@ const DC13Page: React.FC = () => {
                 </button>
               </div>
 
-              {/* Date Scroller - always rendered for stable height, hidden when not date filter */}
-              <div className={`flex-1 flex items-center gap-2.5 w-full max-w-2xl min-w-0 ${filter !== 'date' || uniqueDates.length === 0 ? 'invisible' : ''}`} style={{ minHeight: '42px' }}>
+              {/* Date Scroller - always rendered for stable height, hidden when not date/unplayed filter */}
+              <div className={`flex-1 flex items-center gap-2.5 w-full max-w-2xl min-w-0 ${(filter !== 'date' && filter !== 'unplayed') || uniqueDates.length === 0 ? 'invisible' : ''}`} style={{ minHeight: '42px' }}>
                 <button
                   onClick={() => scrollerRef.current?.scrollBy({ left: -150, behavior: 'smooth' })}
                   className="shrink-0 w-8 h-8 flex items-center justify-center bg-slate-950/60 border border-white/5 hover:border-cyan-500/30 rounded-full text-white/50 hover:text-cyan-400 transition-all text-xs shadow-sm"
@@ -1209,21 +1280,25 @@ const DC13Page: React.FC = () => {
                   const locked = isDC13BettingLocked(match);
                   const alreadyBet = myBetMatchIds.has(match.id);
                   const myBet = myBets.find(b => b.match_id === match.id);
-                  const matchBets = bets.filter(b => b.match_id === match.id);
+                  const matchBets = resolvedBets.filter(b => b.match_id === match.id);
                   const teamABets = matchBets.filter(b => b.chosen_team === 'teamA' || b.chosen_team === match.team_a_name).length;
                   const teamBBets = matchBets.filter(b => b.chosen_team === 'teamB' || b.chosen_team === match.team_b_name).length;
                   const computedResult = getMatchResult(match);
+
+                  const dc13Status = match.dc13_status || match.status || 'scheduled';
+                  const isLive = dc13Status === 'live' || (dc13Status !== 'finished' && new Date(match.start_time) <= new Date());
+                  const isFinished = dc13Status === 'finished';
 
                   return (
                     <div key={match.id} className="flex flex-col h-full bg-slate-950/40 backdrop-blur-2xl border border-white/[0.06] rounded-2xl md:rounded-3xl overflow-hidden group hover:border-cyan-500/40 hover:bg-slate-900/40 shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:shadow-[0_15px_45px_rgba(6,182,212,0.18)] transition-all duration-300">
                       {/* Match header info */}
                       <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between gap-3 flex-wrap bg-slate-900/20">
                         <div className="flex items-center gap-2">
-                          <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest ${(match.dc13_status || 'scheduled') === 'live' ? 'bg-rose-500 text-white animate-pulse' :
-                            (match.dc13_status || 'scheduled') === 'finished' ? 'bg-slate-700 text-slate-400' :
+                          <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest ${isLive ? 'bg-rose-500 text-white animate-pulse' :
+                            isFinished ? 'bg-slate-700 text-slate-400' :
                               'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                             }`}>
-                            {(match.dc13_status || 'scheduled') === 'live' ? '🔴 LIVE' : (match.dc13_status || 'scheduled') === 'finished' ? 'Kết thúc' : 'Sắp đá'}
+                            {isLive ? '🔴 LIVE' : isFinished ? 'Kết thúc' : 'Sắp đá'}
                           </span>
                           <span className="text-[12px] text-slate-400 font-bold">
                             {new Date(match.start_time).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
@@ -1237,8 +1312,8 @@ const DC13Page: React.FC = () => {
                           </span>
                         )}
                         {alreadyBet && (
-                          <span className="text-[10px] font-black text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/25 uppercase tracking-widest">
-                            ✓ Đã bet
+                          <span className={`text-[10px] font-black bg-cyan-500/10 px-2.5 py-1 rounded-full border uppercase tracking-widest ${myBet?.isVirtual ? 'text-amber-500 border-amber-500/25' : 'text-cyan-400 border-cyan-500/25'}`}>
+                            {myBet?.isVirtual ? '🔒 Mặc định' : '✓ Đã bet'}
                           </span>
                         )}
                       </div>
@@ -1270,7 +1345,7 @@ const DC13Page: React.FC = () => {
 
                           {/* VS / Result */}
                           <div className="flex flex-col items-center px-3 self-start pt-3.5 md:pt-4">
-                            {(match.dc13_status || 'scheduled') === 'finished' && computedResult ? (
+                            {isFinished && computedResult ? (
                               <div className="flex flex-col items-center gap-1">
                                 <div className="text-lg font-black text-slate-300">{(match.dc13_score_a ?? 0)} - {(match.dc13_score_b ?? 0)}</div>
                                 <div className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest ${computedResult === 'draw' ? 'bg-slate-700 text-slate-300' :
@@ -1283,7 +1358,7 @@ const DC13Page: React.FC = () => {
                               </div>
                             ) : (
                               <div className="text-center">
-                                {(match.dc13_status || 'scheduled') === 'live' && <div className="text-sm font-black text-rose-500 mb-1">{(match.dc13_score_a ?? 0)} - {(match.dc13_score_b ?? 0)}</div>}
+                                {isLive && <div className="text-sm font-black text-rose-500 mb-1">{(match.dc13_score_a ?? 0)} - {(match.dc13_score_b ?? 0)}</div>}
                                 <span className="text-xl md:text-2xl font-black text-slate-400 group-hover:text-cyan-300 transition-colors duration-300 italic">VS</span>
                               </div>
                             )}
@@ -1384,6 +1459,7 @@ const DC13Page: React.FC = () => {
                                       'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
                                   }`}>
                                   Bạn chọn: <span className="font-black">{myBet.chosen_team === 'teamA' ? match.team_a_name : myBet.chosen_team === 'teamB' ? match.team_b_name : myBet.chosen_team}</span>
+                                  {myBet.isVirtual && <span className="text-[10px] text-amber-500 font-extrabold uppercase ml-1">(Mặc định)</span>}
                                   {effRes === 'win' && ' — ✅ THẮNG (0 điểm)'}
                                   {effRes === 'loss' && ` — ❌ THUA (-${PENALTY_AMOUNT.toLocaleString('vi-VN')} điểm)`}
                                   {effRes === 'draw' && ' — 🤝 HÒA (0 điểm)'}
@@ -1461,6 +1537,7 @@ const DC13Page: React.FC = () => {
                                       <div key={b.id} className="flex items-center justify-between py-1 border-b border-white/[0.03] last:border-0">
                                         <span className="font-bold text-slate-300 truncate mr-1">
                                           {b.dc13_profiles?.full_name || b.user_name}
+                                          {b.isVirtual && <span className="text-amber-500/70 text-[8px] ml-1 font-black uppercase tracking-wider">(Mặc định)</span>}
                                           {user && b.user_id === user.id && <span className="text-cyan-400 text-[8px] ml-1 font-black uppercase tracking-wider">(Bạn)</span>}
                                         </span>
                                         <span className="shrink-0 text-[9px]">
@@ -1498,6 +1575,7 @@ const DC13Page: React.FC = () => {
                                       <div key={b.id} className="flex items-center justify-between py-1 border-b border-white/[0.03] last:border-0">
                                         <span className="font-bold text-slate-300 truncate mr-1">
                                           {b.dc13_profiles?.full_name || b.user_name}
+                                          {b.isVirtual && <span className="text-amber-500/70 text-[8px] ml-1 font-black uppercase tracking-wider">(Mặc định)</span>}
                                           {user && b.user_id === user.id && <span className="text-cyan-400 text-[8px] ml-1 font-black uppercase tracking-wider">(Bạn)</span>}
                                         </span>
                                         <span className="shrink-0 text-[9px]">
@@ -2493,6 +2571,12 @@ const DC13Page: React.FC = () => {
                         Theo Ngày
                       </button>
                       <button
+                        onClick={() => handleFilterChange('unplayed')}
+                        className={`px-4 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${filter === 'unplayed' ? 'bg-cyan-600 text-white shadow-xl shadow-cyan-900/40' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                      >
+                        Chưa Đá
+                      </button>
+                      <button
                         onClick={() => handleFilterChange('live')}
                         className={`px-4 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${filter === 'live' ? 'bg-rose-600 text-white shadow-xl animate-pulse' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
                       >
@@ -2507,7 +2591,7 @@ const DC13Page: React.FC = () => {
                     </div>
 
                     {/* Date Scroller - always rendered for stable height */}
-                    <div className={`flex-1 flex items-center gap-2.5 w-full max-w-2xl min-w-0 ${filter !== 'date' || uniqueDates.length === 0 ? 'invisible' : ''}`} style={{ minHeight: '42px' }}>
+                    <div className={`flex-1 flex items-center gap-2.5 w-full max-w-2xl min-w-0 ${(filter !== 'date' && filter !== 'unplayed') || uniqueDates.length === 0 ? 'invisible' : ''}`} style={{ minHeight: '42px' }}>
                       <button
                         onClick={() => adminScrollerRef.current?.scrollBy({ left: -150, behavior: 'smooth' })}
                         className="shrink-0 w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-cyan-500/20 rounded-full text-white/50 hover:text-cyan-400 transition-all text-xs"
@@ -2563,7 +2647,9 @@ const DC13Page: React.FC = () => {
                       filteredMatches.map(m => {
                         const matchBets = bets.filter(b => b.match_id === m.id);
                         const computedResult = getMatchResult(m);
-                        const mStatus = m.dc13_status || 'scheduled';
+                        const dbStatus = m.dc13_status || m.status || 'scheduled';
+                        const isLive = dbStatus === 'live' || (dbStatus !== 'finished' && new Date(m.start_time) <= new Date());
+                        const mStatus = isLive ? 'live' : dbStatus;
                         return (
                           <div key={m.id} className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-4 md:p-5 hover:bg-white/[0.06] transition-all group">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -2582,7 +2668,7 @@ const DC13Page: React.FC = () => {
                                     {m.team_a_name} <span className="text-slate-500 mx-1 text-[9px]">🏆</span> {m.team_b_name}
                                   </h4>
                                   <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${mStatus === 'live' ? 'bg-rose-500 text-white animate-pulse' :
+                                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${isLive ? 'bg-rose-500 text-white animate-pulse' :
                                       mStatus === 'finished' ? 'bg-slate-700 text-slate-400' :
                                         'bg-cyan-500/20 text-cyan-400'
                                       }`}>{mStatus}</span>
