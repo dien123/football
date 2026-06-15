@@ -14,6 +14,10 @@ const ResultsPage: React.FC = () => {
   const [refunds, setRefunds] = useState<any[]>([]);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
+  // Custom Calculator States
+  const [calcPlayer, setCalcPlayer] = useState<string>('');
+  const [calcSelectedMatches, setCalcSelectedMatches] = useState<Record<string, boolean>>({});
+
   const ctx = useContext(AppContext);
   const isAdmin = ctx?.isAdminAuthenticated || false;
 
@@ -189,6 +193,116 @@ const ResultsPage: React.FC = () => {
       return 0;
     }
     return 0;
+  };
+
+  // Custom Calculator Memos & Helpers
+  const uniquePlayers = useMemo(() => {
+    const names = allBets.map(b => b.user_name);
+    return [...new Set(names)].sort();
+  }, [allBets]);
+
+  const playerMatches = useMemo(() => {
+    if (!calcPlayer) return [];
+    const playerBets = allBets.filter(b => b.user_name === calcPlayer);
+    const matchIds = new Set(playerBets.map(b => b.match_id));
+    return matches.filter(m => matchIds.has(m.id));
+  }, [calcPlayer, allBets, matches]);
+
+  // Automatically check all matches of the selected player by default when they change
+  useEffect(() => {
+    if (calcPlayer) {
+      const initialSelected: Record<string, boolean> = {};
+      playerMatches.forEach(m => {
+        initialSelected[m.id] = true;
+      });
+      setCalcSelectedMatches(initialSelected);
+    } else {
+      setCalcSelectedMatches({});
+    }
+  }, [calcPlayer, playerMatches]);
+
+  const customCalcResults = useMemo(() => {
+    if (!calcPlayer) return { totalAmount: 0, totalProfit: 0, matchesCount: 0, betDetails: [] };
+
+    const playerBets = allBets.filter(b => b.user_name === calcPlayer);
+    let totalAmount = 0;
+    let totalProfit = 0;
+    let matchesCount = 0;
+    const betDetails: any[] = [];
+
+    playerBets.forEach(bet => {
+      // Find match
+      const match = matches.find(m => m.id === bet.match_id);
+      if (!match) return;
+
+      const isChecked = !!calcSelectedMatches[match.id];
+
+      const res = calculateBetResult(
+        bet.option,
+        bet.amount,
+        match.score_a,
+        match.score_b,
+        {
+          handicap: match.handicap,
+          rateA: match.rate_a,
+          rateB: match.rate_b,
+          teamAName: match.team_a_name,
+          teamBName: match.team_b_name
+        }
+      );
+
+      if (isChecked) {
+        totalAmount += bet.amount;
+        totalProfit += res.payout;
+        matchesCount++;
+      }
+
+      const isTeamA = bet.option === 'teamA' || bet.option === match.team_a_name;
+      const selectedTeamName = isTeamA ? match.team_a_name : match.team_b_name;
+
+      betDetails.push({
+        matchId: match.id,
+        matchName: `${match.team_a_name} vs ${match.team_b_name}`,
+        matchScore: `${match.score_a} - ${match.score_b}`,
+        chosenTeam: selectedTeamName,
+        amount: bet.amount,
+        outcome: res.outcome,
+        payout: res.payout
+      });
+    });
+
+    // Sort betDetails by start time (newest first)
+    betDetails.sort((a, b) => {
+      const matchA = matches.find(m => m.id === a.matchId);
+      const matchB = matches.find(m => m.id === b.matchId);
+      if (!matchA || !matchB) return 0;
+      return new Date(matchB.start_time).getTime() - new Date(matchA.start_time).getTime();
+    });
+
+    return { totalAmount, totalProfit, matchesCount, betDetails };
+  }, [calcPlayer, calcSelectedMatches, allBets, matches]);
+
+  const handleToggleMatch = (matchId: string) => {
+    setCalcSelectedMatches(prev => ({
+      ...prev,
+      [matchId]: !prev[matchId]
+    }));
+  };
+
+  const handleSelectAllMatches = () => {
+    const updated: Record<string, boolean> = {};
+    playerMatches.forEach(m => {
+      updated[m.id] = true;
+    });
+    setCalcSelectedMatches(updated);
+  };
+
+  const handleDeselectAllMatches = () => {
+    const updated: Record<string, boolean> = {};
+    playerMatches.forEach(m => {
+      updated[m.id] = false;
+    });
+    setCalcSelectedMatches(updated);
   };
 
   // Consecutive Loss Streaks (Bảo hiểm dây đen)
@@ -545,6 +659,129 @@ const ResultsPage: React.FC = () => {
                   </div>
                 )}
               </div>
+            </div>
+          </section>
+
+          {/* Custom Bet Result Calculator Section */}
+          <section className="animate-fade-in">
+            <div className="flex items-center gap-2 mb-2 text-[12px] font-black uppercase tracking-[0.2em] text-cyan-400">
+              <span className="w-4 h-4 rounded-full bg-cyan-500/20 flex items-center justify-center">🧮</span>
+              Bộ Tính Toán Kết Quả Cược Tùy Chọn
+            </div>
+
+            <div className="bg-gradient-to-br from-cyan-950/20 via-slate-900/50 to-black/45 rounded-3xl border border-cyan-500/20 p-6 shadow-xl relative overflow-hidden">
+              {/* Decorative background glow */}
+              <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-36 h-36 bg-cyan-600/5 rounded-full blur-2xl pointer-events-none" />
+
+              <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-white/5">
+                <div className="w-full md:w-1/2">
+                  <label className="block text-[10px] font-black text-slate-500 mb-1.5 uppercase tracking-widest">Chọn người chơi cần tính</label>
+                  <select
+                    value={calcPlayer}
+                    onChange={(e) => setCalcPlayer(e.target.value)}
+                    className="w-full bg-[#111] border border-white/10 text-white rounded-xl px-4 py-3 focus:border-cyan-500 outline-none cursor-pointer text-sm shadow-md"
+                  >
+                    <option value="">-- Chọn một người chơi --</option>
+                    {uniquePlayers.map(name => (
+                      <option key={name} value={name}>{name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {calcPlayer && (
+                  <div className="flex gap-2 self-end w-full md:w-auto">
+                    <button
+                      onClick={handleSelectAllMatches}
+                      className="flex-1 md:flex-none px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                    >
+                      Chọn tất cả
+                    </button>
+                    <button
+                      onClick={handleDeselectAllMatches}
+                      className="flex-1 md:flex-none px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-white/5 text-slate-300 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                    >
+                      Bỏ chọn tất cả
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {calcPlayer ? (
+                <div className="relative z-10 mt-6 space-y-6">
+                  {/* Results cards summary */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Trận đấu đã chọn</p>
+                      <p className="text-2xl font-black text-white mt-1">{customCalcResults.matchesCount} trận</p>
+                    </div>
+                    <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Tổng tiền cược</p>
+                      <p className="text-2xl font-black text-slate-300 mt-1 font-mono">{formatVND(customCalcResults.totalAmount)}</p>
+                    </div>
+                    <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Tổng Lời / Lãi ròng</p>
+                      <p className={`text-2xl font-black mt-1 font-mono ${customCalcResults.totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {customCalcResults.totalProfit > 0 ? '+' : ''}{formatVND(customCalcResults.totalProfit)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Checklist of matches */}
+                  <div className="space-y-3">
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <span>✓/✗</span> Chọn các trận đấu muốn cộng dồn kết quả:
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
+                      {customCalcResults.betDetails.map(detail => {
+                        const isChecked = !!calcSelectedMatches[detail.matchId];
+                        return (
+                          <div
+                            key={detail.matchId}
+                            onClick={() => handleToggleMatch(detail.matchId)}
+                            className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                              isChecked
+                                ? 'bg-cyan-950/10 border-cyan-500/30'
+                                : 'bg-black/25 border-white/5 opacity-60 hover:opacity-85'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
+                                isChecked
+                                  ? 'bg-cyan-500 border-cyan-400 text-black'
+                                  : 'bg-transparent border-slate-600'
+                              }`}>
+                                {isChecked && <span className="font-bold text-xs">✓</span>}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-black text-slate-200 text-xs truncate">{detail.matchName}</p>
+                                <p className="text-[10px] text-slate-500 mt-0.5 truncate font-semibold">
+                                  Cược: <span className="text-slate-300 font-bold">{detail.chosenTeam}</span> ({formatVND(detail.amount)})
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-black border ${getOutcomeColorCls(detail.outcome)}`}>
+                                {getOutcomeLabel(detail.outcome)}
+                              </span>
+                              <p className={`text-[10px] font-black font-mono mt-0.5 ${detail.payout >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {detail.payout > 0 ? '+' : ''}{formatVND(detail.payout)}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-6 text-center">
+                  <p className="text-xs text-slate-500 italic">
+                    Vui lòng chọn 1 người chơi từ danh sách để bắt đầu tính toán cược tùy chọn.
+                  </p>
+                </div>
+              )}
             </div>
           </section>
 
