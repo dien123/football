@@ -219,6 +219,7 @@ const DC13Page: React.FC = () => {
   const [pendingBetMatch, setPendingBetMatch] = useState<Match | null>(null);
   const [showBetModal, setShowBetModal] = useState(false);
   const [betMatch, setBetMatch] = useState<Match | null>(null);
+  const [showRuleModal, setShowRuleModal] = useState(true);
 
   // Admin
   const [adminAuthed, setAdminAuthed] = useState(false);
@@ -327,6 +328,10 @@ const DC13Page: React.FC = () => {
     setLoading(true);
     Promise.all([fetchMatches(), fetchBets(), fetchDC13OutrightData(), fetchProfiles()]).finally(() => setLoading(false));
   }, [fetchMatches, fetchBets, fetchDC13OutrightData, fetchProfiles]);
+
+  const handleCloseRuleModal = () => {
+    setShowRuleModal(false);
+  };
 
   // Real-time changes listener
   useEffect(() => {
@@ -2152,11 +2157,16 @@ const DC13Page: React.FC = () => {
                   1. Cách chơi & Tính thưởng
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-3.5">
-                  <div className="bg-slate-900/40 border border-white/[0.04] rounded-2xl p-4 hover:border-cyan-500/20 transition-all duration-300 shadow-sm">
-                    <p className="text-sm font-black text-cyan-400 mb-1.5">🎯 CÁCH CHƠI ĐƠN GIẢN</p>
-                    <p className="text-sm text-slate-400 font-semibold leading-relaxed">
-                      Người chơi chỉ cần chọn 1 trong 2 đội thắng (Đội A hoặc Đội B) cho mỗi trận đấu. Hệ thống không yêu cầu nhập số tiền dự đoán. Đóng dự đoán tự động trước giờ bóng lăn 30 phút.
-                    </p>
+                  <div className="bg-slate-900/40 border border-white/[0.04] rounded-2xl p-4 hover:border-cyan-500/20 transition-all duration-300 shadow-sm flex flex-col justify-between">
+                    <div>
+                      <p className="text-sm font-black text-cyan-400 mb-1.5">🎯 CÁCH CHƠI ĐƠN GIẢN</p>
+                      <p className="text-sm text-slate-400 font-semibold leading-relaxed">
+                        Người chơi chỉ cần chọn 1 trong 2 đội thắng (Đội A hoặc Đội B) cho mỗi trận đấu. Hệ thống không yêu cầu nhập số tiền dự đoán. Đóng dự đoán tự động trước giờ bóng lăn 30 phút.
+                      </p>
+                    </div>
+                    <div className="text-[12px] text-amber-400 font-bold border-t border-white/5 pt-2.5 mt-3 leading-relaxed">
+                      ⚠️ Luật bổ sung (từ 18:00 ngày 15/06/2026): Nếu quên bet/không chọn cược trước giờ khóa, hệ thống sẽ tự động xếp bạn vào cửa đội kèo dưới (được chấp).
+                    </div>
                   </div>
                   <div className="bg-slate-900/40 border border-white/[0.04] rounded-2xl p-4 hover:border-rose-500/20 transition-all duration-300 shadow-sm">
                     <p className="text-sm font-black text-rose-400 mb-1.5">💸 PHẠT ĐIỂM THUA CUỢC</p>
@@ -2829,6 +2839,62 @@ const DC13Page: React.FC = () => {
         onClose={() => { setShowAuthModal(false); setPendingBetMatch(null); }}
         onSuccess={handleAuthSuccess}
       />
+
+      {/* New Underdog Default Bet Rule Popup Modal */}
+      {showRuleModal && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/85 backdrop-blur-md" onClick={handleCloseRuleModal} />
+          <div className="relative z-10 w-full max-w-lg bg-[#0e1726]/95 border border-cyan-500/35 rounded-[32px] overflow-hidden shadow-2xl p-8 text-center shadow-[0_0_50px_rgba(6,182,212,0.25)] animate-in zoom-in-95 duration-300">
+            {/* Close button x */}
+            <button
+              onClick={handleCloseRuleModal}
+              className="absolute top-5 right-5 text-slate-400 hover:text-cyan-400 transition-colors text-xl p-1 rounded-full hover:bg-white/5"
+              aria-label="Đóng thông báo"
+            >
+              ✕
+            </button>
+
+            {/* Glowing Megaphone Icon */}
+            <div className="w-16 h-16 bg-gradient-to-tr from-cyan-500/20 to-teal-500/20 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.25)]">
+              📢
+            </div>
+
+            {/* Title */}
+            <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-3">
+              Thông Báo Luật Bet Mới
+            </h3>
+
+            {/* Time badge */}
+            <div className="inline-flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/30 rounded-full px-4 py-1.5 mb-6">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="text-[11px] font-black uppercase tracking-wider text-cyan-300">
+                Áp dụng từ 18:00 hôm nay (15/06/2026)
+              </span>
+            </div>
+
+            {/* Rules Description */}
+            <div className="space-y-4 text-left bg-slate-950/40 p-5 rounded-2xl border border-white/[0.04] mb-6">
+              <p className="text-sm text-slate-300 leading-relaxed font-medium">
+                Để đảm bảo tính công bằng và sự tham gia đầy đủ của toàn bộ người chơi trong giải đấu <span className="text-cyan-400 font-bold">DC13 Bet Championship</span>, Ban tổ chức áp dụng luật bổ sung sau:
+              </p>
+              <div className="flex gap-3 items-start border-t border-white/5 pt-4">
+                <span className="text-rose-400 text-lg">⚠️</span>
+                <p className="text-sm text-slate-300 leading-relaxed font-semibold">
+                  Nếu người chơi <span className="text-rose-400 font-black">quên không bet</span> hoặc <span className="text-rose-400 font-black">không chọn kèo</span> trước thời điểm đóng cược (30 phút trước giờ bóng lăn), hệ thống sẽ <span className="text-cyan-400 font-black">tự động xếp người chơi đó vào cửa đội kèo dưới (đội được chấp)</span> cho trận đấu đó.
+                </p>
+              </div>
+            </div>
+
+            {/* Action CTA Button */}
+            <button
+              onClick={handleCloseRuleModal}
+              className="w-full py-3.5 bg-gradient-to-r from-cyan-500 via-cyan-600 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-white rounded-2xl text-sm font-black uppercase tracking-wider transition-all duration-300 shadow-[0_4px_20px_rgba(6,182,212,0.4)] hover:shadow-[0_4px_25px_rgba(6,182,212,0.6)] transform hover:-translate-y-0.5 active:translate-y-0"
+            >
+              Đã hiểu & Đồng ý
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* DC13 Bet Modal */}
       {showBetModal && betMatch && (
