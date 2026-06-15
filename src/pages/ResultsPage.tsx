@@ -12,6 +12,7 @@ const ResultsPage: React.FC = () => {
   const [allBets, setAllBets] = useState<Bet[]>([]); // ALL bets for ALL finished matches
   const [selectedLossUser, setSelectedLossUser] = useState<any>(null);
   const [refunds, setRefunds] = useState<any[]>([]);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const ctx = useContext(AppContext);
   const isAdmin = ctx?.isAdminAuthenticated || false;
@@ -600,7 +601,7 @@ const ResultsPage: React.FC = () => {
                   <span className="col-span-2 text-right">Kết quả</span>
                 </div>
                 <div className="divide-y divide-white/5">
-                  {results.betResults.length > 0 ? results.betResults.map((bet: any) => (
+                  {results.betResults.length > 0 ? (isExpanded ? results.betResults : results.betResults.slice(0, 10)).map((bet: any) => (
                     <div key={bet.id} className="grid grid-cols-12 gap-4 px-6 py-4 text-xs items-center hover:bg-white/5 transition-colors">
                       <span className="col-span-2 font-black text-[14px] text-slate-400 truncate">{bet.user_name}</span>
                       <div className="col-span-3 flex flex-col gap-1">
@@ -645,6 +646,27 @@ const ResultsPage: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {results.betResults.length > 10 && (
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-[0.98] flex items-center gap-2 text-slate-300 hover:text-white"
+                >
+                  {isExpanded ? (
+                    <>
+                      <span>Thu gọn</span>
+                      <span>▲</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Xem tất cả ({results.betResults.length} lượt cược)</span>
+                      <span>▼</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </section>
 
           {/* Global Leaderboard Section */}
