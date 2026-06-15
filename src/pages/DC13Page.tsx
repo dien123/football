@@ -946,7 +946,7 @@ const DC13Page: React.FC = () => {
     matches.forEach(match => {
       // Rule applies if match has locked betting AND starts on or after threshold
       const matchStartTime = new Date(match.start_time).getTime();
-      if (isDC13BettingLocked(match) && matchStartTime >= threshold) {
+      if (isDC13BettingLocked(match) && match.dc13_handicap_set && matchStartTime >= threshold) {
         // Find who has bet on this match
         const bettedUserIds = new Set(bets.filter(b => b.match_id === match.id).map(b => b.user_id));
         
