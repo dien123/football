@@ -942,11 +942,12 @@ const DC13Page: React.FC = () => {
     
     // Compile active player user_ids who have ever placed a bet in DC13
     const activePlayerIds = new Set(bets.map(b => b.user_id));
-    
     matches.forEach(match => {
       // Rule applies if match has locked betting AND starts on or after threshold
       const matchStartTime = new Date(match.start_time).getTime();
-      if (isDC13BettingLocked(match) && match.dc13_handicap_set && matchStartTime >= threshold) {
+      const timeToKick = (matchStartTime - Date.now()) / 60000;
+      const isWithin30MinsOrStarted = timeToKick <= 30;
+      if (isDC13BettingLocked(match) && match.dc13_handicap_set && isWithin30MinsOrStarted && matchStartTime >= threshold) {
         // Find who has bet on this match
         const bettedUserIds = new Set(bets.filter(b => b.match_id === match.id).map(b => b.user_id));
         
