@@ -951,9 +951,11 @@ const DC13Page: React.FC = () => {
     });
 
     return Object.values(map).sort((a, b) => {
-      // Sort by penalty descending (higher = less penalty, closer to 0)
-      if (a.total_penalty !== b.total_penalty) return b.total_penalty - a.total_penalty;
-      return b.wins - a.wins;
+      // Prioritize wins descending, then total bets descending, then losses ascending
+      if (b.wins !== a.wins) return b.wins - a.wins;
+      if (b.total_bets !== a.total_bets) return b.total_bets - a.total_bets;
+      if (a.losses !== b.losses) return a.losses - b.losses;
+      return 0;
     });
   })();
 
