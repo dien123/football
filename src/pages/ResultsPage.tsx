@@ -392,7 +392,7 @@ const ResultsPage: React.FC = () => {
                   </div>
                   <div className="bg-[#2a1318] border border-rose-500/40 rounded-2xl px-5 py-3.5 text-center flex-1 md:flex-none shadow-lg relative overflow-hidden">
                     <div className="absolute -top-3 -right-3 w-8 h-8 bg-rose-500/20 rotate-45" />
-                    <p className="text-[12px] text-rose-300 font-bold uppercase tracking-wider">Thua 4 trận trở lên</p>
+                    <p className="text-[12px] text-rose-300 font-bold uppercase tracking-wider">Thua 4 trận liên tiếp trở lên</p>
                     <p className="text-lg font-black text-amber-300 mt-1">Hoàn 100.000</p>
                     <p className="text-[12px] text-rose-400/75 font-bold mt-1">(Tổng dự đoán ≥ 400k)</p>
                   </div>
