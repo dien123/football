@@ -109,10 +109,10 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
         {/* Back Button */}
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8 group"
+          className="flex items-center gap-3 px-5 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-2xl text-slate-300 hover:text-white transition-all mb-8 group active:scale-[0.98] shadow-lg shadow-black/20"
         >
-          <span className="p-2 bg-white/5 rounded-lg group-hover:bg-white/10">←</span>
-          <span className="font-bold text-lg uppercase tracking-widest">Quay lại danh sách</span>
+          <span className="text-2xl font-black transition-transform group-hover:-translate-x-1.5 duration-200">←</span>
+          <span className="text-xs font-black uppercase tracking-widest">Quay lại danh sách</span>
         </button>
 
         {/* Match Header Card */}
