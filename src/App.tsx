@@ -38,11 +38,11 @@ const mobileLinkCls = ({ isActive }: { isActive: boolean }) =>
     : 'text-slate-400 hover:text-white hover:bg-white/5'
   }`;
 
-const mobileOutrightCls = ({ isActive }: { isActive: boolean }) =>
-  `w-full max-w-[280px] text-center py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all relative ${isActive
-    ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.6)]'
-    : 'text-amber-400 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/10'
-  }`;
+// const mobileOutrightCls = ({ isActive }: { isActive: boolean }) =>
+//   `w-full max-w-[280px] text-center py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all relative ${isActive
+//     ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.6)]'
+//     : 'text-amber-400 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/10'
+//   }`;
 
 const mobileFutsalCls = ({ isActive }: { isActive: boolean }) =>
   `w-full max-w-[280px] text-center py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all relative ${isActive
