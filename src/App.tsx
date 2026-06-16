@@ -73,7 +73,7 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
   };
 
   const linkCls = ({ isActive }: { isActive: boolean }) =>
-    `px-5 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all ${isActive
+    `px-3 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${isActive
       ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/40'
       : 'text-slate-400 hover:text-white hover:bg-white/5'
     }`;
@@ -85,13 +85,13 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
   //   }`;
 
   const futsalCls = ({ isActive }: { isActive: boolean }) =>
-    `px-4 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
+    `px-3 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest whitespace-nowrap transition-all relative group ${isActive
       ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]'
       : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
     }`;
 
   const dc13Cls = ({ isActive }: { isActive: boolean }) =>
-    `px-4 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all relative group ${isActive
+    `px-3 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest whitespace-nowrap transition-all relative group ${isActive
       ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.6)] transform scale-[1.02]'
       : 'text-cyan-300 border border-cyan-400/35 hover:border-cyan-300 hover:bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
     }`;
@@ -114,7 +114,7 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
         </NavLink>
 
         {/* Desktop Nav Links */}
-        <div className="hidden lg:flex items-center gap-2 flex-1 justify-center px-8">
+        <div className="hidden lg:flex items-center gap-1.5 flex-1 justify-center px-2">
           <NavLink to="/" className={linkCls} end>Dự đoán</NavLink>
           <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
           <NavLink to="/results" className={linkCls}>Kết Quả - Thống Kê</NavLink>

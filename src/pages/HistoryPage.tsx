@@ -100,7 +100,7 @@ const HistoryPage: React.FC = () => {
   const [outrightBets, setOutrightBets] = useState<any[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
   const [outrightWinner, setOutrightWinner] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'worldcup' | 'futsal' | 'outright'>('worldcup');
+  const [activeTab, setActiveTab] = useState<'pending' | 'finished' | 'outright'>('pending');
 
   const session = ctx?.session;
   const user = ctx?.user;
@@ -208,7 +208,7 @@ const HistoryPage: React.FC = () => {
     // 1. Process match bets
     matchBets.forEach(bet => {
       const match = matches.find(m => m.id === bet.match_id);
-      if (!match) return;
+      if (!match || match.league === 'TIP Futsal league') return; // Exclude Futsal!
 
       totalBetsCount++;
       totalInvested += bet.amount;
@@ -258,8 +258,11 @@ const HistoryPage: React.FC = () => {
     }).filter((item): item is { bet: any; match: any } => {
       if (!item) return false;
       const isFutsal = item.match.league === 'TIP Futsal league';
-      if (activeTab === 'worldcup') return !isFutsal;
-      if (activeTab === 'futsal') return isFutsal;
+      if (isFutsal) return false; // Exclude Futsal from history page completely
+      
+      const isFinished = item.match.status === 'finished';
+      if (activeTab === 'pending') return !isFinished;
+      if (activeTab === 'finished') return isFinished;
       return false;
     });
   }, [matchBets, matches, activeTab]);
@@ -351,16 +354,16 @@ const HistoryPage: React.FC = () => {
         {/* SYSTEM TAB BAR */}
         <div className="flex bg-black/40 backdrop-blur-xl p-1 rounded-2xl border border-white/10 max-w-md mb-8">
           <button
-            onClick={() => setActiveTab('worldcup')}
-            className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'worldcup' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+            onClick={() => setActiveTab('pending')}
+            className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'pending' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
           >
-            World Cup 2026
+            Đã bet chưa đá
           </button>
           <button
-            onClick={() => setActiveTab('futsal')}
-            className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'futsal' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+            onClick={() => setActiveTab('finished')}
+            className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'finished' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
           >
-            TIP Futsal 2026
+            Đã bet đã đá
           </button>
           <button
             onClick={() => setActiveTab('outright')}
