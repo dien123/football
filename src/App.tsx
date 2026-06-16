@@ -118,7 +118,7 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
           <NavLink to="/" className={linkCls} end>Dự đoán</NavLink>
           <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
           <NavLink to="/results" className={linkCls}>Kết Quả - Thống Kê</NavLink>
-          <NavLink to="/history" className={linkCls}>Lịch sử cược</NavLink>
+          <NavLink to="/history" className={linkCls}>Lịch sử User</NavLink>
 
           {/* <NavLink to="/outright" className={outrightCls}>
             Dự đoán Vô Địch
@@ -303,7 +303,7 @@ function App() {
                   Kết Quả - Thống Kê
                 </NavLink>
                 <NavLink to="/history" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
-                  Lịch sử cược
+                  Lịch sử User
                 </NavLink>
 
 
