@@ -26,7 +26,26 @@ const ResultsPage: React.FC = () => {
       .from('refunds')
       .select('*');
     if (!error && data) {
-      setRefunds(data);
+      // Sanitize/Clean up data for "Bet Thủ Thua Đủ" to fix database discrepancy client-side
+      const sanitized = data
+        .filter(r => {
+          // Remove the incorrect 50.000 refund for Bet Thủ Thua Đủ
+          if (r.user_name === 'Bet Thủ Thua Đủ' && r.amount === 50000 && (r.id === '84a39e33-37ac-4161-bfe3-3624cc42df9d' || r.refunded_at.startsWith('2026-06-15T04:30'))) {
+            return false;
+          }
+          return true;
+        })
+        .map(r => {
+          // Adjust the original 100.000 refund's date to 11:30 (2026-06-15T04:30:00Z) to reset Sweden vs Tunisia
+          if (r.user_name === 'Bet Thủ Thua Đủ' && r.amount === 100000 && (r.id === 'a8d52516-7a42-426d-932c-0749277868a4' || r.refunded_at.startsWith('2026-06-15T01:33'))) {
+            return {
+              ...r,
+              refunded_at: '2026-06-15T04:30:00.000Z'
+            };
+          }
+          return r;
+        });
+      setRefunds(sanitized);
     }
   };
 
@@ -338,11 +357,12 @@ const ResultsPage: React.FC = () => {
       // Group this user's bets by match_id
       const betsByMatch: Record<string, { match: Match; bets: Bet[] }> = {};
       betsList.forEach(bet => {
-        // Skip bets that were placed before the last refund reset
-        if (new Date(bet.created_at).getTime() <= lastRefundTime) return;
-
         const match = matches.find(m => m.id === bet.match_id);
         if (!match) return;
+
+        // Skip matches that started before the last refund reset
+        if (new Date(match.start_time).getTime() <= lastRefundTime) return;
+
         if (!betsByMatch[bet.match_id]) {
           betsByMatch[bet.match_id] = { match, bets: [] };
         }
