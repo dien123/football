@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef, useContext, useMemo } from 'react';
 import { Match } from '../types';
 import { supabase } from '../lib/supabase';
 import { AppContext } from '../App';
 import { calculateBetResult, getOutcomeLabel } from '../utils/betLogic';
+import { formatVND } from '../utils/format';
+
 
 const AdminPage: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -12,6 +14,9 @@ const AdminPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [localScores, setLocalScores] = useState<Record<string, { a: number, b: number }>>({});
   const [activeTab, setActiveTab] = useState<'matches' | 'outright'>('matches');
+  const [allBets, setAllBets] = useState<any[]>([]);
+  const [refunds, setRefunds] = useState<any[]>([]);
+
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const ctx = useContext(AppContext);
@@ -75,6 +80,12 @@ const AdminPage: React.FC = () => {
         setSelectedDate(startingDate);
       }
     }
+
+    const { data: betsData } = await supabase.from('bets').select('*');
+    if (betsData) setAllBets(betsData);
+
+    const { data: refundsData } = await supabase.from('refunds').select('*');
+    if (refundsData) setRefunds(refundsData);
   };
 
   const handleSaveMatch = async () => {
@@ -304,7 +315,66 @@ const AdminPage: React.FC = () => {
   const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-emerald-500 outline-none";
   const labelCls = "block text-[10px] font-black text-slate-500 mb-1 uppercase";
 
+  // 18:00 local time 16/06/2026 is 2026-06-16T11:00:00Z
+  const CUTOFF_TIME = new Date('2026-06-16T11:00:00.000Z').getTime();
+
+  const adminStats = useMemo(() => {
+    // Filter matches that are finished, not Futsal, starting after the CUTOFF_TIME
+    const targetMatches = matches.filter(m => 
+      m.status === 'finished' && 
+      m.league !== 'TIP Futsal league' &&
+      new Date(m.start_time).getTime() >= CUTOFF_TIME
+    );
+
+    const targetMatchIds = targetMatches.map(m => m.id);
+    const targetBets = allBets.filter(b => targetMatchIds.includes(b.match_id));
+
+    let totalBetsAmount = 0;
+    let totalPayout = 0;
+
+    targetBets.forEach(bet => {
+      const match = targetMatches.find(m => m.id === bet.match_id);
+      if (!match) return;
+
+      const res = calculateBetResult(
+        bet.option,
+        bet.amount,
+        match.score_a,
+        match.score_b,
+        {
+          handicap: match.handicap,
+          rateA: match.rate_a,
+          rateB: match.rate_b,
+          teamAName: match.team_a_name,
+          teamBName: match.team_b_name
+        }
+      );
+
+      totalBetsAmount += bet.amount;
+      totalPayout += res.payout;
+    });
+
+    // Filter refunds that occurred after CUTOFF_TIME
+    const targetRefunds = refunds.filter(r => 
+      new Date(r.refunded_at).getTime() >= CUTOFF_TIME
+    );
+    const totalRefundsAmount = targetRefunds.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+
+    // House profit/loss = -totalPayout - totalRefundsAmount
+    const houseProfit = -totalPayout - totalRefundsAmount;
+
+    return {
+      totalBetsAmount,
+      totalPayout,
+      totalRefundsAmount,
+      houseProfit,
+      matchesCount: targetMatches.length,
+      betsCount: targetBets.length
+    };
+  }, [matches, allBets, refunds]);
+
   return (
+
     <div className="min-h-screen bg-[#080808] relative overflow-hidden text-white font-sans">
       {/* BACKGROUND STADIUM */}
       <div className="fixed inset-0 z-0 bg-cover bg-center opacity-40 blur-sm pointer-events-none" style={{ backgroundImage: 'url("/world_cup_bg.png")' }} />
@@ -331,6 +401,63 @@ const AdminPage: React.FC = () => {
 
         {activeTab === 'matches' ? (
           <div className="space-y-8">
+            {/* HOUSE PROFIT/LOSS SUMMARY (SINCE 18:00 16/06) */}
+            <div className="bg-gradient-to-br from-indigo-950/20 via-slate-900/50 to-black/40 rounded-3xl border border-white/10 p-5 md:p-6 shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
+              
+              <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/5 pb-4 mb-4">
+                <div className="space-y-1">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                    📊 Thống kê tài chính admin
+                  </span>
+                  <h3 className="text-base font-black text-white uppercase tracking-tight italic">
+                    Tổng Lời/Lãi <span className="text-emerald-500">(Từ 18h00 ngày 16/06)</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Tính từ sau trận Iran vs New Zealand (không tính các trận và hoàn tiền trước thời điểm này)
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-4 shrink-0 text-slate-400 text-[11px] font-bold">
+                  <div>Đóng góp: <span className="text-white font-black">{adminStats.matchesCount} trận</span></div>
+                  <div className="w-[1px] h-3 bg-white/10" />
+                  <div>Lượt cược: <span className="text-white font-black">{adminStats.betsCount} cược</span></div>
+                </div>
+              </div>
+
+              <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Tổng tiền cược */}
+                <div className="bg-black/40 rounded-2xl p-4 border border-white/5 text-center">
+                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Tổng tiền cược</p>
+                  <p className="text-lg md:text-xl font-black text-white mt-1 font-mono">{formatVND(adminStats.totalBetsAmount)}</p>
+                </div>
+
+                {/* Lời/lãi khách */}
+                <div className="bg-black/40 rounded-2xl p-4 border border-white/5 text-center">
+                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Lời/Lãi khách</p>
+                  <p className={`text-lg md:text-xl font-black mt-1 font-mono ${adminStats.totalPayout >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {adminStats.totalPayout > 0 ? '+' : ''}{formatVND(adminStats.totalPayout)}
+                  </p>
+                </div>
+
+                {/* Hoàn tiền bảo hiểm */}
+                <div className="bg-black/40 rounded-2xl p-4 border border-white/5 text-center">
+                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Bảo hiểm đã hoàn</p>
+                  <p className="text-lg md:text-xl font-black text-amber-400 mt-1 font-mono">{formatVND(adminStats.totalRefundsAmount)}</p>
+                </div>
+
+                {/* Lời/Lãi Nhà Cái */}
+                <div className="bg-black/40 rounded-2xl p-4 border border-white/5 text-center bg-gradient-to-br from-black/60 to-emerald-950/10 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-8 h-8 bg-emerald-500/10 rounded-bl-full pointer-events-none" />
+                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Lời/Lãi nhà cái (Thực tế)</p>
+                  <p className={`text-lg md:text-xl font-black mt-1 font-mono ${adminStats.houseProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {adminStats.houseProfit > 0 ? '+' : ''}{formatVND(adminStats.houseProfit)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* DATE SCROLLER BAR */}
             <div className="bg-white/5 backdrop-blur-2xl rounded-3xl md:rounded-[40px] border border-white/10 p-3 md:p-4 flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
               {/* Filter buttons row */}
