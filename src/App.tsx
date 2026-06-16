@@ -9,6 +9,8 @@ import StandingsPage from './pages/StandingsPage';
 import OutrightPage from './pages/OutrightPage';
 import AdminPage from './pages/AdminPage';
 import DC13Page from './pages/DC13Page';
+import HistoryPage from './pages/HistoryPage';
+
 import AdminGuard from './components/AdminGuard';
 import RealTimeClock from './components/RealTimeClock';
 import CountdownClock from './components/CountdownClock';
@@ -116,6 +118,8 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
           <NavLink to="/" className={linkCls} end>Dự đoán</NavLink>
           <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
           <NavLink to="/results" className={linkCls}>Kết Quả - Thống Kê</NavLink>
+          <NavLink to="/history" className={linkCls}>Lịch sử cược</NavLink>
+
           {/* <NavLink to="/outright" className={outrightCls}>
             Dự đoán Vô Địch
             <span className="absolute -top-2 -right-2 flex h-4 w-9">
@@ -298,13 +302,17 @@ function App() {
                 <NavLink to="/results" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
                   Kết Quả - Thống Kê
                 </NavLink>
+                <NavLink to="/history" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
+                  Lịch sử cược
+                </NavLink>
 
-                <NavLink to="/outright" className={mobileOutrightCls} onClick={() => setMobileOpen(false)}>
+
+                {/* <NavLink to="/outright" className={mobileOutrightCls} onClick={() => setMobileOpen(false)}>
                   Dự đoán Vô Địch
                   <span className="absolute top-4 right-6 bg-amber-500 text-[8px] px-2.5 py-0.5 rounded-full text-black font-black">
                     WINNER
                   </span>
-                </NavLink>
+                </NavLink> */}
 
                 <NavLink to="/futsal" className={mobileFutsalCls} onClick={() => setMobileOpen(false)}>
                   TIP Futsal 2026
@@ -354,7 +362,9 @@ function App() {
               <Route path="/standings" element={<StandingsPage />} />
               <Route path="/outright" element={<OutrightPage />} />
               <Route path="/dc13" element={<DC13Page />} />
+              <Route path="/history" element={<HistoryPage />} />
               <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
+
             </Routes>
             <div className="hidden lg:block fixed top-[120px] left-4 z-40 pointer-events-none">
               <div className="pointer-events-auto flex flex-col gap-8 pl-2">
