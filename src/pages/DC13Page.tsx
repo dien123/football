@@ -1018,10 +1018,10 @@ const DC13Page: React.FC = () => {
     });
 
     return Object.values(map).sort((a, b) => {
-      // Prioritize wins descending, then total bets descending, then losses ascending
+      // Prioritize wins descending, then losses ascending (fewer losses), then total bets descending
       if (b.wins !== a.wins) return b.wins - a.wins;
-      if (b.total_bets !== a.total_bets) return b.total_bets - a.total_bets;
       if (a.losses !== b.losses) return a.losses - b.losses;
+      if (b.total_bets !== a.total_bets) return b.total_bets - a.total_bets;
       return 0;
     });
   })();
@@ -1032,6 +1032,7 @@ const DC13Page: React.FC = () => {
     const playersWithWins = playerStats.filter(p => p.wins > 0);
     const sortedByWins = [...playersWithWins].sort((a, b) => {
       if (b.wins !== a.wins) return b.wins - a.wins;
+      if (a.losses !== b.losses) return a.losses - b.losses;
       return b.total_bets - a.total_bets;
     });
 
