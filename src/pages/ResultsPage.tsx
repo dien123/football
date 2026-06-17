@@ -200,17 +200,33 @@ const ResultsPage: React.FC = () => {
     });
   }, [allBets, matches]);
 
-  // Helper for computing refund based on losing streak and total bet amount
-  const getRefundAmount = (streakCount: number, totalAmount: number) => {
-    if (streakCount >= 4) {
-      if (totalAmount >= 400000) return 100000;
-      if (totalAmount >= 300000) return 50000; // fallback to 3-match tier
-      return 0;
+  // Helper for computing refund based on lost matches in a streak
+  const getRefundAmount = (losingMatches: { amount: number }[]) => {
+    const len = losingMatches.length;
+    if (len < 3) return 0;
+
+    // Check if there is any 4-match window with total >= 400,000
+    let hasFourMatchTier = false;
+    for (let i = 0; i <= len - 4; i++) {
+      const windowSum = losingMatches.slice(i, i + 4).reduce((sum, item) => sum + item.amount, 0);
+      if (windowSum >= 400000) {
+        hasFourMatchTier = true;
+        break;
+      }
     }
-    if (streakCount === 3) {
-      if (totalAmount >= 300000) return 50000;
-      return 0;
+    if (hasFourMatchTier) return 100000;
+
+    // Check if there is any 3-match window with total >= 300,000
+    let hasThreeMatchTier = false;
+    for (let i = 0; i <= len - 3; i++) {
+      const windowSum = losingMatches.slice(i, i + 3).reduce((sum, item) => sum + item.amount, 0);
+      if (windowSum >= 300000) {
+        hasThreeMatchTier = true;
+        break;
+      }
     }
+    if (hasThreeMatchTier) return 50000;
+
     return 0;
   };
 
@@ -544,7 +560,7 @@ const ResultsPage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {userStreaks.map(streak => {
                       const currentTotal = streak.currentTotalAmount;
-                      const refundAmount = getRefundAmount(streak.currentStreak, currentTotal);
+                      const refundAmount = getRefundAmount(streak.currentStreakMatches || []);
 
                       return (
                         <div
@@ -1080,11 +1096,11 @@ const ResultsPage: React.FC = () => {
             {/* Footer */}
             <div className="p-6 bg-black/40 border-t border-white/5 flex items-center justify-between">
               <div>
-                {getRefundAmount(selectedLossUser.currentStreak, selectedLossUser.currentTotalAmount) > 0 ? (
+                {getRefundAmount(selectedLossUser.currentStreakMatches || []) > 0 ? (
                   <div className="text-left">
                     <p className="text-[9px] text-emerald-400 font-black uppercase tracking-wider">Đủ điều kiện hoàn</p>
                     <p className="text-base font-black text-amber-400 font-mono">
-                      {formatVND(getRefundAmount(selectedLossUser.currentStreak, selectedLossUser.currentTotalAmount))}
+                      {formatVND(getRefundAmount(selectedLossUser.currentStreakMatches || []))}
                     </p>
                   </div>
                 ) : selectedLossUser.currentStreak >= 3 ? (
@@ -1099,10 +1115,10 @@ const ResultsPage: React.FC = () => {
                 )}
               </div>
               <div className="flex items-center gap-3">
-                {isAdmin && getRefundAmount(selectedLossUser.currentStreak, selectedLossUser.currentTotalAmount) > 0 && (
+                {isAdmin && getRefundAmount(selectedLossUser.currentStreakMatches || []) > 0 && (
                   <button
                     onClick={async () => {
-                      const refundAmt = getRefundAmount(selectedLossUser.currentStreak, selectedLossUser.currentTotalAmount);
+                      const refundAmt = getRefundAmount(selectedLossUser.currentStreakMatches || []);
                       if (window.confirm(`Xác nhận đã hoàn tiền bảo hiểm ${formatVND(refundAmt)} cho ${selectedLossUser.name}?`)) {
                         const { error } = await supabase
                           .from('refunds')
