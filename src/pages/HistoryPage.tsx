@@ -175,7 +175,7 @@ const HistoryPage: React.FC = () => {
       setOutrightWinner(winData?.team_name || null);
 
     } catch (err) {
-      console.error('Lỗi khi tải lịch sử cược:', err);
+      console.error('Lỗi khi tải lịch sử :', err);
     }
     setLoading(false);
   };
@@ -199,7 +199,7 @@ const HistoryPage: React.FC = () => {
     }
   }, [user]);
 
-  // Calculate statistics across active user cược
+  // Calculate statistics across active user 
   const stats = useMemo(() => {
     let totalBetsCount = 0;
     let totalInvested = 0;
@@ -259,7 +259,7 @@ const HistoryPage: React.FC = () => {
       if (!item) return false;
       const isFutsal = item.match.league === 'TIP Futsal league';
       if (isFutsal) return false; // Exclude Futsal from history page completely
-      
+
       const isFinished = item.match.status === 'finished';
       if (activeTab === 'pending') return !isFinished;
       if (activeTab === 'finished') return isFinished;
@@ -277,7 +277,7 @@ const HistoryPage: React.FC = () => {
           <div className="w-16 h-16 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-6">🔒</div>
           <h2 className="text-xl font-black uppercase tracking-tight italic mb-3">LỊCH SỬ DỰ ĐOÁN</h2>
           <p className="text-slate-400 text-xs leading-relaxed font-medium mb-8">
-            Vui lòng đăng nhập tài khoản của bạn để kiểm tra toàn bộ danh sách các trận đã cược, đang cược, thắng thua và hiệu số lời lãi thực tế.
+            Vui lòng đăng nhập tài khoản của bạn để kiểm tra toàn bộ danh sách các trận đã , đang , thắng thua và hiệu số lời lãi thực tế.
           </p>
           <button
             onClick={() => setAuthModalOpen(true)}
@@ -305,7 +305,7 @@ const HistoryPage: React.FC = () => {
       <div className="fixed inset-0 z-0 bg-gradient-to-b from-black/40 via-black/20 to-black/80" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-10">
-        
+
         {/* HEADER BAR */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 border-b border-white/5 pb-6">
           <div className="flex items-center gap-3">
@@ -329,15 +329,15 @@ const HistoryPage: React.FC = () => {
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
 
           <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Tổng lượt cược */}
+            {/* Tổng lượt  */}
             <div className="bg-black/30 rounded-2xl p-4 border border-white/5 text-center">
               <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Tổng lượt dự đoán</p>
               <p className="text-xl md:text-2xl font-black text-white mt-1 font-mono">{stats.totalBetsCount}</p>
             </div>
 
-            {/* Tổng tiền đầu tư */}
+            {/* Tổng đầu tư */}
             <div className="bg-black/30 rounded-2xl p-4 border border-white/5 text-center">
-              <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Tổng tiền cược</p>
+              <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Tổng</p>
               <p className="text-xl md:text-2xl font-black text-white mt-1 font-mono">{formatVND(stats.totalInvested)}</p>
             </div>
 
@@ -369,7 +369,7 @@ const HistoryPage: React.FC = () => {
             onClick={() => setActiveTab('outright')}
             className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'outright' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
           >
-            Cược Vô Địch
+            Chọn Vô Địch
           </button>
         </div>
 
@@ -380,14 +380,14 @@ const HistoryPage: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            
+
             {/* MATCH BETS (WORLD CUP & FUTSAL) */}
             {activeTab !== 'outright' && (
               filteredBets.length > 0 ? (
                 filteredBets.map(({ bet, match }) => {
                   const isFinished = match.status === 'finished';
                   const isLive = match.status === 'live' || (match.status !== 'finished' && new Date(match.start_time) <= new Date());
-                  
+
                   let payout = 0;
                   let outcomeLabel = 'Đang chờ';
                   let outcomeColorClass = 'text-slate-400 bg-slate-500/10 border-slate-500/30';
@@ -438,7 +438,7 @@ const HistoryPage: React.FC = () => {
                           <h4 className="text-[13px] font-black uppercase text-slate-200 truncate leading-tight">
                             {match.team_a_name} vs {match.team_b_name}
                           </h4>
-                          
+
                           <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500">
                             <span className="text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">KÈO: {formatHandicap(match.handicap)}</span>
                             {isFinished ? (
@@ -461,7 +461,7 @@ const HistoryPage: React.FC = () => {
                             {chosenTeamName}
                           </h5>
                           <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
-                            Cược: {formatVND(bet.amount)} • Ăn: {oddsUsed}%
+                            Chọn: {formatVND(bet.amount)} • Ăn: {oddsUsed}%
                           </span>
                         </div>
 
@@ -478,7 +478,7 @@ const HistoryPage: React.FC = () => {
                           ) : (
                             <>
                               <span className="px-2 py-0.5 rounded border border-white/5 bg-white/5 text-[9px] font-black uppercase text-slate-500 tracking-wider">
-                                Đang cược
+                                Đang chọn
                               </span>
                               <span className="text-[12px] font-bold text-slate-500 font-mono mt-1">
                                 Đợi kết quả
@@ -530,7 +530,7 @@ const HistoryPage: React.FC = () => {
                       {/* Betting details and financial results */}
                       <div className="flex items-center justify-between sm:justify-end gap-6 border-t border-white/5 pt-3 sm:pt-0 sm:border-t-0 font-medium">
                         <div className="text-left sm:text-right">
-                          <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider leading-none">Cược đầu tư</p>
+                          <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider leading-none">Chọn đầu tư</p>
                           <h5 className="text-[13px] font-mono font-black text-emerald-400 mt-1">
                             {formatVND(bet.amount)}
                           </h5>

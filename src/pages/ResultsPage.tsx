@@ -615,7 +615,7 @@ const ResultsPage: React.FC = () => {
                                     </span>
                                   </div>
                                   <span className="text-[10px] font-bold text-slate-500">
-                                    Tổng cược chuỗi: <span className="font-mono text-slate-300">{formatVND(currentTotal)}</span>
+                                    Tổng chuỗi: <span className="font-mono text-slate-300">{formatVND(currentTotal)}</span>
                                   </span>
                                 </div>
                               </div>
@@ -630,7 +630,7 @@ const ResultsPage: React.FC = () => {
                                     <button
                                       onClick={async (e) => {
                                         e.stopPropagation();
-                                        if (window.confirm(`Xác nhận đã hoàn tiền bảo hiểm ${formatVND(refundAmount)} cho ${streak.name}?`)) {
+                                        if (window.confirm(`Xác nhận đã hoàn bảo hiểm ${formatVND(refundAmount)} cho ${streak.name}?`)) {
                                           const { error } = await supabase
                                             .from('refunds')
                                             .insert({
@@ -638,9 +638,9 @@ const ResultsPage: React.FC = () => {
                                               amount: refundAmount
                                             });
                                           if (error) {
-                                            alert(`Lỗi hoàn tiền: ${error.message}`);
+                                            alert(`Lỗi hoàn : ${error.message}`);
                                           } else {
-                                            alert(`Đã hoàn tiền thành công cho ${streak.name}!`);
+                                            alert(`Đã hoàn thành công cho ${streak.name}!`);
                                             fetchRefunds();
                                           }
                                         }
@@ -653,7 +653,7 @@ const ResultsPage: React.FC = () => {
                                 </>
                               ) : streak.currentStreak >= 3 ? (
                                 <>
-                                  <p className="text-[10px] font-black text-amber-500 uppercase tracking-wider">Thiếu Tổng Cược</p>
+                                  <p className="text-[10px] font-black text-amber-500 uppercase tracking-wider">Thiếu Tổng </p>
                                   <p className="text-[9px] text-slate-500 mt-0.5">
                                     Yêu cầu {formatVND(streak.currentStreak === 3 ? 300000 : 400000)}
                                   </p>
@@ -723,7 +723,7 @@ const ResultsPage: React.FC = () => {
                   </div>
                 ) : (
                   <div className="bg-white/[0.01] border border-dashed border-white/5 rounded-2xl py-6 text-center text-slate-600 font-bold text-[10px] uppercase tracking-widest">
-                    Chưa có lịch sử hoàn tiền bảo hiểm!
+                    Chưa có lịch sử hoàn bảo hiểm!
                   </div>
                 )}
               </div>
@@ -734,7 +734,7 @@ const ResultsPage: React.FC = () => {
           <section className="animate-fade-in">
             <div className="flex items-center gap-2 mb-2 text-[12px] font-black uppercase tracking-[0.2em] text-cyan-400">
               <span className="w-4 h-4 rounded-full bg-cyan-500/20 flex items-center justify-center">🧮</span>
-              Bộ Tính Toán Kết Quả Cược Tùy Chọn
+              Bộ Tính Toán Kết Quả Tùy Chọn
             </div>
 
             <div className="bg-gradient-to-br from-cyan-950/20 via-slate-900/50 to-black/45 rounded-3xl border border-cyan-500/20 p-6 shadow-xl relative overflow-hidden">
@@ -784,7 +784,7 @@ const ResultsPage: React.FC = () => {
                       <p className="text-2xl font-black text-white mt-1">{customCalcResults.matchesCount} trận</p>
                     </div>
                     <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
-                      <p className="text-[10px] text-slate-500 uppercase font-black">Tổng tiền cược</p>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Tổng </p>
                       <p className="text-2xl font-black text-slate-300 mt-1 font-mono">{formatVND(customCalcResults.totalAmount)}</p>
                     </div>
                     <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
@@ -822,7 +822,7 @@ const ResultsPage: React.FC = () => {
                               <div className="min-w-0">
                                 <p className="font-black text-slate-200 text-xs truncate">{detail.matchName}</p>
                                 <p className="text-[10px] text-slate-500 mt-0.5 truncate font-semibold">
-                                  Cược: <span className="text-slate-300 font-bold">{detail.chosenTeam}</span> ({formatVND(detail.amount)})
+                                  Chọn: <span className="text-slate-300 font-bold">{detail.chosenTeam}</span> ({formatVND(detail.amount)})
                                 </p>
                               </div>
                             </div>
@@ -844,7 +844,7 @@ const ResultsPage: React.FC = () => {
               ) : (
                 <div className="py-6 text-center">
                   <p className="text-xs text-slate-500 italic">
-                    Vui lòng chọn 1 người chơi từ danh sách để bắt đầu tính toán cược tùy chọn.
+                    Vui lòng chọn 1 người chơi từ danh sách để bắt đầu tính toán tùy chọn.
                   </p>
                 </div>
               )}
@@ -1082,18 +1082,18 @@ const ResultsPage: React.FC = () => {
                 <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
                   <p className="text-[10px] text-slate-500 uppercase font-black">Chuỗi hiện tại</p>
                   <p className="text-2xl font-black text-rose-500 mt-1">{selectedLossUser.currentStreak} trận</p>
-                  <p className="text-[10px] text-slate-400 mt-1 font-bold">Tổng cược: {formatVND(selectedLossUser.currentTotalAmount)}</p>
+                  <p className="text-[10px] text-slate-400 mt-1 font-bold">Tổng : {formatVND(selectedLossUser.currentTotalAmount)}</p>
                 </div>
                 <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
                   <p className="text-[10px] text-slate-500 uppercase font-black">Chuỗi kỷ lục</p>
                   <p className="text-2xl font-black text-slate-400 mt-1">{selectedLossUser.maxStreak} trận</p>
-                  <p className="text-[10px] text-slate-400 mt-1 font-bold">Tổng cược: {formatVND(selectedLossUser.maxTotalAmount)}</p>
+                  <p className="text-[10px] text-slate-400 mt-1 font-bold">Tổng : {formatVND(selectedLossUser.maxTotalAmount)}</p>
                 </div>
               </div>
 
               {/* Match list */}
               <div className="space-y-3">
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Danh sách trận cược liên tiếp gần nhất</p>
+                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Danh sách trận chọn liên tiếp gần nhất</p>
 
                 <div className="space-y-2">
                   {selectedLossUser.currentStreakMatches.length > 0 ? (
@@ -1101,7 +1101,7 @@ const ResultsPage: React.FC = () => {
                       <div key={idx} className="bg-white/[0.03] border border-white/5 rounded-xl p-3.5 flex items-center justify-between text-xs hover:bg-white/[0.05] transition-colors">
                         <div>
                           <p className="font-black text-slate-200">{item.matchName}</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5 font-semibold">Ngày đá: {item.date} • Cược: {formatVND(item.amount)}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5 font-semibold">Ngày đá: {item.date} • Chọn: {formatVND(item.amount)}</p>
                         </div>
                         <div className="text-right">
                           <span className="inline-block px-2 py-0.5 rounded text-[9px] font-black border bg-rose-500/10 text-rose-400 border-rose-500/20 uppercase tracking-wider">
@@ -1125,7 +1125,7 @@ const ResultsPage: React.FC = () => {
                         <div key={idx} className="bg-white/[0.01] border border-white/[0.02] rounded-xl p-3 flex items-center justify-between text-[11px]">
                           <div>
                             <p className="font-bold text-slate-400">{item.matchName}</p>
-                            <p className="text-[9px] text-slate-600 mt-0.5">Ngày đá: {item.date} • Cược: {formatVND(item.amount)}</p>
+                            <p className="text-[9px] text-slate-600 mt-0.5">Ngày đá: {item.date} • Chọn: {formatVND(item.amount)}</p>
                           </div>
                           <div className="text-right">
                             <span className="inline-block px-1.5 py-0.5 rounded text-[8px] font-black bg-rose-500/5 text-rose-500 border border-rose-500/10 uppercase tracking-wider">
@@ -1153,7 +1153,7 @@ const ResultsPage: React.FC = () => {
                   </div>
                 ) : selectedLossUser.currentStreak >= 3 ? (
                   <div className="text-left">
-                    <p className="text-[9px] text-amber-500 font-black uppercase tracking-wider">Chưa đủ tổng cược</p>
+                    <p className="text-[9px] text-amber-500 font-black uppercase tracking-wider">Chưa đủ tổng</p>
                     <p className="text-[10px] font-bold text-slate-400">
                       Tổng : {formatVND(selectedLossUser.currentTotalAmount)} / {formatVND(selectedLossUser.currentStreak === 3 ? 300000 : 400000)}
                     </p>
@@ -1167,7 +1167,7 @@ const ResultsPage: React.FC = () => {
                   <button
                     onClick={async () => {
                       const refundAmt = getRefundAmount(selectedLossUser.currentStreakMatches || []);
-                      if (window.confirm(`Xác nhận đã hoàn tiền bảo hiểm ${formatVND(refundAmt)} cho ${selectedLossUser.name}?`)) {
+                      if (window.confirm(`Xác nhận đã hoàn bảo hiểm ${formatVND(refundAmt)} cho ${selectedLossUser.name}?`)) {
                         const { error } = await supabase
                           .from('refunds')
                           .insert({
@@ -1175,9 +1175,9 @@ const ResultsPage: React.FC = () => {
                             amount: refundAmt
                           });
                         if (error) {
-                          alert(`Lỗi hoàn tiền: ${error.message}`);
+                          alert(`Lỗi hoàn : ${error.message}`);
                         } else {
-                          alert(`Đã hoàn tiền thành công cho ${selectedLossUser.name}!`);
+                          alert(`Đã hoàn thành công cho ${selectedLossUser.name}!`);
                           setSelectedLossUser(null);
                           fetchRefunds();
                         }
