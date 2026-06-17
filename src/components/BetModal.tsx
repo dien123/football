@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Match, BetOption } from '../types';
-import { parseVND, formatHandicap, formatRate } from '../utils/format';
+import { parseVND, formatHandicap, formatRate, normalizeBetAmount } from '../utils/format';
 
 interface BetModalProps {
   isOpen: boolean;
@@ -79,7 +79,7 @@ const BetModal: React.FC<BetModalProps> = ({
 
   const handleSave = () => {
     if (!validate()) return;
-    onSave(userName.trim(), parseVND(amountRaw) * 1000, currentOption);
+    onSave(userName.trim(), normalizeBetAmount(parseVND(amountRaw)), currentOption);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

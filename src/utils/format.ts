@@ -9,6 +9,17 @@ export const parseVND = (str: string): number => {
   return cleaned ? parseInt(cleaned, 10) : 0;
 };
 
+/**
+ * Normalizes input bet amount.
+ * If the amount is less than 15000 (e.g. they typed 50 meaning 50k, or 20 meaning 20k),
+ * we multiply by 1000 to convert to full VND.
+ * If the amount is >= 15000 (e.g. they typed 50000 or 20000), we keep it as is.
+ */
+export const normalizeBetAmount = (amount: number): number => {
+  return amount < 15000 ? amount * 1000 : amount;
+};
+
+
 export const formatDate = (date: Date): string => {
   return new Intl.DateTimeFormat('vi-VN', {
     dateStyle: 'short',

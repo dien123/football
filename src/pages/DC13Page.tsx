@@ -3,7 +3,7 @@ import { Match, DC13Bet, DC13Profile } from '../types';
 import { supabase } from '../lib/supabase';
 import { AppContext } from '../App';
 import DC13AuthModal from '../components/DC13AuthModal';
-import { formatVND } from '../utils/format';
+import { formatVND, normalizeBetAmount } from '../utils/format';
 
 const PENALTY_AMOUNT = 5000;
 const ADMIN_PIN = 'DC13123';
@@ -444,7 +444,7 @@ const DC13Page: React.FC = () => {
 
   const handleUpdateDC13OutrightBet = async () => {
     if (!editingOutrightBet) return;
-    const betVal = Number(editOutrightAmount) * 1000;
+    const betVal = normalizeBetAmount(Number(editOutrightAmount));
     if (!editOutrightAmount || Number(editOutrightAmount) < 20) {
       alert('Gía trị tối thiểu là 20đ');
       return;
@@ -3361,7 +3361,7 @@ const DC13Page: React.FC = () => {
 
               {/* Estimated Rewards display */}
               {Number(editOutrightAmount) >= 20 && (() => {
-                const refBet = Number(editOutrightAmount) * 1000;
+                const refBet = normalizeBetAmount(Number(editOutrightAmount));
                 const oldAmount = editingOutrightBet.amount;
                 const diff = refBet - oldAmount;
 

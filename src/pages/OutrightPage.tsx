@@ -2,7 +2,7 @@ import { useEffect, useState, useContext } from 'react';
 import { supabase } from '../lib/supabase';
 import { AppContext } from '../App';
 import AuthModal from '../components/AuthModal';
-import { formatVND } from '../utils/format';
+import { formatVND, normalizeBetAmount } from '../utils/format';
 
 const TIERS = [
   {
@@ -167,7 +167,7 @@ export default function OutrightPage() {
       if (!ctx?.session?.user) setAuthModalOpen(true);
       return;
     }
-    const betVal = Number(amount) * 1000;
+    const betVal = normalizeBetAmount(Number(amount));
     if (!amount || Number(amount) < 20) {
       alert('Số tối thiểu là 20');
       return;
@@ -210,7 +210,7 @@ export default function OutrightPage() {
 
   const handleUpdateOutrightBet = async () => {
     if (!editingBet) return;
-    const betVal = Number(editAmount) * 1000;
+    const betVal = normalizeBetAmount(Number(editAmount));
     if (!editAmount || Number(editAmount) < 20) {
       alert('Số tối thiểu là 20');
       return;
@@ -237,7 +237,7 @@ export default function OutrightPage() {
   const winnerOdds = winner ? getTeamOdds(winner) : 1.0;
 
   const getEstPrize = (teamName: string, betAmount: number | '') => {
-    const numAmount = (Number(betAmount) || 0) * 1000;
+    const numAmount = normalizeBetAmount(Number(betAmount) || 0);
     const myExistingBet = bets
       .filter(b => b.team_name === teamName && b.user_id === ctx?.session?.user?.id)
       .reduce((sum, b) => sum + b.amount, 0);
@@ -844,7 +844,7 @@ export default function OutrightPage() {
                   </div>
                   <div className="flex items-baseline gap-3 justify-center mb-2">
                     <span className="text-4xl font-black text-emerald-400 font-mono">
-                      {formatVND(Math.round((Number(editAmount) || 0) * 1000 * getTeamOdds(editingBet.team_name)))}
+                      {formatVND(Math.round(normalizeBetAmount(Number(editAmount) || 0) * getTeamOdds(editingBet.team_name)))}
                     </span>
                   </div>
                 </div>
