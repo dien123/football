@@ -172,7 +172,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">⚖️</span>
               <span className="text-base md:text-lg font-bold text-amber-400/90 uppercase tracking-widest">
-                KÈO CHẤP
+                Lệch
               </span>
             </div>
 
@@ -242,8 +242,8 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
             {/* Bets List A */}
             <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 shadow-2xl backdrop-blur-md">
               <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{match.team_a_name} thắng</span>
-                <span className="text-xs font-black text-indigo-400">{betsA.length} cược</span>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{match.team_a_name}</span>
+                <span className="text-xs font-black text-indigo-400">{betsA.length} </span>
               </div>
               <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                 {betsA.map((bet, idx) => {
@@ -275,7 +275,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
                     </div>
                   );
                 })}
-                {betsA.length === 0 && <p className="text-[10px] text-slate-500 italic text-center py-4">Chưa có cược nào...</p>}
+                {betsA.length === 0 && <p className="text-[10px] text-slate-500 italic text-center py-4">Chưa có ...</p>}
               </div>
             </div>
           </div>
@@ -310,8 +310,8 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
             {/* Bets List B */}
             <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 shadow-2xl backdrop-blur-md">
               <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{match.team_b_name} thắng</span>
-                <span className="text-xs font-black text-rose-400">{betsB.length} cược</span>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{match.team_b_name}</span>
+                <span className="text-xs font-black text-rose-400">{betsB.length}</span>
               </div>
               <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                 {betsB.map((bet, idx) => {
@@ -343,7 +343,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
                     </div>
                   );
                 })}
-                {betsB.length === 0 && <p className="text-[10px] text-slate-500 italic text-center py-4">Chưa có cược nào...</p>}
+                {betsB.length === 0 && <p className="text-[10px] text-slate-500 italic text-center py-4">Chưa có ...</p>}
               </div>
             </div>
           </div>
@@ -358,7 +358,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
               <span className="text-2xl">📊</span>
               <div>
                 <h3 className="text-sm font-black uppercase tracking-wider text-slate-200">
-                  Thống kê lượng cược trận đấu
+                  Thống kê
                 </h3>
                 <p className="text-[11px] text-slate-500 font-bold uppercase mt-0.5">Cập nhật thời gian thực</p>
               </div>

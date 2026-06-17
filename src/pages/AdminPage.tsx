@@ -369,8 +369,8 @@ const AdminPage: React.FC = () => {
 
   const adminStats = useMemo(() => {
     // Filter matches that are finished, not Futsal, starting after the CUTOFF_TIME
-    const targetMatches = matches.filter(m => 
-      m.status === 'finished' && 
+    const targetMatches = matches.filter(m =>
+      m.status === 'finished' &&
       m.league !== 'TIP Futsal league' &&
       new Date(m.start_time).getTime() >= CUTOFF_TIME
     );
@@ -404,7 +404,7 @@ const AdminPage: React.FC = () => {
     });
 
     // Filter refunds that occurred after CUTOFF_TIME
-    const targetRefunds = refunds.filter(r => 
+    const targetRefunds = refunds.filter(r =>
       new Date(r.refunded_at).getTime() >= CUTOFF_TIME
     );
     const totalRefundsAmount = targetRefunds.reduce((sum, r) => sum + Number(r.amount || 0), 0);
@@ -456,52 +456,52 @@ const AdminPage: React.FC = () => {
             <div className="bg-gradient-to-br from-indigo-950/20 via-slate-900/50 to-black/40 rounded-3xl border border-white/10 p-5 md:p-6 shadow-xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
-              
+
               <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/5 pb-4 mb-4">
                 <div className="space-y-1">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-400 uppercase tracking-widest">
                     📊 Thống kê tài chính admin
                   </span>
                   <h3 className="text-base font-black text-white uppercase tracking-tight italic">
-                    Tổng Lời/Lãi <span className="text-emerald-500">(Từ 18h00 ngày 16/06)</span>
+                    Tổng <span className="text-emerald-500">(Từ 18h00 ngày 16/06)</span>
                   </h3>
                   <p className="text-[11px] text-slate-500 font-medium">
-                    Tính từ sau trận Iran vs New Zealand (không tính các trận và hoàn tiền trước thời điểm này)
+                    Tính từ sau trận Iran vs New Zealand (không tính các trận và hoàn điểm trước thời điểm này)
                   </p>
                 </div>
-                
+
                 <div className="flex items-center gap-4 shrink-0 text-slate-400 text-[11px] font-bold">
                   <div>Đóng góp: <span className="text-white font-black">{adminStats.matchesCount} trận</span></div>
                   <div className="w-[1px] h-3 bg-white/10" />
-                  <div>Lượt cược: <span className="text-white font-black">{adminStats.betsCount} cược</span></div>
+                  <div>Lượt: <span className="text-white font-black">{adminStats.betsCount}</span></div>
                 </div>
               </div>
 
               <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Tổng tiền cược */}
+                {/* Tổng  */}
                 <div className="bg-black/40 rounded-2xl p-4 border border-white/5 text-center">
-                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Tổng tiền cược</p>
+                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Tổng </p>
                   <p className="text-lg md:text-xl font-black text-white mt-1 font-mono">{formatVND(adminStats.totalBetsAmount)}</p>
                 </div>
 
-                {/* Lời/lãi khách */}
+                {/* Thặng dư */}
                 <div className="bg-black/40 rounded-2xl p-4 border border-white/5 text-center">
-                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Lời/Lãi khách</p>
+                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Thặng dư</p>
                   <p className={`text-lg md:text-xl font-black mt-1 font-mono ${adminStats.totalPayout >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {adminStats.totalPayout > 0 ? '+' : ''}{formatVND(adminStats.totalPayout)}
                   </p>
                 </div>
 
-                {/* Hoàn tiền bảo hiểm */}
+                {/* Hoàn bảo hiểm */}
                 <div className="bg-black/40 rounded-2xl p-4 border border-white/5 text-center">
                   <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Bảo hiểm đã hoàn</p>
                   <p className="text-lg md:text-xl font-black text-amber-400 mt-1 font-mono">{formatVND(adminStats.totalRefundsAmount)}</p>
                 </div>
 
-                {/* Lời/Lãi Nhà Cái */}
+                {/* Thặng dư Host */}
                 <div className="bg-black/40 rounded-2xl p-4 border border-white/5 text-center bg-gradient-to-br from-black/60 to-emerald-950/10 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-8 h-8 bg-emerald-500/10 rounded-bl-full pointer-events-none" />
-                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Lời/Lãi nhà cái (Thực tế)</p>
+                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Thặng dư host (Thực tế)</p>
                   <p className={`text-lg md:text-xl font-black mt-1 font-mono ${adminStats.houseProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {adminStats.houseProfit > 0 ? '+' : ''}{formatVND(adminStats.houseProfit)}
                   </p>
@@ -513,7 +513,7 @@ const AdminPage: React.FC = () => {
                 {/* Số tiền đã đóng (Input) */}
                 <div className="bg-black/30 rounded-2xl p-4 border border-white/5 flex flex-col justify-between">
                   <label htmlFor="contributed-fund-input" className="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-1">
-                    Số tiền quỹ đã đóng
+                    Input
                   </label>
                   <div className="relative flex items-center mt-1">
                     <input
@@ -526,7 +526,7 @@ const AdminPage: React.FC = () => {
                     />
                     {contributedValue > 0 && (
                       <span className="absolute right-4 text-xs font-bold text-slate-500 pointer-events-none">
-                        VND
+
                       </span>
                     )}
                   </div>
@@ -535,7 +535,7 @@ const AdminPage: React.FC = () => {
                 {/* Số tiền còn lại (Display) */}
                 <div className="bg-black/30 rounded-2xl p-4 border border-white/5 text-center flex flex-col justify-between bg-gradient-to-br from-black/60 to-indigo-950/10 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-8 h-8 bg-indigo-500/10 rounded-bl-full pointer-events-none" />
-                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Số tiền còn lại (Quỹ +/- Lời lãi)</p>
+                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Còn lại</p>
                   <p className={`text-lg md:text-xl font-black mt-3.5 font-mono ${remainingFund >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {remainingFund > 0 ? '+' : ''}{formatVND(remainingFund)}
                   </p>
@@ -593,12 +593,12 @@ const AdminPage: React.FC = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-6 md:mt-8">
                   <div>
                     <label className={labelCls}>Kèo được chấp - {editingMatch?.team_a_name || 'Đội A'}</label>
-                    <input 
-                      type="number" 
-                      step="0.25" 
+                    <input
+                      type="number"
+                      step="0.25"
                       className={inputCls}
                       placeholder="Trống = Cửa Trên"
-                      value={(editingMatch?.handicap !== undefined && (editingMatch.handicap < 0 || editingMatch.favorite_team === 'teamB') && editingMatch.handicap !== 0) ? Math.abs(editingMatch.handicap) : ''} 
+                      value={(editingMatch?.handicap !== undefined && (editingMatch.handicap < 0 || editingMatch.favorite_team === 'teamB') && editingMatch.handicap !== 0) ? Math.abs(editingMatch.handicap) : ''}
                       onChange={e => {
                         const val = parseFloat(e.target.value);
                         if (isNaN(val) || val === 0) {
@@ -614,17 +614,17 @@ const AdminPage: React.FC = () => {
                             handicap: -Math.abs(val)
                           });
                         }
-                      }} 
+                      }}
                     />
                   </div>
                   <div>
                     <label className={labelCls}>Kèo được chấp - {editingMatch?.team_b_name || 'Đội B'}</label>
-                    <input 
-                      type="number" 
-                      step="0.25" 
-                      className={inputCls} 
+                    <input
+                      type="number"
+                      step="0.25"
+                      className={inputCls}
                       placeholder="Trống = Cửa Trên"
-                      value={(editingMatch?.handicap !== undefined && editingMatch.handicap > 0 && editingMatch.favorite_team === 'teamA') ? Math.abs(editingMatch.handicap) : ''} 
+                      value={(editingMatch?.handicap !== undefined && editingMatch.handicap > 0 && editingMatch.favorite_team === 'teamA') ? Math.abs(editingMatch.handicap) : ''}
                       onChange={e => {
                         const val = parseFloat(e.target.value);
                         if (isNaN(val) || val === 0) {
@@ -640,7 +640,7 @@ const AdminPage: React.FC = () => {
                             handicap: Math.abs(val)
                           });
                         }
-                      }} 
+                      }}
                     />
                   </div>
                   <div><label className={labelCls}>Ăn A</label><input type="number" step="0.01" className={inputCls} value={editingMatch?.rate_a || 1} onChange={e => setEditingMatch({ ...editingMatch, rate_a: parseFloat(e.target.value) })} /></div>
