@@ -21,6 +21,14 @@ const MatchPage: React.FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [editingBet, setEditingBet] = useState<any | null>(null);
   const [betListModalOpen, setBetListModalOpen] = useState(false); // State for the new bet list modal
+  const [showNotice, setShowNotice] = useState(() => {
+    return localStorage.getItem('hide_realname_notice') !== 'true';
+  });
+
+  const handleDismissNotice = () => {
+    localStorage.setItem('hide_realname_notice', 'true');
+    setShowNotice(false);
+  };
 
   const scrollerRef = useRef<HTMLDivElement>(null);
 
@@ -400,6 +408,46 @@ const MatchPage: React.FC = () => {
         onClose={() => setAuthModalOpen(false)}
         onSuccess={() => setAuthModalOpen(false)}
       />
+
+      {/* Notice Popup */}
+      {showNotice && (
+        <div className="fixed bottom-6 right-6 z-[9999] max-w-sm w-[calc(100%-2rem)] mx-4 sm:mx-0 bg-[#1e1115]/95 backdrop-blur-xl border border-rose-500/30 rounded-2xl p-5 shadow-[0_0_30px_rgba(244,63,94,0.2)] animate-in fade-in slide-in-from-bottom-5 duration-300">
+          {/* Flashing Red Dot in Top Right */}
+          <div className="absolute top-4 right-10 flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+          </div>
+
+          <button
+            onClick={handleDismissNotice}
+            className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors text-xs"
+            aria-label="Close Notice"
+          >
+            ✕
+          </button>
+
+          <div className="flex items-start gap-3.5">
+            <span className="text-xl shrink-0 mt-0.5 animate-bounce">⚠️</span>
+            <div>
+              <h4 className="text-[11px] font-black uppercase tracking-widest text-rose-400 mb-1.5 flex items-center gap-1.5">
+                Thông báo quan trọng
+              </h4>
+              <p className="text-xs font-semibold text-slate-200 leading-relaxed">
+                Vui lòng tạo acc với <span className="text-rose-400 font-bold">real name</span>, những account với tên không rõ ràng vui lòng inform cho Admin, nếu không lượt cược từ những account đó sẽ bị xóa, bất kể thắng/thua.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={handleDismissNotice}
+              className="px-4 py-1.5 bg-rose-950/60 hover:bg-rose-900 border border-rose-500/20 hover:border-rose-400/50 rounded-xl text-[10px] font-bold uppercase tracking-wider text-rose-300 hover:text-white transition-all active:scale-95"
+            >
+              Tôi đã hiểu
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
