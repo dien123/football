@@ -295,7 +295,7 @@ const AdminPage: React.FC = () => {
         return;
       }
 
-      let csv = 'ID Lượt dự đoán,Tài Khoản,Lựa Chọn,Số Tiền,Tỷ Lệ Ăn,Kết Quả Bet,Thực Nhận (LN/TL),Thời Gian Dự Đoán\n';
+      let csv = 'ID Lượt dự đoán,Tài Khoản,Lựa Chọn,Gía Trị,Tỷ Lệ ,Kết Quả ,Thực  (LN/TL),Thời Gian Dự Đoán\n';
 
       matchBets.forEach(b => {
         const isTeamA = b.option === 'teamA' || b.option === match.team_a_name;
@@ -510,7 +510,7 @@ const AdminPage: React.FC = () => {
 
               {/* Fund Section */}
               <div className="relative z-10 mt-5 pt-5 border-t border-white/5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Số tiền đã đóng (Input) */}
+                {/* (Input) */}
                 <div className="bg-black/30 rounded-2xl p-4 border border-white/5 flex flex-col justify-between">
                   <label htmlFor="contributed-fund-input" className="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-1">
                     Input
@@ -521,7 +521,7 @@ const AdminPage: React.FC = () => {
                       type="text"
                       value={contributedInput}
                       onChange={handleContributedChange}
-                      placeholder="Nhập số tiền..."
+                      placeholder="Nhập ..."
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-base font-black text-white outline-none focus:border-emerald-500/50 transition-all font-mono text-center"
                     />
                     {contributedValue > 0 && (
@@ -532,7 +532,7 @@ const AdminPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Số tiền còn lại (Display) */}
+                {/* Còn lại (Display) */}
                 <div className="bg-black/30 rounded-2xl p-4 border border-white/5 text-center flex flex-col justify-between bg-gradient-to-br from-black/60 to-indigo-950/10 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-8 h-8 bg-indigo-500/10 rounded-bl-full pointer-events-none" />
                   <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Còn lại</p>

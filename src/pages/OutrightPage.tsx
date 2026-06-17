@@ -352,9 +352,9 @@ export default function OutrightPage() {
                         Để cân bằng tính thanh khoản khi lượng cược dồn quá nhiều vào một đội cửa trên, Odds gốc sẽ tự động giảm dựa trên tỷ trọng của đội đó trên tổng quỹ cược:
                       </p>
                       <ul className="list-disc pl-5 space-y-2 text-slate-400 text-xs">
-                        <li><span className="text-slate-200 font-bold">Tier S (Gốc 2.5):</span> Vượt 35% tổng cược giảm còn <span className="text-rose-400 font-bold font-mono">2.0</span>; Vượt 50% giảm còn <span className="text-rose-400 font-bold font-mono">1.8</span>.</li>
-                        <li><span className="text-slate-200 font-bold">Tier A (Gốc 3.5):</span> Vượt 35% tổng cược giảm còn <span className="text-rose-400 font-bold font-mono">3.0</span>; Vượt 50% giảm còn <span className="text-rose-400 font-bold font-mono">2.5</span>.</li>
-                        <li><span className="text-slate-200 font-bold">Tier B (Gốc 5.0):</span> Vượt 40% tổng cược giảm còn <span className="text-rose-400 font-bold font-mono">4.0</span>.</li>
+                        <li><span className="text-slate-200 font-bold">Tier S (Gốc 2.5):</span> Vượt 35% tổng giảm còn <span className="text-rose-400 font-bold font-mono">2.0</span>; Vượt 50% giảm còn <span className="text-rose-400 font-bold font-mono">1.8</span>.</li>
+                        <li><span className="text-slate-200 font-bold">Tier A (Gốc 3.5):</span> Vượt 35% tổng giảm còn <span className="text-rose-400 font-bold font-mono">3.0</span>; Vượt 50% giảm còn <span className="text-rose-400 font-bold font-mono">2.5</span>.</li>
+                        <li><span className="text-slate-200 font-bold">Tier B (Gốc 5.0):</span> Vượt 40% tổng giảm còn <span className="text-rose-400 font-bold font-mono">4.0</span>.</li>
                       </ul>
                     </div>
 
@@ -381,7 +381,7 @@ export default function OutrightPage() {
                     </div>
 
                     <div className="space-y-4">
-                      <p className="text-xs text-slate-400 font-bold">Giả sử bạn đưa ra dự đoán với số tiền <span className="text-white font-black font-mono">100.000</span>:</p>
+                      <p className="text-xs text-slate-400 font-bold">Giả sử bạn đưa ra dự đoán với  <span className="text-white font-black font-mono">100</span>:</p>
 
                       <div className="space-y-3 font-mono text-xs">
                         {Object.entries(TIER_ODDS).map(([tierName, odds]) => {
@@ -571,7 +571,7 @@ export default function OutrightPage() {
                     <th className="pb-4 pl-4">Người chơi</th>
                     <th className="pb-4">Đội dự đoán</th>
                     <th className="pb-4">Phân hạng</th>
-                    <th className="pb-4 text-right">Tiền cược</th>
+                    <th className="pb-4 text-right">Gía trị</th>
                     <th className="pb-4 text-center">Odds áp dụng</th>
                     <th className="pb-4 text-right">Thưởng ước tính</th>
                     <th className="pb-4 pr-4 text-right">Thời gian</th>
@@ -699,15 +699,15 @@ export default function OutrightPage() {
               <div className="space-y-8">
                 <div>
                   <div className="flex justify-between mb-4">
-                    <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest">Số tiền bạn muốn cược (đ)</label>
+                    <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest">Gía trị bạn muốn (đ)</label>
                   </div>
                   <input type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="Nhập số tiền (tối thiểu 20.000đ)..."
+                    placeholder="Nhập (tối thiểu 20)..."
                     className="w-full bg-black border border-white/10 rounded-3xl px-8 py-6 text-xl font-black text-center text-white focus:border-indigo-500 transition-all font-mono" />
                   {amount !== '' && Number(amount) > 0 && Number(amount) < 20000 && (
-                    <p className="text-rose-400 text-[11px] font-bold mt-2 text-center">⚠ Mức cược tối thiểu là 20.000đ</p>
+                    <p className="text-rose-400 text-[11px] font-bold mt-2 text-center">⚠ Mức tối thiểu là 20</p>
                   )}
                   <div className="grid grid-cols-5 gap-3 mt-4">
                     {[20000, 50000, 100000, 200000, 500000].map(val => (
@@ -719,7 +719,7 @@ export default function OutrightPage() {
                 </div>
 
                 <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/5 border border-indigo-500/20 rounded-[40px] p-8 text-center relative overflow-hidden">
-                  <p className="text-[13px] font-black text-indigo-300 uppercase mb-2">Tiền thưởng ước tính nếu vô địch</p>
+                  <p className="text-[13px] font-black text-indigo-300 uppercase mb-2">Thưởng ước tính nếu vô địch</p>
                   <div className="text-[13px] font-black text-slate-500 uppercase mb-4">
                     Tỷ lệ Odds áp dụng: <span className="text-indigo-400 font-mono">x{getTeamOdds(bettingOn.name).toFixed(1)}</span>
                   </div>
@@ -809,7 +809,7 @@ export default function OutrightPage() {
               <div className="space-y-6">
                 <div>
                   <div className="flex justify-between mb-3">
-                    <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest">Số tiền cược mới</label>
+                    <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest">Số thêm mới</label>
                     <span className="text-[11px] font-bold text-slate-400">
                       Cũ: {formatVND(editingBet.amount)}
                     </span>
@@ -818,11 +818,11 @@ export default function OutrightPage() {
                     type="number"
                     value={editAmount}
                     onChange={(e) => setEditAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="Nhập số tiền (tối thiểu 20)..."
+                    placeholder="Nhập (tối thiểu 20)..."
                     className="w-full bg-black border border-white/10 rounded-3xl px-8 py-5 text-xl font-black text-center text-white focus:border-amber-500 transition-all font-mono"
                   />
                   {editAmount !== '' && Number(editAmount) > 0 && Number(editAmount) < 20 && (
-                    <p className="text-rose-400 text-[11px] font-bold mt-2 text-center">⚠ Mức cược tối thiểu là 20</p>
+                    <p className="text-rose-400 text-[11px] font-bold mt-2 text-center">⚠ Mức tối thiểu là 20</p>
                   )}
                   <div className="grid grid-cols-5 gap-3 mt-4">
                     {[20, 50, 100, 200, 500].map(val => (
@@ -838,7 +838,7 @@ export default function OutrightPage() {
                 </div>
 
                 <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 rounded-[40px] p-6 text-center relative overflow-hidden">
-                  <p className="text-[13px] font-black text-amber-300 uppercase mb-2">Tiền thưởng ước tính mới nếu vô địch</p>
+                  <p className="text-[13px] font-black text-amber-300 uppercase mb-2">Thưởng ước tính mới nếu vô địch</p>
                   <div className="text-[13px] font-black text-slate-500 uppercase mb-4">
                     Tỷ lệ Odds áp dụng: <span className="text-amber-400 font-mono">x{getTeamOdds(editingBet.team_name).toFixed(1)}</span>
                   </div>
@@ -888,8 +888,8 @@ export default function OutrightPage() {
                   <thead>
                     <tr className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5">
                       <th className="pb-4">Người chơi</th>
-                      <th className="pb-4 text-center">Tiền cược</th>
-                      <th className="pb-4 text-right">Tiền thưởng nhận được</th>
+                      <th className="pb-4 text-center">Gía trị</th>
+                      <th className="pb-4 text-right">Thưởng nhận được</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -921,7 +921,7 @@ export default function OutrightPage() {
 
               <div className="mt-8 pt-6 border-t border-white/5 space-y-3 px-2">
                 <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase font-mono">
-                  <span>Tổng tiền cược đội thắng (W):</span>
+                  <span>Tổng giá trị đội thắng (W):</span>
                   <span className="text-slate-200 font-bold">
                     {(() => {
                       const winnerBets = bets.filter(b => b.team_name === winner);
@@ -938,7 +938,7 @@ export default function OutrightPage() {
                 </div>
                 <div className="h-[1px] bg-white/5 my-1" />
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-black text-emerald-400 uppercase font-mono">Tổng tiền trả thưởng thực tế:</span>
+                  <span className="text-xs font-black text-emerald-400 uppercase font-mono">Tổng trả thưởng thực tế:</span>
                   <span className="text-xl font-black text-yellow-500 font-mono">
                     {(() => {
                       const winnerBets = bets.filter(b => b.team_name === winner);

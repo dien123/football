@@ -64,7 +64,7 @@ const DC13_TEAMS = [
 const isDC13BettingLocked = (match: Match): boolean => {
   const status = match.dc13_status || match.status || 'scheduled';
   if (status === 'finished') return true;
-  if (!match.dc13_handicap_set) return true; // Khóa cược nếu chưa set kèo
+  if (!match.dc13_handicap_set) return true; // Khóa nếu chưa set kèo
   if (match.dc13_betting_open === true) return false;
   if (match.dc13_betting_open === false) return true;
   const LOCK_MINUTES = 30;
@@ -446,7 +446,7 @@ const DC13Page: React.FC = () => {
     if (!editingOutrightBet) return;
     const betVal = Number(editOutrightAmount) * 1000;
     if (!editOutrightAmount || Number(editOutrightAmount) < 20) {
-      alert('Số tiền tối thiểu là 20đ');
+      alert('Gía trị tối thiểu là 20đ');
       return;
     }
     setOutrightSubmitting(true);
@@ -543,7 +543,7 @@ const DC13Page: React.FC = () => {
     // Check if match betting is locked 30m before kickoff
     if (isDC13BettingLocked(betMatch)) {
       if (!betMatch.dc13_handicap_set) {
-        alert('Trận đấu này chưa được thiết lập kèo cược, không thể dự đoán!');
+        alert('Trận đấu này chưa được thiết lập kèo, không thể dự đoán!');
       } else {
         alert('Trận đấu này đã khóa dự đoán!');
       }
@@ -864,7 +864,7 @@ const DC13Page: React.FC = () => {
       return;
     }
 
-    let csv = 'ID Lượt dự đoán,Tài Khoản,Đội Tuyển Chọn,Số Tiền Cược,Kết Quả Dự Đoán,Tiền Thắng Chia Quỹ,Tổng Thực Nhận,Thời Gian Dự Đoán\n';
+    let csv = 'ID Lượt dự đoán,Tài Khoản,Đội Tuyển Chọn,Gía Trị,Kết Quả Dự Đoán,Thắng Chia Quỹ,Tổng Thực Nhận,Thời Gian Dự Đoán\n';
 
     outrightBets.forEach(b => {
       let statusStr = 'Chờ kết quả';
@@ -1741,7 +1741,7 @@ const DC13Page: React.FC = () => {
                 </div>
 
                 <p className="text-base text-slate-300 leading-relaxed mt-2 font-medium">
-                  Đặt dự đoán cho đội bạn tin là nhà vô địch. Mỗi lượt dự đoán vô địch được cố định ở mức <strong className="text-cyan-400">20 điểm</strong>. Người dự đoán sai sẽ mất tiền cược gốc, toàn bộ số điểm thua đó được chia đều theo đầu người cho những người dự đoán đúng.
+                  Đặt dự đoán cho đội bạn tin là nhà vô địch. Mỗi lượt dự đoán vô địch được cố định ở mức <strong className="text-cyan-400">20 điểm</strong>. Người dự đoán sai sẽ mất gốc, toàn bộ số điểm thua đó được chia đều theo đầu người cho những người dự đoán đúng.
                 </p>
 
                 {showOutrightRules && (
@@ -1754,7 +1754,7 @@ const DC13Page: React.FC = () => {
                         <div className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-[10px] font-black text-cyan-400 shrink-0 mt-0.5">1</div>
                         <div>
                           <p className="text-xs font-black text-slate-200">Xác định Quỹ Thua (Losing Pool)</p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">Tổng số tiền cược của tất cả những người dự đoán sai đội vô địch.</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">Tổng số của tất cả những người dự đoán sai đội vô địch.</p>
                         </div>
                       </div>
 
@@ -1769,10 +1769,10 @@ const DC13Page: React.FC = () => {
                       <div className="flex gap-3 items-start">
                         <div className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-[10px] font-black text-cyan-400 shrink-0 mt-0.5">3</div>
                         <div>
-                          <p className="text-xs font-black text-slate-200">Cách tính tiền nhận của bạn</p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">Mỗi người thắng nhận lại 20.000đ cược gốc + phần chia đều từ Quỹ Thua.</p>
+                          <p className="text-xs font-black text-slate-200">Cách tính điểm nhận của bạn</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">Mỗi người thắng nhận lại 20.000đ gốc + phần chia đều từ Quỹ Thua.</p>
                           <div className="bg-slate-900/60 p-2.5 rounded-xl border border-white/5 mt-2 font-mono text-[11px] text-cyan-300">
-                            Tiền thắng = Quỹ Thua / N
+                            Thắng = Quỹ Thua / N
                           </div>
                         </div>
                       </div>
@@ -1796,13 +1796,13 @@ const DC13Page: React.FC = () => {
 
                         <p className="font-bold text-slate-200">Mỗi người dự đoán đúng Argentina nhận được:</p>
                         <div className="space-y-1.5 pl-2 border-l-2 border-cyan-500/40">
-                          <p>• Tiền thắng chia đều:</p>
+                          <p>• Thắng chia đều:</p>
                           <p className="font-black text-cyan-400 text-sm">800.000đ (Quỹ Thua) / 10 người = 80.000đ</p>
 
                           <p className="mt-1">• Tổng thực nhận mang về (bao gồm gốc):</p>
                           <p className="font-black text-emerald-400 text-sm">20.000đ (gốc) + 80.000đ (thắng) = 100.000đ</p>
                         </div>
-                        <p className="text-[10px] text-slate-500 italic mt-2">⚠️ Lưu ý: Nếu dự đoán sai, bạn sẽ mất hoàn toàn 20.000đ cược gốc của mình.</p>
+                        <p className="text-[10px] text-slate-500 italic mt-2">⚠️ Lưu ý: Nếu dự đoán sai, bạn sẽ mất hoàn toàn 20.000đ gốc của mình.</p>
                       </div>
                     </div>
                   </div>
@@ -1912,8 +1912,8 @@ const DC13Page: React.FC = () => {
                       <tr className="border-b border-white/5 text-[9px] font-black text-slate-500 uppercase tracking-widest bg-white/[0.01]">
                         <th className="py-4 px-6">Người dự đoán</th>
                         <th className="py-4 px-4">Đội lựa chọn</th>
-                        <th className="py-4 px-4 text-right">Tiền dự đoán</th>
-                        <th className="py-4 px-4 text-right">Tiền thắng dự kiến</th>
+                        <th className="py-4 px-4 text-right">Tổng dự đoán</th>
+                        <th className="py-4 px-4 text-right">Thắng dự kiến</th>
                         <th className="py-4 px-4 text-right">Tổng thực nhận(gồm gốc)</th>
                         <th className="py-4 px-6 text-right">Thao tác</th>
                       </tr>
@@ -2308,11 +2308,11 @@ const DC13Page: React.FC = () => {
                     <div>
                       <p className="text-sm font-black text-cyan-400 mb-1.5">🎯 CÁCH CHƠI ĐƠN GIẢN</p>
                       <p className="text-sm text-slate-400 font-semibold leading-relaxed">
-                        Người chơi chỉ cần chọn 1 trong 2 đội thắng (Đội A hoặc Đội B) cho mỗi trận đấu. Hệ thống không yêu cầu nhập số tiền dự đoán. Đóng dự đoán tự động trước giờ bóng lăn 30 phút.
+                        Người chơi chỉ cần chọn 1 trong 2 đội thắng (Đội A hoặc Đội B) cho mỗi trận đấu. Hệ thống không yêu cầu nhập giá trị dự đoán. Đóng dự đoán tự động trước giờ bóng lăn 30 phút.
                       </p>
                     </div>
                     <div className="text-[12px] text-amber-400 font-bold border-t border-white/5 pt-2.5 mt-3 leading-relaxed">
-                      ⚠️ Luật bổ sung (từ 18:00 ngày 15/06/2026): Nếu quên bet/không chọn cược trước giờ khóa, hệ thống sẽ tự động xếp bạn vào cửa đội kèo dưới (được chấp).
+                      ⚠️ Luật bổ sung (từ 18:00 ngày 15/06/2026): Nếu quên bet/không chọn đội trước giờ khóa, hệ thống sẽ tự động xếp bạn vào cửa đội kèo dưới (được chấp).
                     </div>
                   </div>
                   <div className="bg-slate-900/40 border border-white/[0.04] rounded-2xl p-4 hover:border-rose-500/20 transition-all duration-300 shadow-sm">
@@ -2556,7 +2556,7 @@ const DC13Page: React.FC = () => {
                           </select>
                         </div>
                         <div className="col-span-1 md:col-span-2">
-                          <label className={labelCls}>Kèo cược DC13</label>
+                          <label className={labelCls}>Kèo DC13</label>
                           <select
                             className={inputCls}
                             value={dc13KeoType}
@@ -2600,7 +2600,7 @@ const DC13Page: React.FC = () => {
                               }
                             }}
                           >
-                            <option value="unset">🔴 Chưa set kèo (Khóa cược)</option>
+                            <option value="unset">🔴 Chưa set kèo (Khóa )</option>
                             <option value="draw">🤝 Đồng banh (0)</option>
                             <option value="handicap">⚽ Có kèo chấp (Nhập tỷ lệ)</option>
                           </select>
@@ -2920,7 +2920,7 @@ const DC13Page: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                       <div className="space-y-2">
-                        <label className={labelCls}>Chọn Đội Tuyển Vô Địch / Khóa cược</label>
+                        <label className={labelCls}>Chọn Đội Tuyển Vô Địch / Khóa </label>
                         <div className="flex gap-2 flex-wrap sm:flex-nowrap">
                           <select
                             onChange={(e) => {
@@ -2943,28 +2943,28 @@ const DC13Page: React.FC = () => {
                           {isOutrightLocked ? (
                             <button
                               onClick={() => {
-                                if (window.confirm('Bạn có muốn mở khóa cổng nhận cược vô địch?')) {
+                                if (window.confirm('Bạn có muốn mở khóa cổng nhận chọn vô địch?')) {
                                   handleSetDC13OutrightWinner(null);
                                 }
                               }}
                               className="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/20 text-emerald-400 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shrink-0"
                             >
-                              🔓 Mở khóa cổng nhận cược
+                              🔓 Mở khóa cổng
                             </button>
                           ) : (
                             <button
                               onClick={() => {
-                                if (window.confirm('Bạn có chắc chắn muốn khóa cổng nhận cược vô địch?')) {
+                                if (window.confirm('Bạn có chắc chắn muốn khóa cổng nhận chọn vô địch?')) {
                                   handleSetDC13OutrightWinner('__LOCKED__');
                                 }
                               }}
                               className="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 border border-rose-500/20 text-rose-400 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shrink-0"
                             >
-                              🔒 Khóa cổng nhận cược
+                              🔒 Khóa cổng
                             </button>
                           )}
                         </div>
-                        <p className="text-[10px] text-slate-500 italic">Đặt đội vô địch hoặc khóa cược sẽ dừng cổng nhận cược. Đóng/mở khóa cổng nhận cược bất kỳ lúc nào.</p>
+                        <p className="text-[10px] text-slate-500 italic">Đặt đội vô địch hoặc khóa sẽ dừng cổng nhận . Đóng/mở khóa cổng nhận bất kỳ lúc nào.</p>
                       </div>
 
                       <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
@@ -2972,7 +2972,7 @@ const DC13Page: React.FC = () => {
                         {outrightWinner ? (
                           outrightWinner === '__LOCKED__' ? (
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-black text-amber-500 uppercase">🔒 Cổng nhận cược đã khóa</span>
+                              <span className="text-sm font-black text-amber-500 uppercase">🔒 Cổng nhận đã khóa</span>
                               <span className="text-[10px] font-bold text-slate-500">(Chưa chọn đội vô địch)</span>
                             </div>
                           ) : (
@@ -3048,7 +3048,7 @@ const DC13Page: React.FC = () => {
               <div className="flex gap-3 items-start border-t border-white/5 pt-4">
                 <span className="text-rose-400 text-lg">⚠️</span>
                 <p className="text-sm text-slate-300 leading-relaxed font-semibold">
-                  Nếu người chơi <span className="text-rose-400 font-black">quên không bet</span> hoặc <span className="text-rose-400 font-black">không chọn kèo</span> trước thời điểm đóng cược (30 phút trước giờ bóng lăn), hệ thống sẽ <span className="text-cyan-400 font-black">tự động xếp người chơi đó vào cửa đội kèo dưới (đội được chấp)</span> cho trận đấu đó.
+                  Nếu người chơi <span className="text-rose-400 font-black">quên không bet</span> hoặc <span className="text-rose-400 font-black">không chọn kèo</span> trước thời điểm đóng  (30 phút trước giờ bóng lăn), hệ thống sẽ <span className="text-cyan-400 font-black">tự động xếp người chơi đó vào cửa đội kèo dưới (đội được chấp)</span> cho trận đấu đó.
                 </p>
               </div>
             </div>
@@ -3257,9 +3257,9 @@ const DC13Page: React.FC = () => {
             {/* Input field */}
             <div className="px-8 py-4 space-y-4">
               <div>
-                <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest">Số tiền dự đoán (đ)</label>
+                <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest">Gía trị dự đoán (đ)</label>
                 <div className="w-full bg-slate-900 border border-white/10 rounded-2xl px-4 py-3.5 text-white font-mono font-bold flex justify-between items-center">
-                  <span>Số tiền cược cố định:</span>
+                  <span>Số cố định:</span>
                   <span className="text-cyan-400 text-lg">20đ</span>
                 </div>
                 <p className="text-[10px] text-slate-500 mt-1.5 italic">Mỗi lượt dự đoán vô địch được cố định là 20đ theo luật chơi mới.</p>
@@ -3288,7 +3288,7 @@ const DC13Page: React.FC = () => {
                       <span>Tổng thực nhận dự kiến:</span>
                       <span className="font-mono font-black text-sm">{formatVND(Math.round(estTotal))} điểm</span>
                     </div>
-                    <p className="text-[9px] text-slate-500 text-center italic mt-1">Lưu ý: Đây là số liệu dự kiến nếu đội tuyển này vô địch, dựa trên số lượng cược hiện tại.</p>
+                    <p className="text-[9px] text-slate-500 text-center italic mt-1">Lưu ý: Đây là số liệu dự kiến nếu đội tuyển này vô địch, dựa trên số lượng hiện tại.</p>
                   </div>
                 );
               })()}
