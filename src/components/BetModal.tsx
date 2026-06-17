@@ -64,7 +64,7 @@ const BetModal: React.FC<BetModalProps> = ({
     if (!userName.trim()) newErrors.userName = 'Vui lòng nhập tên người dùng.';
     const amount = parseVND(amountRaw);
     if (!amountRaw || isNaN(amount) || amount < 50) {
-      newErrors.amount = 'Số tiền phải là số nguyên tối thiểu 50.';
+      newErrors.amount = 'Gía trị phải là số nguyên tối thiểu 50.';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -96,9 +96,9 @@ const BetModal: React.FC<BetModalProps> = ({
   const handicapDisplay = handicapVal === 0
     ? '0'
     : (isTeamA
-        ? (match.favorite_team === 'teamA' ? '0' : `+${formatHandicap(handicapVal)}`)
-        : (match.favorite_team === 'teamB' ? '0' : `+${formatHandicap(handicapVal)}`)
-      );
+      ? (match.favorite_team === 'teamA' ? '0' : `+${formatHandicap(handicapVal)}`)
+      : (match.favorite_team === 'teamB' ? '0' : `+${formatHandicap(handicapVal)}`)
+    );
 
 
   return (
@@ -115,7 +115,7 @@ const BetModal: React.FC<BetModalProps> = ({
         <div className="relative bg-[#1a2f1a] px-8 py-8 border-b border-white/5">
           <div className="text-emerald-500 text-xs font-black uppercase tracking-widest mb-1.5 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-            {isEditing ? 'Chỉnh sửa cược' : 'Đặt cược mới'}
+            {isEditing ? 'Chỉnh sửa' : 'Đặt mới'}
           </div>
           <h2 className="text-xl font-black text-white uppercase tracking-tight">
             {match.team_a_name} <span className="text-slate-500 px-1">vs</span> {match.team_b_name}
@@ -170,7 +170,7 @@ const BetModal: React.FC<BetModalProps> = ({
               <span>📌 Quy định & Điều khoản</span>
             </div>
             <ul className="text-[12px] text-slate-400 space-y-1 list-disc pl-4 font-semibold leading-relaxed">
-              <li>Đóng nhận cược trước giờ thi đấu <strong className="text-indigo-300">30 phút</strong>.</li>
+              <li>Đóng nhận trước giờ thi đấu <strong className="text-indigo-300">30 phút</strong>.</li>
               <li>Chỉ tính trong <strong className="text-indigo-300">thời gian thi đấu chính thức</strong> (không gồm hiệp phụ/luân lưu).</li>
             </ul>
           </div>
@@ -194,7 +194,7 @@ const BetModal: React.FC<BetModalProps> = ({
 
           <div>
             <label htmlFor="bet-amount" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">
-              Số tiền cược {initialUserName && <span className="lowercase font-medium text-slate-600 ml-1">(@{initialUserName})</span>}
+              Gía trị {initialUserName && <span className="lowercase font-medium text-slate-600 ml-1">(@{initialUserName})</span>}
             </label>
             <input
               ref={amountInputRef}
@@ -221,7 +221,7 @@ const BetModal: React.FC<BetModalProps> = ({
             onClick={handleSave}
             className="flex-[2] py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-900/40 active:scale-95 transition-all"
           >
-            {isEditing ? 'Cập nhật kèo 🚀' : 'Xác nhận cược 🚀'}
+            {isEditing ? 'Cập nhật kèo 🚀' : 'Xác nhận 🚀'}
           </button>
         </div>
       </div>

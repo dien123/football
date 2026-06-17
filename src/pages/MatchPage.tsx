@@ -140,7 +140,7 @@ const MatchPage: React.FC = () => {
         .eq('id', editingBet.id);
 
       if (error) {
-        alert('Lỗi khi cập nhật cược: ' + error.message);
+        alert('Lỗi khi cập nhật: ' + error.message);
       } else {
         setModalOpen(false);
         setEditingBet(null);
@@ -508,7 +508,7 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
         <div className="relative bg-[#1a2f1a] px-6 py-6 sm:px-8 sm:py-8 border-b border-white/5">
           <div className="text-emerald-500 text-xs sm:text-sm font-black uppercase tracking-widest mb-1.5 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-            Danh sách cược
+            Danh sách
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">
             {match.team_a_name} <span className="text-slate-500 px-1">vs</span> {match.team_b_name}
@@ -526,7 +526,7 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
           {loadingBets ? (
             <div className="flex flex-col items-center gap-4 py-10">
               <div className="w-8 h-8 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-              <span className="text-emerald-500 font-black text-xs uppercase tracking-widest animate-pulse">Đang tải cược...</span>
+              <span className="text-emerald-500 font-black text-xs uppercase tracking-widest animate-pulse">Đang tải ...</span>
             </div>
           ) : (
             <div className="space-y-6">
@@ -539,7 +539,7 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
                     <span className="text-2xl">📊</span>
                     <div>
                       <h3 className="text-sm font-black uppercase tracking-wider text-slate-200">
-                        Thống kê lượng cược trận đấu
+                        Thống kê lượng chọn trận đấu
                       </h3>
                       <p className="text-[11px] text-slate-500 font-bold uppercase mt-0.5">Cập nhật thời gian thực</p>
                     </div>
@@ -587,7 +587,7 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
                 {/* Team A Bets */}
                 <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                   <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 mb-4 border-b border-white/5 pb-2">
-                    Cược cho {match.team_a_name}
+                    Chọn {match.team_a_name}
                   </h3>
                   <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                     {bets.filter(b => b.option === match.team_a_name || b.option === "teamA").length > 0 ? (
@@ -601,7 +601,7 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
                         );
                       })
                     ) : (
-                      <p className="text-[11px] text-slate-500 italic text-center py-4">Chưa có cược nào.</p>
+                      <p className="text-[11px] text-slate-500 italic text-center py-4">Chưa có .</p>
                     )}
                   </div>
                 </div>
@@ -609,7 +609,7 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
                 {/* Team B Bets */}
                 <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                   <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 mb-4 border-b border-white/5 pb-2">
-                    Cược cho {match.team_b_name}
+                    Chọn {match.team_b_name}
                   </h3>
                   <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                     {bets.filter(b => b.option === match.team_b_name || b.option === "teamB").length > 0 ? (
@@ -623,7 +623,7 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
                         );
                       })
                     ) : (
-                      <p className="text-[11px] text-slate-500 italic text-center py-4">Chưa có cược nào.</p>
+                      <p className="text-[11px] text-slate-500 italic text-center py-4">Chưa có.</p>
                     )}
                   </div>
                 </div>

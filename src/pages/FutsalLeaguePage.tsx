@@ -129,7 +129,7 @@ const FutsalLeaguePage: React.FC = () => {
       match_id: selectedMatch.id, user_name: userName, amount, option: finalOption, user_id: user.id
     });
     if (error) alert(error.message);
-    else { setModalOpen(false); setRefreshTrigger(t => t + 1); alert('Đặt cược thành công!'); }
+    else { setModalOpen(false); setRefreshTrigger(t => t + 1); alert('Đặt  thành công!'); }
   };
 
   if (loading && matches.length === 0) return <div className="p-20 text-center text-emerald-500 font-bold">ĐANG TẢI...</div>;

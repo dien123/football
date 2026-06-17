@@ -187,7 +187,7 @@ const AdminPage: React.FC = () => {
     if (!error) {
       fetchMatches();
     } else {
-      alert(`Lỗi khi cập nhật trạng thái cược: ${error.message}`);
+      alert(`Lỗi khi cập nhật trạng thái : ${error.message}`);
     }
   };
 
@@ -239,7 +239,7 @@ const AdminPage: React.FC = () => {
   };
 
   const handleResetMatch = async (matchId: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn reset trận đấu này về "Sắp đá"? Mọi tỷ số và lượt cược bên ngoài của trận đấu này sẽ bị xóa!')) return;
+    if (!window.confirm('Bạn có chắc chắn muốn reset trận đấu này về "Sắp đá"? Mọi tỷ số và lượt dự đoán bên ngoài của trận đấu này sẽ bị xóa!')) return;
 
     const { error: matchErr } = await supabase
       .from('matches')
@@ -261,7 +261,7 @@ const AdminPage: React.FC = () => {
       .eq('match_id', matchId);
 
     if (betErr) {
-      alert(`Lỗi xóa cược: ${betErr.message}`);
+      alert(`Lỗi xóa : ${betErr.message}`);
     } else {
       alert('Đã reset trận đấu thành công!');
     }
@@ -333,7 +333,7 @@ const AdminPage: React.FC = () => {
       const fileName = `Bets_${match.team_a_name}_vs_${match.team_b_name}.csv`;
       exportToCSV(csv, fileName);
     } catch (err: any) {
-      alert('Lỗi xuất cược: ' + err.message);
+      alert('Lỗi xuất : ' + err.message);
     }
   };
 
@@ -703,7 +703,7 @@ const AdminPage: React.FC = () => {
                         <button onClick={() => setEditingMatch(m)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full border border-white/10 transition-all text-[10px] md:text-xs" title="Sửa trận đấu">✏️</button>
                         <button
                           onClick={() => handleExportMatchBets(m)}
-                          title="Xuất Excel cược trận này"
+                          title="Xuất Excel trận này"
                           className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-emerald-600 hover:text-white rounded-full border border-white/10 transition-all text-[10px] md:text-xs"
                         >
                           📥
@@ -725,8 +725,8 @@ const AdminPage: React.FC = () => {
                               className="bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-[9px] md:text-[11px] font-black text-slate-300 focus:border-emerald-500 outline-none cursor-pointer hover:border-white/20 transition-colors h-9 md:h-11"
                             >
                               <option value="auto">🔄 Tự động (30m)</option>
-                              <option value="open">🟢 Mở cược (Ghi đè)</option>
-                              <option value="closed">🔴 Đóng cược (Ghi đè)</option>
+                              <option value="open">🟢 Mở  (Ghi đè)</option>
+                              <option value="closed">🔴 Đóng  (Ghi đè)</option>
                             </select>
                           </div>
                         )}

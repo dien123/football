@@ -169,7 +169,7 @@ export default function OutrightPage() {
     }
     const betVal = Number(amount) * 1000;
     if (!amount || Number(amount) < 20) {
-      alert('Số tiền tối thiểu là 20');
+      alert('Số tối thiểu là 20');
       return;
     }
     setSubmitting(true);
@@ -212,7 +212,7 @@ export default function OutrightPage() {
     if (!editingBet) return;
     const betVal = Number(editAmount) * 1000;
     if (!editAmount || Number(editAmount) < 20) {
-      alert('Số tiền tối thiểu là 20');
+      alert('Số tối thiểu là 20');
       return;
     }
     setSubmitting(true);
@@ -295,7 +295,7 @@ export default function OutrightPage() {
           )}
           <div className="mt-8 flex items-center justify-center gap-8">
             <div className="text-center">
-              <p className="text-[14px] font-black text-slate-500 uppercase mb-1">Tổng quỹ cược</p>
+              <p className="text-[14px] font-black text-slate-500 uppercase mb-1">Tổng</p>
               <p className="text-5xl font-black text-emerald-400 font-mono">{formatVND(totalPool)}</p>
             </div>
             <div className="w-[1px] h-10 bg-white/10" />
@@ -330,26 +330,26 @@ export default function OutrightPage() {
                 <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 md:p-8 space-y-6">
                   <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                     <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-black text-sm">🎯</div>
-                    <h3 className="font-black text-slate-100 uppercase tracking-wider text-base">Cơ chế Tỷ lệ cược Cố định</h3>
+                    <h3 className="font-black text-slate-100 uppercase tracking-wider text-base">Cơ chế Tỷ lệ Cố định</h3>
                   </div>
 
                   <div className="space-y-6 text-sm text-slate-300 leading-relaxed font-medium">
                     <p>
-                      Để mang lại sự minh bạch tối đa và giúp người tham gia dễ dàng tính toán chính xác phần thưởng của mình, hệ thống áp dụng cơ chế <span className="text-indigo-400 font-black">Tỷ lệ cược Cố định (Fixed Odds)</span> theo phân hạng sức mạnh (Tier) của từng đội tuyển.
+                      Để mang lại sự minh bạch tối đa và giúp người tham gia dễ dàng tính toán chính xác phần thưởng của mình, hệ thống áp dụng cơ chế <span className="text-indigo-400 font-black">Tỷ lệ Cố định (Fixed Odds)</span> theo phân hạng sức mạnh (Tier) của từng đội tuyển.
                     </p>
 
                     {/* <div className="bg-black/30 p-5 rounded-2xl border border-white/5 space-y-3">
                       <p className="font-black text-indigo-400 uppercase tracking-widest text-xs">Ưu điểm của cơ chế này:</p>
                       <ul className="list-disc pl-5 space-y-2 text-slate-400 text-xs">
                         <li><span className="text-slate-200 font-bold">Biết trước kết quả:</span> Tỷ lệ Odds được chốt và áp dụng chung cho toàn bộ người chơi đặt trước và sau.</li>
-                        <li><span className="text-slate-200 font-bold">Tính toán cực kỳ dễ dàng:</span> Số tiền nhận về = Tiền cược &times; Odds thực tế của Tier tương ứng.</li>
+                        <li><span className="text-slate-200 font-bold">Tính toán cực kỳ dễ dàng:</span> Số nhận về = Gía trị &times; Odds thực tế của Tier tương ứng.</li>
                       </ul>
                     </div> */}
 
                     <div className="bg-rose-950/20 p-5 rounded-2xl border border-rose-500/10 space-y-3">
                       <p className="font-black text-rose-400 uppercase tracking-widest text-xs">⚠️ Điều chỉnh Odds tự động:</p>
                       <p className="text-xs text-slate-400 leading-relaxed font-semibold">
-                        Để cân bằng tính thanh khoản khi lượng cược dồn quá nhiều vào một đội cửa trên, Odds gốc sẽ tự động giảm dựa trên tỷ trọng của đội đó trên tổng quỹ cược:
+                        Để cân bằng tính thanh khoản khi lượng chọn dồn quá nhiều vào một đội cửa trên, Odds gốc sẽ tự động giảm dựa trên tỷ trọng của đội đó trên tổng quỹ:
                       </p>
                       <ul className="list-disc pl-5 space-y-2 text-slate-400 text-xs">
                         <li><span className="text-slate-200 font-bold">Tier S (Gốc 2.5):</span> Vượt 35% tổng giảm còn <span className="text-rose-400 font-bold font-mono">2.0</span>; Vượt 50% giảm còn <span className="text-rose-400 font-bold font-mono">1.8</span>.</li>
@@ -359,7 +359,7 @@ export default function OutrightPage() {
                     </div>
 
                     <div className="pt-4 border-t border-white/5">
-                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Bảng quy đổi tỷ lệ cược (Odds) theo Tier:</p>
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Bảng quy đổi tỷ lệ (Odds) theo Tier:</p>
                       <div className="grid grid-cols-5 gap-3 text-center">
                         {Object.entries(TIER_ODDS).map(([tier, odds]) => (
                           <div key={tier} className="bg-black/40 border border-white/5 p-3 rounded-2xl flex flex-col justify-center items-center">
@@ -504,14 +504,14 @@ export default function OutrightPage() {
                               if (isOddsAdjusted) {
                                 if (tier.name === "Tier S") {
                                   adjustReason = currentOdds === 1.8
-                                    ? `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x1.8 do vượt 50% tổng cược`
-                                    : `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x2.0 do vượt 35% tổng cược`;
+                                    ? `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x1.8 do vượt 50% tổng `
+                                    : `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x2.0 do vượt 35% tổng `;
                                 } else if (tier.name === "Tier A") {
                                   adjustReason = currentOdds === 2.5
-                                    ? `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x2.5 do vượt 50% tổng cược`
-                                    : `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x3.0 do vượt 35% tổng cược`;
+                                    ? `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x2.5 do vượt 50% tổng `
+                                    : `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x3.0 do vượt 35% tổng `;
                                 } else if (tier.name === "Tier B") {
-                                  adjustReason = `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x4.0 do vượt 40% tổng cược`;
+                                  adjustReason = `Đã hạ Odds từ x${baseOdds.toFixed(1)} xuống x4.0 do vượt 40% tổng `;
                                 }
                               }
 
@@ -749,7 +749,7 @@ export default function OutrightPage() {
                   <thead>
                     <tr className="border-b border-white/5 text-slate-500 font-black">
                       <th className="pb-3 uppercase tracking-wider">Người dùng</th>
-                      <th className="pb-3 uppercase tracking-wider text-right">Mức cược</th>
+                      <th className="pb-3 uppercase tracking-wider text-right">Mức </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">

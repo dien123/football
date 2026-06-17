@@ -67,7 +67,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
   };
 
   const handleDeleteBet = async (betId: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa cược này?')) return;
+    if (!window.confirm('Bạn có chắc chắn muốn xóa?')) return;
 
     const { error } = await supabase
       .from('bets')
@@ -75,7 +75,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
       .eq('id', betId);
 
     if (error) {
-      alert('Lỗi khi xóa cược: ' + error.message);
+      alert('Lỗi khi xóa : ' + error.message);
     } else {
       fetchBets();
     }
@@ -256,14 +256,14 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
                             <button
                               onClick={() => onEditBet?.(bet)}
                               className="text-amber-500 hover:text-amber-400 p-1 bg-amber-500/10 rounded transition-colors"
-                              title="Sửa cược"
+                              title="Sửa "
                             >
                               ✏️
                             </button>
                             <button
                               onClick={() => handleDeleteBet(bet.id)}
                               className="text-rose-500 hover:text-rose-400 p-1 bg-rose-500/10 rounded transition-colors"
-                              title="Xóa cược"
+                              title="Xóa "
                             >
                               ✕
                             </button>
@@ -324,14 +324,14 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
                             <button
                               onClick={() => onEditBet?.(bet)}
                               className="text-amber-500 hover:text-amber-400 p-1 bg-amber-500/10 rounded transition-colors"
-                              title="Sửa cược"
+                              title="Sửa "
                             >
                               ✏️
                             </button>
                             <button
                               onClick={() => handleDeleteBet(bet.id)}
                               className="text-rose-500 hover:text-rose-400 p-1 bg-rose-500/10 rounded transition-colors"
-                              title="Xóa cược"
+                              title="Xóa "
                             >
                               ✕
                             </button>

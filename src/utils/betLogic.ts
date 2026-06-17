@@ -28,7 +28,7 @@ export const calculateBetResult = (
   const effectiveScore = diff - handicap;
 
   let outcome: BetOutcome = 'PUSH';
-  
+
   // Backward compatibility: match team name OR the legacy 'teamA' label
   const isBetOnTeamA = option === 'teamA' || (teamAName && option === teamAName);
   const rate = isBetOnTeamA ? rateA : rateB;
@@ -77,7 +77,7 @@ export const getOutcomeLabel = (outcome: BetOutcome): string => {
   switch (outcome) {
     case 'WIN_FULL': return 'Thắng';
     case 'WIN_HALF': return 'Thắng nửa';
-    case 'PUSH': return 'Hòa tiền';
+    case 'PUSH': return 'Hòa ';
     case 'LOSS_HALF': return 'Thua nửa';
     case 'LOSS_FULL': return 'Thua';
     default: return '';
