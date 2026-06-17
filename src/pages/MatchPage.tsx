@@ -433,7 +433,7 @@ const MatchPage: React.FC = () => {
                 Thông báo quan trọng
               </h4>
               <p className="text-xs font-semibold text-slate-200 leading-relaxed">
-                Vui lòng tạo acc với <span className="text-rose-400 font-bold">real name</span>, những account với tên không rõ ràng vui lòng inform cho Admin, nếu không lượt cược từ những account đó sẽ bị xóa, bất kể thắng/thua.
+                Vui lòng tạo acc với <span className="text-rose-400 font-bold">real name</span>, những account mới tạo với tên không rõ ràng vui lòng inform cho Admin, nếu không lượt cược từ những account đó sẽ bị xóa, bất kể thắng/thua.
               </p>
             </div>
           </div>
