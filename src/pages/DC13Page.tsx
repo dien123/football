@@ -220,7 +220,7 @@ const DC13Page: React.FC = () => {
   const [pendingBetMatch, setPendingBetMatch] = useState<Match | null>(null);
   const [showBetModal, setShowBetModal] = useState(false);
   const [betMatch, setBetMatch] = useState<Match | null>(null);
-  const [showRuleModal, setShowRuleModal] = useState(true);
+  //const [showRuleModal, setShowRuleModal] = useState(true);
   const [leaderboardTab, setLeaderboardTab] = useState<'standings' | 'overview'>('standings');
 
   // Admin
@@ -343,9 +343,9 @@ const DC13Page: React.FC = () => {
     Promise.all([fetchMatches(), fetchBets(), fetchDC13OutrightData(), fetchProfiles()]).finally(() => setLoading(false));
   }, [fetchMatches, fetchBets, fetchDC13OutrightData, fetchProfiles]);
 
-  const handleCloseRuleModal = () => {
-    setShowRuleModal(false);
-  };
+  // const handleCloseRuleModal = () => {
+  //   setShowRuleModal(false);
+  // };
 
   // Real-time changes listener
   useEffect(() => {
@@ -1167,7 +1167,7 @@ const DC13Page: React.FC = () => {
           </div>
           <h1 className="text-3xl md:text-7xl font-extrabold uppercase tracking-tight italic drop-shadow-[0_0_30px_rgba(6,182,212,0.3)]">
             <span className="block w-full bg-gradient-to-r from-cyan-300 via-teal-300 to-blue-400 bg-clip-text text-transparent">
-              DC13 - BET CHAMPIONSHIP
+              DC13 - CHAMPIONSHIP
             </span>
           </h1>
         </div>
@@ -1561,7 +1561,7 @@ const DC13Page: React.FC = () => {
 
                         return (
                           <div className="px-5 pb-5 border-t border-white/5 pt-4">
-                            <p className="text-[12px] font-black text-slate-300 uppercase tracking-widest mb-3">Danh sách bet ({matchBets.length})</p>
+                            <p className="text-[12px] font-black text-slate-300 uppercase tracking-widest mb-3">Danh sách ({matchBets.length})</p>
 
                             <div className="grid grid-cols-2 gap-4">
                               {/* Bets on Team A */}
@@ -1741,7 +1741,7 @@ const DC13Page: React.FC = () => {
                 </div>
 
                 <p className="text-base text-slate-300 leading-relaxed mt-2 font-medium">
-                  Đặt dự đoán cho đội bạn tin là nhà vô địch. Mỗi lượt dự đoán vô địch được cố định ở mức <strong className="text-cyan-400">20.000đ</strong>. Người dự đoán sai sẽ mất tiền cược gốc, toàn bộ số tiền thua đó được chia đều theo đầu người cho những người dự đoán đúng.
+                  Đặt dự đoán cho đội bạn tin là nhà vô địch. Mỗi lượt dự đoán vô địch được cố định ở mức <strong className="text-cyan-400">20 điểm</strong>. Người dự đoán sai sẽ mất tiền cược gốc, toàn bộ số điểm thua đó được chia đều theo đầu người cho những người dự đoán đúng.
                 </p>
 
                 {showOutrightRules && (
@@ -1816,7 +1816,7 @@ const DC13Page: React.FC = () => {
                     <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
                       <span>🏟️ DANH SÁCH ĐỘI TUYỂN</span>
                     </h3>
-                    <p className="text-[12px] text-slate-400 mt-1">Chọn đội tuyển bạn dự đoán sẽ vô địch để đặt dự đoán (20.000đ).</p>
+                    <p className="text-[12px] text-slate-400 mt-1">Chọn đội tuyển bạn dự đoán sẽ vô địch để đặt dự đoán (20).</p>
                   </div>
 
                   {/* Search input */}
@@ -2029,7 +2029,7 @@ const DC13Page: React.FC = () => {
                   </div>
                   <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl px-4 py-2 flex items-center gap-2 shadow-inner">
                     <span className="text-sm">💰</span>
-                    <span className="text-[12px] font-black text-cyan-400/80 uppercase tracking-wider">Tổng quỹ phạt thu (IC nhận):</span>
+                    <span className="text-[12px] font-black text-cyan-400/80 uppercase tracking-wider">Tổng (IC nhận):</span>
                     <span className="text-base font-extrabold text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.4)]">
                       {formatVND(playerStats.reduce((sum, p) => sum + Math.abs(p.total_penalty), 0))} điểm
                     </span>
@@ -2450,7 +2450,7 @@ const DC13Page: React.FC = () => {
                       <div>
                         <h2 className="text-lg font-black uppercase tracking-tight italic text-cyan-400">Quản Lý DC 13</h2>
                         <p className="text-[12px] text-slate-500 font-bold mt-0.5">
-                          Tổng quỹ phạt thu: <span className="text-cyan-400 font-black">{playerStats.reduce((sum, p) => sum + Math.abs(p.total_penalty), 0).toLocaleString('vi-VN')} điểm</span>
+                          Tổng : <span className="text-cyan-400 font-black">{playerStats.reduce((sum, p) => sum + Math.abs(p.total_penalty), 0).toLocaleString('vi-VN')} điểm</span>
                         </p>
                       </div>
                     </div>
@@ -2985,7 +2985,7 @@ const DC13Page: React.FC = () => {
                             </div>
                           )
                         ) : (
-                          <span className="text-xs text-emerald-400 font-bold block">🟢 Cổng nhận cược đang mở...</span>
+                          <span className="text-xs text-emerald-400 font-bold block">🟢 Cổng nhận đang mở...</span>
                         )}
                       </div>
                     </div>
@@ -3010,11 +3010,11 @@ const DC13Page: React.FC = () => {
       />
 
       {/* New Underdog Default Bet Rule Popup Modal */}
-      {showRuleModal && (
+      {/* {showRuleModal && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="absolute inset-0 bg-black/85 backdrop-blur-md" onClick={handleCloseRuleModal} />
           <div className="relative z-10 w-full max-w-lg bg-[#0e1726]/95 border border-cyan-500/35 rounded-[32px] overflow-hidden shadow-2xl p-8 text-center shadow-[0_0_50px_rgba(6,182,212,0.25)] animate-in zoom-in-95 duration-300">
-            {/* Close button x */}
+
             <button
               onClick={handleCloseRuleModal}
               className="absolute top-5 right-5 text-slate-400 hover:text-cyan-400 transition-colors text-xl p-1 rounded-full hover:bg-white/5"
@@ -3023,17 +3023,16 @@ const DC13Page: React.FC = () => {
               ✕
             </button>
 
-            {/* Glowing Megaphone Icon */}
+   
             <div className="w-16 h-16 bg-gradient-to-tr from-cyan-500/20 to-teal-500/20 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.25)]">
               📢
             </div>
 
-            {/* Title */}
+      
             <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-3">
               Thông Báo Luật Bet Mới
             </h3>
 
-            {/* Time badge */}
             <div className="inline-flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/30 rounded-full px-4 py-1.5 mb-6">
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
               <span className="text-[11px] font-black uppercase tracking-wider text-cyan-300">
@@ -3041,7 +3040,7 @@ const DC13Page: React.FC = () => {
               </span>
             </div>
 
-            {/* Rules Description */}
+         
             <div className="space-y-4 text-left bg-slate-950/40 p-5 rounded-2xl border border-white/[0.04] mb-6">
               <p className="text-sm text-slate-300 leading-relaxed font-medium">
                 Để đảm bảo tính công bằng và sự tham gia đầy đủ của toàn bộ người chơi trong giải đấu <span className="text-cyan-400 font-bold">DC13 Bet Championship</span>, Ban tổ chức áp dụng luật bổ sung sau:
@@ -3054,7 +3053,7 @@ const DC13Page: React.FC = () => {
               </div>
             </div>
 
-            {/* Action CTA Button */}
+           
             <button
               onClick={handleCloseRuleModal}
               className="w-full py-3.5 bg-gradient-to-r from-cyan-500 via-cyan-600 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-white rounded-2xl text-sm font-black uppercase tracking-wider transition-all duration-300 shadow-[0_4px_20px_rgba(6,182,212,0.4)] hover:shadow-[0_4px_25px_rgba(6,182,212,0.6)] transform hover:-translate-y-0.5 active:translate-y-0"
@@ -3063,7 +3062,7 @@ const DC13Page: React.FC = () => {
             </button>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* DC13 Bet Modal */}
       {showBetModal && betMatch && (
