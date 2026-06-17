@@ -18,6 +18,19 @@ const ResultsPage: React.FC = () => {
   const [calcPlayer, setCalcPlayer] = useState<string>('');
   const [calcSelectedMatches, setCalcSelectedMatches] = useState<Record<string, boolean>>({});
 
+  // Leaderboard Sorting States
+  const [leaderboardSortField, setLeaderboardSortField] = useState<'wins' | 'totalAmount' | 'totalProfit'>('wins');
+  const [leaderboardSortOrder, setLeaderboardSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  const handleSortLeaderboard = (field: 'wins' | 'totalAmount' | 'totalProfit') => {
+    if (leaderboardSortField === field) {
+      setLeaderboardSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setLeaderboardSortField(field);
+      setLeaderboardSortOrder('desc');
+    }
+  };
+
   const ctx = useContext(AppContext);
   const isAdmin = ctx?.isAdminAuthenticated || false;
 
@@ -199,10 +212,20 @@ const ResultsPage: React.FC = () => {
     });
 
     return Object.values(userStats).sort((a, b) => {
-      if (b.wins !== a.wins) return b.wins - a.wins;
+      const valA = a[leaderboardSortField];
+      const valB = b[leaderboardSortField];
+      
+      if (valA !== valB) {
+        return leaderboardSortOrder === 'desc' ? valB - valA : valA - valB;
+      }
+      
+      // Fallback sorting when equal
+      if (leaderboardSortField !== 'wins' && b.wins !== a.wins) {
+        return b.wins - a.wins;
+      }
       return b.totalAmount - a.totalAmount;
     });
-  }, [allBets, matches]);
+  }, [allBets, matches, leaderboardSortField, leaderboardSortOrder]);
 
   // Helper for computing refund based on lost matches in a streak
   const getRefundAmount = (losingMatches: { amount: number }[]) => {
@@ -961,12 +984,33 @@ const ResultsPage: React.FC = () => {
 
               <div className="bg-[#1a1a1a] rounded-3xl border border-white/10 overflow-hidden shadow-2xl overflow-x-auto">
                 <div className="min-w-[750px]">
-                  <div className="grid grid-cols-12 gap-4 px-8 py-5 bg-gradient-to-r from-amber-500/10 to-transparent text-[11px] font-black uppercase text-slate-400 border-b border-white/10">
+                  <div className="grid grid-cols-12 gap-4 px-8 py-5 bg-gradient-to-r from-amber-500/10 to-transparent text-[11px] font-black uppercase text-slate-400 border-b border-white/10 select-none">
                     <span className="col-span-1 text-center">Hạng</span>
                     <span className="col-span-4">Người chơi</span>
-                    <span className="col-span-2 text-right">Thắng</span>
-                    <span className="col-span-2 text-right">Tổng cược</span>
-                    <span className="col-span-3 text-right">Lời / Lãi</span>
+                    <button
+                      onClick={() => handleSortLeaderboard('wins')}
+                      className={`col-span-2 text-right font-black uppercase tracking-wider flex items-center justify-end gap-1 hover:text-white transition-colors ml-auto ${
+                        leaderboardSortField === 'wins' ? 'text-amber-400 font-black' : 'text-slate-400'
+                      }`}
+                    >
+                      Thắng {leaderboardSortField === 'wins' ? (leaderboardSortOrder === 'desc' ? '▼' : '▲') : '⇅'}
+                    </button>
+                    <button
+                      onClick={() => handleSortLeaderboard('totalAmount')}
+                      className={`col-span-2 text-right font-black uppercase tracking-wider flex items-center justify-end gap-1 hover:text-white transition-colors ml-auto ${
+                        leaderboardSortField === 'totalAmount' ? 'text-amber-400 font-black' : 'text-slate-400'
+                      }`}
+                    >
+                      Tổng cược {leaderboardSortField === 'totalAmount' ? (leaderboardSortOrder === 'desc' ? '▼' : '▲') : '⇅'}
+                    </button>
+                    <button
+                      onClick={() => handleSortLeaderboard('totalProfit')}
+                      className={`col-span-3 text-right font-black uppercase tracking-wider flex items-center justify-end gap-1 hover:text-white transition-colors ml-auto ${
+                        leaderboardSortField === 'totalProfit' ? 'text-amber-400 font-black' : 'text-slate-400'
+                      }`}
+                    >
+                      Lời / Lãi {leaderboardSortField === 'totalProfit' ? (leaderboardSortOrder === 'desc' ? '▼' : '▲') : '⇅'}
+                    </button>
                   </div>
 
                   <div className="divide-y divide-white/5">
