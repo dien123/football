@@ -220,6 +220,7 @@ const DC13Page: React.FC = () => {
   const [showBetModal, setShowBetModal] = useState(false);
   const [betMatch, setBetMatch] = useState<Match | null>(null);
   const [showRuleModal, setShowRuleModal] = useState(true);
+  const [leaderboardTab, setLeaderboardTab] = useState<'standings' | 'overview'>('standings');
 
   // Admin
   const [adminAuthed, setAdminAuthed] = useState(false);
@@ -290,7 +291,13 @@ const DC13Page: React.FC = () => {
       .from('dc13_bets')
       .select('*, dc13_profiles(full_name)')
       .order('created_at', { ascending: false });
-    if (data) setBets(data as any);
+    if (data) {
+      const filtered = data.filter((b: any) => 
+        b.user_name !== 'Lâm Mỹ Linh' && 
+        b.dc13_profiles?.full_name !== 'Lâm Mỹ Linh'
+      );
+      setBets(filtered as any);
+    }
   }, []);
 
   const fetchDC13OutrightData = useCallback(async () => {
@@ -298,7 +305,10 @@ const DC13Page: React.FC = () => {
       const { data: betsData } = await supabase
         .from('dc13_outright_bets')
         .select('*');
-      if (betsData) setOutrightBets(betsData);
+      if (betsData) {
+        const filtered = betsData.filter((b: any) => b.user_name !== 'Lâm Mỹ Linh');
+        setOutrightBets(filtered);
+      }
 
       const { data: winData } = await supabase
         .from('dc13_outright_winner')
@@ -321,7 +331,10 @@ const DC13Page: React.FC = () => {
     const { data } = await supabase
       .from('dc13_profiles')
       .select('*');
-    if (data) setProfiles(data as DC13Profile[]);
+    if (data) {
+      const filtered = data.filter((p: DC13Profile) => p.full_name !== 'Lâm Mỹ Linh');
+      setProfiles(filtered as DC13Profile[]);
+    }
   }, []);
 
   useEffect(() => {
@@ -935,7 +948,7 @@ const DC13Page: React.FC = () => {
 
   // ─── Resolved Bets with Underdog Fallback for Forgotten Bets ────────────────
   const resolvedBets = useMemo(() => {
-    const list = [...bets];
+    const list = [...bets].filter(b => b.user_name !== 'Lâm Mỹ Linh' && b.dc13_profiles?.full_name !== 'Lâm Mỹ Linh');
     
     // Threshold start time: 2026-06-15T11:00:00Z (18:00:00+07:00)
     const threshold = new Date('2026-06-15T11:00:00Z').getTime();
@@ -953,6 +966,7 @@ const DC13Page: React.FC = () => {
         
         // For each active player who forgot to bet
         profiles.forEach(profile => {
+          if (profile.full_name === 'Lâm Mỹ Linh') return; // Exclude Lâm Mỹ Linh!
           if (activePlayerIds.has(profile.id) && !bettedUserIds.has(profile.id)) {
             // Determine underdog team
             const favorite = match.dc13_favorite_team || 'teamA';
@@ -1025,6 +1039,13 @@ const DC13Page: React.FC = () => {
       return 0;
     });
   })();
+
+  const finishedMatches = useMemo(() => {
+    return matches.filter(m => 
+      m.league !== 'TIP Futsal league' && 
+      (m.dc13_status || 'scheduled') === 'finished'
+    ).sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime()); // Newest first
+  }, [matches]);
 
   // ─── Prize Predictions Calculation ──────────────────────────────────────────
   const prizeStandings = (() => {
@@ -2052,85 +2073,184 @@ const DC13Page: React.FC = () => {
                 </div>
               ) : (
                 <div className="bg-slate-950/40 border border-white/[0.06] rounded-2xl md:rounded-3xl overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.4)]">
-                  <div className="px-5 py-4 border-b border-white/5 flex items-center gap-3 bg-slate-900/20">
-                    <span className="text-lg">🏆</span>
-                    <h2 className="text-sm font-black uppercase tracking-widest text-cyan-300">Bảng Xếp Hạng DC 13</h2>
+                  <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-slate-900/20 flex-wrap gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">🏆</span>
+                      <h2 className="text-sm font-black uppercase tracking-widest text-cyan-300">Bảng Xếp Hạng DC 13</h2>
+                    </div>
+
+                    {/* Tab Navigation */}
+                    <div className="flex bg-black/40 p-1 rounded-xl border border-white/5">
+                      <button
+                        onClick={() => setLeaderboardTab('standings')}
+                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${leaderboardTab === 'standings' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                      >
+                        Bảng xếp hạng
+                      </button>
+                      <button
+                        onClick={() => setLeaderboardTab('overview')}
+                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${leaderboardTab === 'overview' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                      >
+                        Bảng tổng quan
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Desktop table */}
-                  <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="text-[11px] font-black text-slate-300 uppercase tracking-widest border-b border-white/5 bg-slate-900/10">
-                          <th className="py-3 px-5 text-left">#</th>
-                          <th className="py-3 px-5 text-left">Người chơi</th>
-                          <th className="py-3 px-5 text-center">Tổng bet</th>
-                          <th className="py-3 px-5 text-center">Thắng</th>
-                          <th className="py-3 px-5 text-center">Thua</th>
-                          <th className="py-3 px-5 text-center">Đang chờ</th>
-                          <th className="py-3 px-5 text-right">Tổng phạt</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                  {leaderboardTab === 'standings' ? (
+                    <>
+                      {/* Desktop table */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-[11px] font-black text-slate-300 uppercase tracking-widest border-b border-white/5 bg-slate-900/10">
+                              <th className="py-3 px-5 text-left">#</th>
+                              <th className="py-3 px-5 text-left">Người chơi</th>
+                              <th className="py-3 px-5 text-center">Tổng bet</th>
+                              <th className="py-3 px-5 text-center">Thắng</th>
+                              <th className="py-3 px-5 text-center">Thua</th>
+                              <th className="py-3 px-5 text-center">Đang chờ</th>
+                              <th className="py-3 px-5 text-right">Tổng phạt</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {playerStats.map((p, i) => {
+                              const isCurrentUser = p.user_id === user?.id;
+                              return (
+                                <tr key={p.user_name} className={`border-b border-white/5 transition-colors ${isCurrentUser ? 'bg-cyan-500/10 hover:bg-cyan-500/15 text-cyan-300 font-extrabold' : 'hover:bg-white/[0.03]'}`}>
+                                  <td className="py-3.5 px-5">
+                                    <span className={`w-7 h-7 inline-flex items-center justify-center rounded-lg text-[10px] font-black ${i === 0 ? 'bg-amber-500/20 text-amber-400' :
+                                      i === 1 ? 'bg-slate-400/20 text-slate-300' :
+                                        i === 2 ? 'bg-orange-500/20 text-orange-400' :
+                                          'bg-white/5 text-slate-500'
+                                      }`}>
+                                      {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+                                    </span>
+                                  </td>
+                                  <td className={`py-3.5 px-5 font-black ${isCurrentUser ? 'text-cyan-300' : 'text-white'}`}>{p.user_name} {isCurrentUser && '(Bạn)'}</td>
+                                  <td className="py-3.5 px-5 text-center font-bold text-slate-400">{p.total_bets}</td>
+                                  <td className="py-3.5 px-5 text-center font-black text-emerald-400">{p.wins}</td>
+                                  <td className="py-3.5 px-5 text-center font-black text-rose-400">{p.losses}</td>
+                                  <td className="py-3.5 px-5 text-center font-bold text-slate-500">{p.pending}</td>
+                                  <td className={`py-3.5 px-5 text-right font-black ${p.total_penalty < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+                                    {p.total_penalty === 0 ? '0 điểm' : `${p.total_penalty.toLocaleString('vi-VN')} điểm`}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Mobile cards */}
+                      <div className="md:hidden space-y-1 p-2">
                         {playerStats.map((p, i) => {
                           const isCurrentUser = p.user_id === user?.id;
                           return (
-                            <tr key={p.user_name} className={`border-b border-white/5 transition-colors ${isCurrentUser ? 'bg-cyan-500/10 hover:bg-cyan-500/15 text-cyan-300 font-extrabold' : 'hover:bg-white/[0.03]'}`}>
-                              <td className="py-3.5 px-5">
-                                <span className={`w-7 h-7 inline-flex items-center justify-center rounded-lg text-[10px] font-black ${i === 0 ? 'bg-amber-500/20 text-amber-400' :
-                                  i === 1 ? 'bg-slate-400/20 text-slate-300' :
-                                    i === 2 ? 'bg-orange-500/20 text-orange-400' :
-                                      'bg-white/5 text-slate-500'
-                                  }`}>
-                                  {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
-                                </span>
-                              </td>
-                              <td className={`py-3.5 px-5 font-black ${isCurrentUser ? 'text-cyan-300' : 'text-white'}`}>{p.user_name} {isCurrentUser && '(Bạn)'}</td>
-                              <td className="py-3.5 px-5 text-center font-bold text-slate-400">{p.total_bets}</td>
-                              <td className="py-3.5 px-5 text-center font-black text-emerald-400">{p.wins}</td>
-                              <td className="py-3.5 px-5 text-center font-black text-rose-400">{p.losses}</td>
-                              <td className="py-3.5 px-5 text-center font-bold text-slate-500">{p.pending}</td>
-                              <td className={`py-3.5 px-5 text-right font-black ${p.total_penalty < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
-                                {p.total_penalty === 0 ? '0 điểm' : `${p.total_penalty.toLocaleString('vi-VN')} điểm`}
-                              </td>
-                            </tr>
+                            <div key={p.user_name} className={`rounded-xl p-3 flex items-center gap-3 border transition-colors ${isCurrentUser ? 'bg-cyan-500/10 border-cyan-500/25' : 'bg-white/[0.02] border-transparent'}`}>
+                              <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-black shrink-0 ${i === 0 ? 'bg-amber-500/20 text-amber-400' :
+                                i === 1 ? 'bg-slate-400/20 text-slate-300' :
+                                  i === 2 ? 'bg-orange-500/20 text-orange-400' :
+                                    'bg-white/5 text-slate-500'
+                                }`}>
+                                {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-xs font-black truncate ${isCurrentUser ? 'text-cyan-300' : 'text-white'}`}>{p.user_name} {isCurrentUser && '(Bạn)'}</p>
+                                <div className="flex gap-3 mt-0.5">
+                                  <span className="text-[9px] text-emerald-400 font-bold">W:{p.wins}</span>
+                                  <span className="text-[9px] text-rose-400 font-bold">L:{p.losses}</span>
+                                  <span className="text-[9px] text-slate-500 font-bold">P:{p.pending}</span>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className={`text-sm font-black ${p.total_penalty < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+                                  {p.total_penalty === 0 ? '0 điểm' : `${p.total_penalty.toLocaleString('vi-VN')} điểm`}
+                                </p>
+                                <p className="text-[8px] text-slate-500 font-bold">{p.total_bets} trận</p>
+                              </div>
+                            </div>
                           );
                         })}
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
+                    </>
+                  ) : (
+                    /* Bảng tổng quan (Overview Matrix) */
+                    <div className="overflow-x-auto custom-scrollbar p-2">
+                      <table className="w-full text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-white/5 bg-slate-900/10">
+                            <th className="py-3 px-4 text-left font-black uppercase text-slate-400 sticky left-0 bg-[#09101b] z-20 whitespace-nowrap min-w-[180px]">Trận đấu</th>
+                            {playerStats.map(p => (
+                              <th key={p.user_id} className="py-3 px-3 text-center font-black uppercase text-cyan-300 whitespace-nowrap min-w-[90px] border-l border-white/5 bg-slate-900/10">
+                                {p.user_name.replace('_DC13', '')}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {finishedMatches.length === 0 ? (
+                            <tr>
+                              <td colSpan={playerStats.length + 1} className="py-10 text-center text-slate-500 italic">
+                                Chưa có trận đấu nào kết thúc.
+                              </td>
+                            </tr>
+                          ) : (
+                            finishedMatches.map(match => {
+                              const dateStr = new Date(match.start_time).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                              return (
+                                <tr key={match.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                                  <td className="py-3 px-4 text-left font-black text-slate-300 sticky left-0 bg-[#09101b] z-10 whitespace-nowrap min-w-[180px] border-r border-white/5">
+                                    <span className="text-[10px] text-slate-500 font-mono mr-2">{dateStr}</span>
+                                    {match.team_a_name} vs {match.team_b_name}
+                                  </td>
+                                  {playerStats.map(p => {
+                                    const bet = resolvedBets.find(b => b.user_id === p.user_id && b.match_id === match.id);
+                                    let statusText = '-';
+                                    let cellCls = 'text-slate-600 border border-transparent';
 
-                  {/* Mobile cards */}
-                  <div className="md:hidden space-y-1 p-2">
-                    {playerStats.map((p, i) => {
-                      const isCurrentUser = p.user_id === user?.id;
-                      return (
-                        <div key={p.user_name} className={`rounded-xl p-3 flex items-center gap-3 border transition-colors ${isCurrentUser ? 'bg-cyan-500/10 border-cyan-500/25' : 'bg-white/[0.02] border-transparent'}`}>
-                          <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-black shrink-0 ${i === 0 ? 'bg-amber-500/20 text-amber-400' :
-                            i === 1 ? 'bg-slate-400/20 text-slate-300' :
-                              i === 2 ? 'bg-orange-500/20 text-orange-400' :
-                                'bg-white/5 text-slate-500'
-                            }`}>
-                            {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-xs font-black truncate ${isCurrentUser ? 'text-cyan-300' : 'text-white'}`}>{p.user_name} {isCurrentUser && '(Bạn)'}</p>
-                            <div className="flex gap-3 mt-0.5">
-                              <span className="text-[9px] text-emerald-400 font-bold">W:{p.wins}</span>
-                              <span className="text-[9px] text-rose-400 font-bold">L:{p.losses}</span>
-                              <span className="text-[9px] text-slate-500 font-bold">P:{p.pending}</span>
-                            </div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className={`text-sm font-black ${p.total_penalty < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
-                              {p.total_penalty === 0 ? '0 điểm' : `${p.total_penalty.toLocaleString('vi-VN')} điểm`}
-                            </p>
-                            <p className="text-[8px] text-slate-500 font-bold">{p.total_bets} trận</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                                    if (bet) {
+                                      let effectiveResult = bet.result;
+                                      if (effectiveResult === 'pending' && match.dc13_status === 'finished') {
+                                        const diff = (match.dc13_score_a ?? 0) - (match.dc13_score_b ?? 0);
+                                        const handicap = match.dc13_handicap || 0;
+                                        const effectiveScore = diff - handicap;
+                                        if (effectiveScore > 0) {
+                                          effectiveResult = (bet.chosen_team === 'teamA' || bet.chosen_team === match.team_a_name) ? 'win' : 'loss';
+                                        } else if (effectiveScore < 0) {
+                                          effectiveResult = (bet.chosen_team === 'teamB' || bet.chosen_team === match.team_b_name) ? 'win' : 'loss';
+                                        } else {
+                                          effectiveResult = 'draw';
+                                        }
+                                      }
+
+                                      if (effectiveResult === 'win') {
+                                        statusText = 'W';
+                                        cellCls = 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 font-black rounded-lg';
+                                      } else if (effectiveResult === 'loss') {
+                                        statusText = 'L';
+                                        cellCls = 'bg-rose-500/15 text-rose-400 border border-rose-500/20 font-black rounded-lg';
+                                      } else if (effectiveResult === 'draw') {
+                                        statusText = 'D';
+                                        cellCls = 'bg-slate-800/40 text-slate-400 border border-white/5 rounded-lg';
+                                      }
+                                    }
+
+                                    return (
+                                      <td key={p.user_id} className="py-2 px-1.5 text-center border-l border-white/5">
+                                        <div className={`py-1 px-1 text-[10px] uppercase font-black tracking-wider text-center max-w-[50px] mx-auto ${cellCls}`} title={statusText === 'W' ? 'Thắng' : statusText === 'L' ? 'Thua' : statusText === 'D' ? 'Hòa' : 'Chưa đặt'}>
+                                          {statusText}
+                                        </div>
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
