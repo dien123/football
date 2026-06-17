@@ -214,11 +214,11 @@ const ResultsPage: React.FC = () => {
     return Object.values(userStats).sort((a, b) => {
       const valA = a[leaderboardSortField];
       const valB = b[leaderboardSortField];
-      
+
       if (valA !== valB) {
         return leaderboardSortOrder === 'desc' ? valB - valA : valA - valB;
       }
-      
+
       // Fallback sorting when equal
       if (leaderboardSortField !== 'wins' && b.wins !== a.wins) {
         return b.wins - a.wins;
@@ -569,15 +569,15 @@ const ResultsPage: React.FC = () => {
                 {/* Visual striking benefits badge */}
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
                   <div className="bg-[#1f1215] border border-rose-500/30 rounded-2xl px-5 py-3.5 text-center flex-1 md:flex-none shadow-lg">
-                    <p className="text-[12px] text-rose-400 font-bold uppercase tracking-wider">Thua 3 trận liên tiếp</p>
-                    <p className="text-lg font-black text-amber-400 mt-1">Hoàn 50.000</p>
-                    <p className="text-[12px] text-slate-500 font-bold mt-1">(Tổng dự đoán ≥ 300k)</p>
+                    <p className="text-[12px] text-rose-400 font-bold uppercase tracking-wider">Thua 3 lần liên tiếp</p>
+                    <p className="text-lg font-black text-amber-400 mt-1">Hoàn 50</p>
+                    <p className="text-[12px] text-slate-500 font-bold mt-1">(Tổng dự đoán ≥ 300)</p>
                   </div>
                   <div className="bg-[#2a1318] border border-rose-500/40 rounded-2xl px-5 py-3.5 text-center flex-1 md:flex-none shadow-lg relative overflow-hidden">
                     <div className="absolute -top-3 -right-3 w-8 h-8 bg-rose-500/20 rotate-45" />
-                    <p className="text-[12px] text-rose-300 font-bold uppercase tracking-wider">Thua 4 trận liên tiếp trở lên</p>
-                    <p className="text-lg font-black text-amber-300 mt-1">Hoàn 100.000</p>
-                    <p className="text-[12px] text-rose-400/75 font-bold mt-1">(Tổng dự đoán ≥ 400k)</p>
+                    <p className="text-[12px] text-rose-300 font-bold uppercase tracking-wider">Thua 4 lần liên tiếp trở lên</p>
+                    <p className="text-lg font-black text-amber-300 mt-1">Hoàn 100</p>
+                    <p className="text-[12px] text-rose-400/75 font-bold mt-1">(Tổng dự đoán ≥ 400)</p>
                   </div>
                 </div>
               </div>
@@ -585,7 +585,7 @@ const ResultsPage: React.FC = () => {
               {/* Leaderboard of Losing Streaks */}
               <div className="mt-6">
                 <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <span>📉</span> Thành viên đang trong chuỗi thua (từ 3 trận trở lên)
+                  <span>📉</span> Thành viên đang trong chuỗi thua (từ 3 lần trở lên)
                 </p>
 
                 {userStreaks.length > 0 ? (
@@ -807,18 +807,16 @@ const ResultsPage: React.FC = () => {
                           <div
                             key={detail.matchId}
                             onClick={() => handleToggleMatch(detail.matchId)}
-                            className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                              isChecked
-                                ? 'bg-cyan-950/10 border-cyan-500/30'
-                                : 'bg-black/25 border-white/5 opacity-60 hover:opacity-85'
-                            }`}
+                            className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${isChecked
+                              ? 'bg-cyan-950/10 border-cyan-500/30'
+                              : 'bg-black/25 border-white/5 opacity-60 hover:opacity-85'
+                              }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
-                                isChecked
-                                  ? 'bg-cyan-500 border-cyan-400 text-black'
-                                  : 'bg-transparent border-slate-600'
-                              }`}>
+                              <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all ${isChecked
+                                ? 'bg-cyan-500 border-cyan-400 text-black'
+                                : 'bg-transparent border-slate-600'
+                                }`}>
                                 {isChecked && <span className="font-bold text-xs">✓</span>}
                               </div>
                               <div className="min-w-0">
@@ -868,7 +866,7 @@ const ResultsPage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                   <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02]">
                     <p className="text-2xl md:text-3xl font-black text-white">{results.betResults.length}</p>
-                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Tổng lượt cược</p>
+                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Tổng lượt</p>
                   </div>
                   <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02]">
                     <p className="text-2xl md:text-3xl font-black text-emerald-400">{results.totalWinners}</p>
@@ -878,14 +876,14 @@ const ResultsPage: React.FC = () => {
                     <p className={`text-xl md:text-2xl font-black font-mono ${results.totalPayout >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {results.totalPayout > 0 ? '+' : ''}{formatVND(results.totalPayout)}
                     </p>
-                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Lời/Lãi Khách</p>
+                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Thặng dư</p>
                   </div>
                   <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02] relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-rose-500 to-amber-500" />
                     <p className={`text-xl md:text-2xl font-black font-mono ${houseBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {houseBalance > 0 ? '+' : ''}{formatVND(houseBalance)}
                     </p>
-                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Tổng Quỹ Thu Chi</p>
+                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Tổng điểm</p>
                     {selectedMatchId === 'all' && totalRefunded > 0 && (
                       <p className="text-[8px] text-slate-600 font-bold mt-0.5 uppercase">
                         (Đã hoàn: {formatVND(totalRefunded)})
@@ -965,7 +963,7 @@ const ResultsPage: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <span>Xem tất cả ({results.betResults.length} lượt cược)</span>
+                      <span>Xem tất cả ({results.betResults.length} lượt )</span>
                       <span>▼</span>
                     </>
                   )}
@@ -989,27 +987,24 @@ const ResultsPage: React.FC = () => {
                     <span className="col-span-4">Người chơi</span>
                     <button
                       onClick={() => handleSortLeaderboard('wins')}
-                      className={`col-span-2 text-right font-black uppercase tracking-wider flex items-center justify-end gap-1 hover:text-white transition-colors ml-auto ${
-                        leaderboardSortField === 'wins' ? 'text-amber-400 font-black' : 'text-slate-400'
-                      }`}
+                      className={`col-span-2 text-right font-black uppercase tracking-wider flex items-center justify-end gap-1 hover:text-white transition-colors ml-auto ${leaderboardSortField === 'wins' ? 'text-amber-400 font-black' : 'text-slate-400'
+                        }`}
                     >
                       Thắng {leaderboardSortField === 'wins' ? (leaderboardSortOrder === 'desc' ? '▼' : '▲') : '⇅'}
                     </button>
                     <button
                       onClick={() => handleSortLeaderboard('totalAmount')}
-                      className={`col-span-2 text-right font-black uppercase tracking-wider flex items-center justify-end gap-1 hover:text-white transition-colors ml-auto ${
-                        leaderboardSortField === 'totalAmount' ? 'text-amber-400 font-black' : 'text-slate-400'
-                      }`}
+                      className={`col-span-2 text-right font-black uppercase tracking-wider flex items-center justify-end gap-1 hover:text-white transition-colors ml-auto ${leaderboardSortField === 'totalAmount' ? 'text-amber-400 font-black' : 'text-slate-400'
+                        }`}
                     >
-                      Tổng cược {leaderboardSortField === 'totalAmount' ? (leaderboardSortOrder === 'desc' ? '▼' : '▲') : '⇅'}
+                      Tổng {leaderboardSortField === 'totalAmount' ? (leaderboardSortOrder === 'desc' ? '▼' : '▲') : '⇅'}
                     </button>
                     <button
                       onClick={() => handleSortLeaderboard('totalProfit')}
-                      className={`col-span-3 text-right font-black uppercase tracking-wider flex items-center justify-end gap-1 hover:text-white transition-colors ml-auto ${
-                        leaderboardSortField === 'totalProfit' ? 'text-amber-400 font-black' : 'text-slate-400'
-                      }`}
+                      className={`col-span-3 text-right font-black uppercase tracking-wider flex items-center justify-end gap-1 hover:text-white transition-colors ml-auto ${leaderboardSortField === 'totalProfit' ? 'text-amber-400 font-black' : 'text-slate-400'
+                        }`}
                     >
-                      Lời / Lãi {leaderboardSortField === 'totalProfit' ? (leaderboardSortOrder === 'desc' ? '▼' : '▲') : '⇅'}
+                      Thặng dư {leaderboardSortField === 'totalProfit' ? (leaderboardSortOrder === 'desc' ? '▼' : '▲') : '⇅'}
                     </button>
                   </div>
 
@@ -1160,7 +1155,7 @@ const ResultsPage: React.FC = () => {
                   <div className="text-left">
                     <p className="text-[9px] text-amber-500 font-black uppercase tracking-wider">Chưa đủ tổng cược</p>
                     <p className="text-[10px] font-bold text-slate-400">
-                      Tổng cược: {formatVND(selectedLossUser.currentTotalAmount)} / {formatVND(selectedLossUser.currentStreak === 3 ? 300000 : 400000)}
+                      Tổng : {formatVND(selectedLossUser.currentTotalAmount)} / {formatVND(selectedLossUser.currentStreak === 3 ? 300000 : 400000)}
                     </p>
                   </div>
                 ) : (

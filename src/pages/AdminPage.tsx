@@ -18,12 +18,19 @@ const AdminPage: React.FC = () => {
   const [refunds, setRefunds] = useState<any[]>([]);
 
   const [contributedInput, setContributedInput] = useState(() => {
-    return localStorage.getItem('admin_contributed_fund') || '';
+    const saved = localStorage.getItem('admin_contributed_fund') || '';
+    const num = parseInt(saved.replace(/\D/g, ''), 10);
+    if (!isNaN(num) && num >= 10000) {
+      const converted = (num / 1000).toLocaleString('vi-VN');
+      localStorage.setItem('admin_contributed_fund', converted);
+      return converted;
+    }
+    return saved;
   });
 
   const contributedValue = useMemo(() => {
     const num = parseInt(contributedInput.replace(/\D/g, ''), 10);
-    return isNaN(num) ? 0 : num;
+    return isNaN(num) ? 0 : num * 1000;
   }, [contributedInput]);
 
   const handleContributedChange = (e: React.ChangeEvent<HTMLInputElement>) => {

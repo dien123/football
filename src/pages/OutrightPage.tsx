@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from 'react';
 import { supabase } from '../lib/supabase';
 import { AppContext } from '../App';
 import AuthModal from '../components/AuthModal';
+import { formatVND } from '../utils/format';
 
 const TIERS = [
   {
@@ -166,9 +167,9 @@ export default function OutrightPage() {
       if (!ctx?.session?.user) setAuthModalOpen(true);
       return;
     }
-    const betVal = Number(amount);
-    if (!betVal || betVal < 20000) {
-      alert('Số tiền tối thiểu là 20.000');
+    const betVal = Number(amount) * 1000;
+    if (!amount || Number(amount) < 20) {
+      alert('Số tiền tối thiểu là 20');
       return;
     }
     setSubmitting(true);
@@ -209,9 +210,9 @@ export default function OutrightPage() {
 
   const handleUpdateOutrightBet = async () => {
     if (!editingBet) return;
-    const betVal = Number(editAmount);
-    if (!betVal || betVal < 20000) {
-      alert('Số tiền tối thiểu là 20.000');
+    const betVal = Number(editAmount) * 1000;
+    if (!editAmount || Number(editAmount) < 20) {
+      alert('Số tiền tối thiểu là 20');
       return;
     }
     setSubmitting(true);
@@ -236,7 +237,7 @@ export default function OutrightPage() {
   const winnerOdds = winner ? getTeamOdds(winner) : 1.0;
 
   const getEstPrize = (teamName: string, betAmount: number | '') => {
-    const numAmount = Number(betAmount) || 0;
+    const numAmount = (Number(betAmount) || 0) * 1000;
     const myExistingBet = bets
       .filter(b => b.team_name === teamName && b.user_id === ctx?.session?.user?.id)
       .reduce((sum, b) => sum + b.amount, 0);
@@ -295,7 +296,7 @@ export default function OutrightPage() {
           <div className="mt-8 flex items-center justify-center gap-8">
             <div className="text-center">
               <p className="text-[14px] font-black text-slate-500 uppercase mb-1">Tổng quỹ cược</p>
-              <p className="text-5xl font-black text-emerald-400 font-mono">{totalPool.toLocaleString('vi-VN')}</p>
+              <p className="text-5xl font-black text-emerald-400 font-mono">{formatVND(totalPool)}</p>
             </div>
             <div className="w-[1px] h-10 bg-white/10" />
             <div className="text-center">
@@ -400,7 +401,7 @@ export default function OutrightPage() {
                                 <span className={`w-2.5 h-2.5 rounded-full ${currentConfig.color} ${currentConfig.animate}`} />
                                 <span className="font-black text-white">{tierName} (Odds {odds.toFixed(1)})</span>
                               </div>
-                              <span className="text-emerald-400 font-black text-[13px]">Nhận về: {Math.round(estReturn).toLocaleString('vi-VN')}</span>
+                              <span className="text-emerald-400 font-black text-[13px]">Nhận về: {formatVND(Math.round(estReturn))}</span>
                             </div>
                           );
                         })}
@@ -556,8 +557,8 @@ export default function OutrightPage() {
 
             <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-wider text-slate-400 font-mono">
               <div className="flex items-center gap-2 bg-black/40 border border-white/5 px-4 py-2 rounded-2xl">
-                <span>Tổng cược:</span>
-                <span className="text-emerald-400 font-black">{totalPool.toLocaleString('vi-VN')}₫</span>
+                <span>Tổng:</span>
+                <span className="text-emerald-400 font-black">{formatVND(totalPool)}₫</span>
               </div>
             </div>
           </div>
@@ -604,7 +605,7 @@ export default function OutrightPage() {
                                       <button
                                         onClick={() => {
                                           setEditingBet(b);
-                                          setEditAmount(b.amount);
+                                          setEditAmount(b.amount / 1000);
                                         }}
                                         className="text-amber-500 hover:text-amber-400 p-1 bg-amber-500/10 rounded transition-colors text-[10px] cursor-pointer"
                                         title="Sửa lượt dự đoán"
@@ -647,7 +648,7 @@ export default function OutrightPage() {
                             </td>
                             <td className="py-4 text-right">
                               <span className="font-black text-emerald-400 font-mono text-[13px]">
-                                {b.amount.toLocaleString('vi-VN')}₫
+                                {formatVND(b.amount)}
                               </span>
                             </td>
                             <td className="py-4 text-center font-mono font-black text-indigo-400">
@@ -655,7 +656,7 @@ export default function OutrightPage() {
                             </td>
                             <td className="py-4 text-right">
                               <span className="font-black text-amber-400 font-mono text-[13px]">
-                                {Math.round(estPrize).toLocaleString('vi-VN')}₫
+                                {formatVND(Math.round(estPrize))}
                               </span>
                             </td>
                             <td className="py-4 pr-4 text-right text-slate-400 font-mono text-[11px]">
@@ -723,8 +724,7 @@ export default function OutrightPage() {
                     Tỷ lệ Odds áp dụng: <span className="text-indigo-400 font-mono">x{getTeamOdds(bettingOn.name).toFixed(1)}</span>
                   </div>
                   <div className="flex items-baseline gap-3 justify-center mb-4">
-                    <span className="text-5xl font-black text-emerald-400 font-mono">{Math.round(getEstPrize(bettingOn.name, amount)).toLocaleString('vi-VN')}</span>
-                    <span className="text-2xl text-emerald-600/50 font-black"></span>
+                    <span className="text-5xl font-black text-emerald-400 font-mono">{formatVND(Math.round(getEstPrize(bettingOn.name, amount)))}</span>
                   </div>
                 </div>
 
@@ -760,7 +760,7 @@ export default function OutrightPage() {
                             <span className="font-bold text-slate-300 group-hover:text-indigo-400 transition-colors uppercase">{b.user_name}</span>
                           </td>
                           <td className="py-4 text-right">
-                            <span className="font-black text-emerald-400 font-mono">{b.amount.toLocaleString('vi-VN')}</span>
+                            <span className="font-black text-emerald-400 font-mono">{formatVND(b.amount)}</span>
                           </td>
                         </tr>
                       ))
@@ -811,27 +811,27 @@ export default function OutrightPage() {
                   <div className="flex justify-between mb-3">
                     <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest">Số tiền cược mới</label>
                     <span className="text-[11px] font-bold text-slate-400">
-                      Cũ: {editingBet.amount.toLocaleString('vi-VN')}
+                      Cũ: {formatVND(editingBet.amount)}
                     </span>
                   </div>
                   <input
                     type="number"
                     value={editAmount}
                     onChange={(e) => setEditAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="Nhập số tiền (tối thiểu 20.000)..."
+                    placeholder="Nhập số tiền (tối thiểu 20)..."
                     className="w-full bg-black border border-white/10 rounded-3xl px-8 py-5 text-xl font-black text-center text-white focus:border-amber-500 transition-all font-mono"
                   />
-                  {editAmount !== '' && Number(editAmount) > 0 && Number(editAmount) < 20000 && (
-                    <p className="text-rose-400 text-[11px] font-bold mt-2 text-center">⚠ Mức cược tối thiểu là 20.000</p>
+                  {editAmount !== '' && Number(editAmount) > 0 && Number(editAmount) < 20 && (
+                    <p className="text-rose-400 text-[11px] font-bold mt-2 text-center">⚠ Mức cược tối thiểu là 20</p>
                   )}
                   <div className="grid grid-cols-5 gap-3 mt-4">
-                    {[20000, 50000, 100000, 200000, 500000].map(val => (
+                    {[20, 50, 100, 200, 500].map(val => (
                       <button
                         key={val}
                         onClick={() => setEditAmount(val)}
                         className={`py-3 rounded-2xl text-[11px] font-black transition-all border ${editAmount === val ? 'bg-amber-600 border-amber-500 text-white' : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'}`}
                       >
-                        {val / 1000}K
+                        {val}K
                       </button>
                     ))}
                   </div>
@@ -844,15 +844,14 @@ export default function OutrightPage() {
                   </div>
                   <div className="flex items-baseline gap-3 justify-center mb-2">
                     <span className="text-4xl font-black text-emerald-400 font-mono">
-                      {Math.round((Number(editAmount) || 0) * getTeamOdds(editingBet.team_name)).toLocaleString('vi-VN')}
+                      {formatVND(Math.round((Number(editAmount) || 0) * 1000 * getTeamOdds(editingBet.team_name)))}
                     </span>
-                    <span className="text-xl text-emerald-600/50 font-black">đ</span>
                   </div>
                 </div>
 
                 <div className="flex gap-4">
                   <button
-                    disabled={submitting || !editAmount || Number(editAmount) < 20000}
+                    disabled={submitting || !editAmount || Number(editAmount) < 20}
                     onClick={handleUpdateOutrightBet}
                     className="flex-[2] bg-amber-600 hover:bg-amber-500 text-white font-black py-5 rounded-[30px] transition-all uppercase tracking-widest active:scale-95 text-sm disabled:opacity-30 disabled:cursor-not-allowed"
                   >

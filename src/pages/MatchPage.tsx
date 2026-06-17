@@ -7,6 +7,7 @@ import MatchDetail from '../components/MatchDetail';
 import AuthModal from '../components/AuthModal';
 import { AppContext } from '../App';
 import { isMatchBettingLocked } from '../utils/betLogic';
+import { formatVND } from '../utils/format';
 
 const MatchPage: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -21,14 +22,14 @@ const MatchPage: React.FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [editingBet, setEditingBet] = useState<any | null>(null);
   const [betListModalOpen, setBetListModalOpen] = useState(false); // State for the new bet list modal
-  const [showNotice, setShowNotice] = useState(() => {
-    return localStorage.getItem('hide_realname_notice') !== 'true';
-  });
+  // const [showNotice, setShowNotice] = useState(() => {
+  //   return localStorage.getItem('hide_realname_notice') !== 'true';
+  // });
 
-  const handleDismissNotice = () => {
-    localStorage.setItem('hide_realname_notice', 'true');
-    setShowNotice(false);
-  };
+  // const handleDismissNotice = () => {
+  //   localStorage.setItem('hide_realname_notice', 'true');
+  //   setShowNotice(false);
+  // };
 
   const scrollerRef = useRef<HTMLDivElement>(null);
 
@@ -410,9 +411,9 @@ const MatchPage: React.FC = () => {
       />
 
       {/* Notice Popup */}
-      {showNotice && (
+      {/* {showNotice && (
         <div className="fixed bottom-6 right-6 z-[9999] max-w-sm w-[calc(100%-2rem)] mx-4 sm:mx-0 bg-[#1e1115]/95 backdrop-blur-xl border border-rose-500/30 rounded-2xl p-5 shadow-[0_0_30px_rgba(244,63,94,0.2)] animate-in fade-in slide-in-from-bottom-5 duration-300">
-          {/* Flashing Red Dot in Top Right */}
+
           <div className="absolute top-4 right-10 flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
@@ -433,7 +434,7 @@ const MatchPage: React.FC = () => {
                 Thông báo quan trọng
               </h4>
               <p className="text-xs font-semibold text-slate-200 leading-relaxed">
-                Vui lòng tạo acc với <span className="text-rose-400 font-bold">real name</span>, những account mới tạo với tên không rõ ràng vui lòng inform cho Admin, nếu không lượt cược từ những account đó sẽ bị xóa, bất kể thắng/thua.
+                Vui lòng tạo acc với <span className="text-rose-400 font-bold">real name</span>, những account mới tạo với tên không rõ ràng vui lòng inform cho Admin, nếu không lượt dự đoán từ những account đó sẽ bị xóa, bất kể thắng/thua.
               </p>
             </div>
           </div>
@@ -447,7 +448,7 @@ const MatchPage: React.FC = () => {
             </button>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
@@ -548,7 +549,7 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
                     <div className="text-center md:text-right">
                       <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Tổng giá trị</p>
                       <p className="text-2xl font-black text-emerald-400">
-                        {bets.reduce((sum, b) => sum + b.amount, 0).toLocaleString("vi-VN")}
+                        {formatVND(bets.reduce((sum, b) => sum + b.amount, 0))}
                       </p>
                     </div>
                     <div className="w-[1px] h-8 bg-white/10" />
@@ -563,10 +564,10 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
                 <div className="space-y-2">
                   <div className="flex justify-between text-[11px] font-black uppercase tracking-wider">
                     <span className="text-indigo-400">
-                      {match.team_a_name}: {bets.filter(b => b.option === match.team_a_name || b.option === "teamA").reduce((sum, b) => sum + b.amount, 0).toLocaleString("vi-VN")} ({bets.reduce((sum, b) => sum + b.amount, 0) > 0 ? Math.round((bets.filter(b => b.option === match.team_a_name || b.option === "teamA").reduce((sum, b) => sum + b.amount, 0) / bets.reduce((sum, b) => sum + b.amount, 0)) * 100) : 0}%)
+                      {match.team_a_name}: {formatVND(bets.filter(b => b.option === match.team_a_name || b.option === "teamA").reduce((sum, b) => sum + b.amount, 0))} ({bets.reduce((sum, b) => sum + b.amount, 0) > 0 ? Math.round((bets.filter(b => b.option === match.team_a_name || b.option === "teamA").reduce((sum, b) => sum + b.amount, 0) / bets.reduce((sum, b) => sum + b.amount, 0)) * 100) : 0}%)
                     </span>
                     <span className="text-rose-400">
-                      {match.team_b_name}: {bets.filter(b => b.option === match.team_b_name || b.option === "teamB").reduce((sum, b) => sum + b.amount, 0).toLocaleString("vi-VN")} ({bets.reduce((sum, b) => sum + b.amount, 0) > 0 ? Math.round((bets.filter(b => b.option === match.team_b_name || b.option === "teamB").reduce((sum, b) => sum + b.amount, 0) / bets.reduce((sum, b) => sum + b.amount, 0)) * 100) : 0}%)
+                      {match.team_b_name}: {formatVND(bets.filter(b => b.option === match.team_b_name || b.option === "teamB").reduce((sum, b) => sum + b.amount, 0))} ({bets.reduce((sum, b) => sum + b.amount, 0) > 0 ? Math.round((bets.filter(b => b.option === match.team_b_name || b.option === "teamB").reduce((sum, b) => sum + b.amount, 0) / bets.reduce((sum, b) => sum + b.amount, 0)) * 100) : 0}%)
                     </span>
                   </div>
                   <div className="h-3 w-full bg-slate-950/80 rounded-full overflow-hidden flex p-0.5 border border-white/5">

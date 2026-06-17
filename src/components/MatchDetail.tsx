@@ -373,7 +373,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
               </div>
               <div className="w-[1px] h-8 bg-white/10" />
               <div className="text-center md:text-left">
-                <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Tổng lượt cược</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Tổng lượt</p>
                 <p className="text-2xl font-black text-indigo-400">{bets.length} lượt</p>
               </div>
             </div>

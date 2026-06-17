@@ -47,8 +47,8 @@ const BetModal: React.FC<BetModalProps> = ({
     if (isOpen) {
       setCurrentOption(option);
       setUserName(initialUserName || '');
-      setAmountRaw(initialAmount?.toString() || '');
-      setAmountDisplay(initialAmount ? initialAmount.toLocaleString('vi-VN') : '');
+      setAmountRaw(initialAmount ? (initialAmount / 1000).toString() : '');
+      setAmountDisplay(initialAmount ? (initialAmount / 1000).toLocaleString('vi-VN') : '');
       setErrors({});
 
       if (!initialUserName) {
@@ -63,8 +63,8 @@ const BetModal: React.FC<BetModalProps> = ({
     const newErrors: { userName?: string; amount?: string } = {};
     if (!userName.trim()) newErrors.userName = 'Vui lòng nhập tên người dùng.';
     const amount = parseVND(amountRaw);
-    if (!amountRaw || isNaN(amount) || amount < 50000) {
-      newErrors.amount = 'Số tiền phải là số nguyên tối thiểu 50.000.';
+    if (!amountRaw || isNaN(amount) || amount < 50) {
+      newErrors.amount = 'Số tiền phải là số nguyên tối thiểu 50.';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -79,7 +79,7 @@ const BetModal: React.FC<BetModalProps> = ({
 
   const handleSave = () => {
     if (!validate()) return;
-    onSave(userName.trim(), parseVND(amountRaw), currentOption);
+    onSave(userName.trim(), parseVND(amountRaw) * 1000, currentOption);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -202,7 +202,7 @@ const BetModal: React.FC<BetModalProps> = ({
               type="text"
               value={amountDisplay}
               onChange={handleAmountChange}
-              placeholder="Tối thiểu 50.000"
+              placeholder="Tối thiểu 50"
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none transition-colors"
             />
             {errors.amount && <p className="text-rose-400 text-[10px] font-bold mt-2">⚠️ {errors.amount}</p>}

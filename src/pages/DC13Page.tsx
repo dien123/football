@@ -3,6 +3,7 @@ import { Match, DC13Bet, DC13Profile } from '../types';
 import { supabase } from '../lib/supabase';
 import { AppContext } from '../App';
 import DC13AuthModal from '../components/DC13AuthModal';
+import { formatVND } from '../utils/format';
 
 const PENALTY_AMOUNT = 5000;
 const ADMIN_PIN = 'DC13123';
@@ -292,8 +293,8 @@ const DC13Page: React.FC = () => {
       .select('*, dc13_profiles(full_name)')
       .order('created_at', { ascending: false });
     if (data) {
-      const filtered = data.filter((b: any) => 
-        b.user_name !== 'Lâm Mỹ Linh' && 
+      const filtered = data.filter((b: any) =>
+        b.user_name !== 'Lâm Mỹ Linh' &&
         b.dc13_profiles?.full_name !== 'Lâm Mỹ Linh'
       );
       setBets(filtered as any);
@@ -443,9 +444,9 @@ const DC13Page: React.FC = () => {
 
   const handleUpdateDC13OutrightBet = async () => {
     if (!editingOutrightBet) return;
-    const betVal = Number(editOutrightAmount);
-    if (!betVal || betVal < 20000) {
-      alert('Số tiền tối thiểu là 20.000đ');
+    const betVal = Number(editOutrightAmount) * 1000;
+    if (!editOutrightAmount || Number(editOutrightAmount) < 20) {
+      alert('Số tiền tối thiểu là 20đ');
       return;
     }
     setOutrightSubmitting(true);
@@ -938,7 +939,7 @@ const DC13Page: React.FC = () => {
     const scoreA = match.dc13_score_a ?? 0;
     const scoreB = match.dc13_score_b ?? 0;
     if (status !== 'finished') return null;
-    
+
     const handicap = match.dc13_handicap || 0;
     const effectiveScore = (scoreA - scoreB) - handicap;
     if (effectiveScore > 0) return 'teamA';
@@ -949,10 +950,10 @@ const DC13Page: React.FC = () => {
   // ─── Resolved Bets with Underdog Fallback for Forgotten Bets ────────────────
   const resolvedBets = useMemo(() => {
     const list = [...bets].filter(b => b.user_name !== 'Lâm Mỹ Linh' && b.dc13_profiles?.full_name !== 'Lâm Mỹ Linh');
-    
+
     // Threshold start time: 2026-06-15T11:00:00Z (18:00:00+07:00)
     const threshold = new Date('2026-06-15T11:00:00Z').getTime();
-    
+
     // Compile active player user_ids who have ever placed a bet in DC13
     const activePlayerIds = new Set(bets.map(b => b.user_id));
     matches.forEach(match => {
@@ -963,7 +964,7 @@ const DC13Page: React.FC = () => {
       if (isDC13BettingLocked(match) && match.dc13_handicap_set && isWithin30MinsOrStarted && matchStartTime >= threshold) {
         // Find who has bet on this match
         const bettedUserIds = new Set(bets.filter(b => b.match_id === match.id).map(b => b.user_id));
-        
+
         // For each active player who forgot to bet
         profiles.forEach(profile => {
           if (profile.full_name === 'Lâm Mỹ Linh') return; // Exclude Lâm Mỹ Linh!
@@ -971,7 +972,7 @@ const DC13Page: React.FC = () => {
             // Determine underdog team
             const favorite = match.dc13_favorite_team || 'teamA';
             const underdogTeamName = favorite === 'teamA' ? match.team_b_name : match.team_a_name;
-            
+
             // Add virtual bet
             list.push({
               id: `virtual-${match.id}-${profile.id}`,
@@ -987,7 +988,7 @@ const DC13Page: React.FC = () => {
         });
       }
     });
-    
+
     return list;
   }, [bets, profiles, matches]);
 
@@ -1066,8 +1067,8 @@ const DC13Page: React.FC = () => {
   }, [leaderboardTab, playerStats]);
 
   const finishedMatches = useMemo(() => {
-    return matches.filter(m => 
-      m.league !== 'TIP Futsal league' && 
+    return matches.filter(m =>
+      m.league !== 'TIP Futsal league' &&
       (m.dc13_status || 'scheduled') === 'finished'
     ).sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime()); // Newest first
   }, [matches]);
@@ -1233,7 +1234,7 @@ const DC13Page: React.FC = () => {
                   </div>
                   <div className="bg-slate-950/40 px-4 py-2 rounded-2xl border border-white/[0.03]">
                     <p className="text-xl font-extrabold text-rose-400 drop-shadow-[0_0_8px_rgba(251,113,133,0.4)]">
-                      {(-myBetsWithResult.filter(b => b.effectiveResult === 'loss').length * PENALTY_AMOUNT).toLocaleString('vi-VN')} điểm
+                      {formatVND(-myBetsWithResult.filter(b => b.effectiveResult === 'loss').length * PENALTY_AMOUNT)} điểm
                     </p>
                     <p className="text-[10px] font-black text-slate-500 uppercase mt-0.5 tracking-wider">Tổng phạt</p>
                   </div>
@@ -1453,7 +1454,7 @@ const DC13Page: React.FC = () => {
 
                             <div className="flex items-center gap-4 font-mono sm:justify-end">
                               <div>
-                                <p className="text-[8px] font-black text-slate-500 uppercase mb-0.5 tracking-wider font-sans">Tổng lượt cược</p>
+                                <p className="text-[8px] font-black text-slate-500 uppercase mb-0.5 tracking-wider font-sans">Tổng lượt</p>
                                 <p className="text-xs font-black text-indigo-400">{(teamABets + teamBBets)} lượt</p>
                               </div>
                             </div>
@@ -1510,7 +1511,7 @@ const DC13Page: React.FC = () => {
                                   Bạn chọn: <span className="font-black">{myBet.chosen_team === 'teamA' ? match.team_a_name : myBet.chosen_team === 'teamB' ? match.team_b_name : myBet.chosen_team}</span>
                                   {myBet.isVirtual && <span className="text-[10px] text-amber-500 font-extrabold uppercase ml-1">(Mặc định)</span>}
                                   {effRes === 'win' && ' — ✅ THẮNG (0 điểm)'}
-                                  {effRes === 'loss' && ` — ❌ THUA (-${PENALTY_AMOUNT.toLocaleString('vi-VN')} điểm)`}
+                                  {effRes === 'loss' && ` — ❌ THUA (-${formatVND(PENALTY_AMOUNT)} điểm)`}
                                   {effRes === 'draw' && ' — 🤝 HÒA (0 điểm)'}
                                   {effRes === 'pending' && ' — ⏳ Đang chờ kết quả'}
                                 </div>
@@ -1685,10 +1686,10 @@ const DC13Page: React.FC = () => {
                   <div>
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Tổng quỹ dự đoán vô địch</span>
                     <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-400">
-                      {totalOutrightPool.toLocaleString('vi-VN')} điểm
+                      {formatVND(totalOutrightPool)} điểm
                     </span>
                     <span className="block text-[10px] text-slate-500 mt-1">
-                      Quỹ chia (thua): {netOutrightPool.toLocaleString('vi-VN')} điểm
+                      Quỹ chia (thua): {formatVND(netOutrightPool)} điểm
                     </span>
                   </div>
                   <div className="text-3xl">💰</div>
@@ -1699,7 +1700,7 @@ const DC13Page: React.FC = () => {
                   <div>
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Bạn đã dự đoán vô địch</span>
                     <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">
-                      {myOutrightBets.reduce((sum, b) => sum + b.amount, 0).toLocaleString('vi-VN')} điểm
+                      {formatVND(myOutrightBets.reduce((sum, b) => sum + b.amount, 0))} điểm
                     </span>
                   </div>
                   <div className="text-3xl">🎟️</div>
@@ -1876,7 +1877,7 @@ const DC13Page: React.FC = () => {
                             <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Đã dự đoán</span>
                           )}
                           <span className="block text-[11px] font-black text-cyan-400">
-                            {teamTotalBet > 0 ? `${(teamTotalBet).toLocaleString('vi-VN')} điểm` : '0 điểm'}
+                            {teamTotalBet > 0 ? `${formatVND(teamTotalBet)} điểm` : '0 điểm'}
                           </span>
                         </div>
                       </button>
@@ -1974,15 +1975,15 @@ const DC13Page: React.FC = () => {
                                 </div>
                               </td>
                               <td className="py-4 px-4 text-right font-mono font-bold text-slate-300">
-                                {bet.amount.toLocaleString('vi-VN')} điểm
+                                {formatVND(bet.amount)} điểm
                               </td>
                               <td className="py-4 px-4 text-right font-mono">
                                 <span className={statusColor}>
-                                  {estWinnings >= 0 ? '+' : ''}{estWinnings.toLocaleString('vi-VN')} điểm
+                                  {estWinnings >= 0 ? '+' : ''}{formatVND(estWinnings)} điểm
                                 </span>
                               </td>
                               <td className="py-4 px-4 text-right font-mono font-black text-emerald-400">
-                                {estTotal.toLocaleString('vi-VN')} điểm
+                                {formatVND(estTotal)} điểm
                               </td>
                               <td className="py-4 px-6 text-right">
                                 {(isOwnBet || adminAuthed) && !isOutrightLocked && (
@@ -2030,7 +2031,7 @@ const DC13Page: React.FC = () => {
                     <span className="text-sm">💰</span>
                     <span className="text-[12px] font-black text-cyan-400/80 uppercase tracking-wider">Tổng quỹ phạt thu (IC nhận):</span>
                     <span className="text-base font-extrabold text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.4)]">
-                      {playerStats.reduce((sum, p) => sum + Math.abs(p.total_penalty), 0).toLocaleString('vi-VN')} điểm
+                      {formatVND(playerStats.reduce((sum, p) => sum + Math.abs(p.total_penalty), 0))} điểm
                     </span>
                   </div>
                 </div>
@@ -2039,7 +2040,7 @@ const DC13Page: React.FC = () => {
                   {/* Hạng Nhất */}
                   <div className="bg-gradient-to-b from-amber-500/15 via-amber-600/5 to-slate-950/20 border border-amber-500/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(245,158,11,0.08)] hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
-                      <p className="text-[11px] font-black text-amber-400/80 uppercase tracking-wider flex items-center gap-1.5">🥇 GIẢI NHẤT (300K điểm)</p>
+                      <p className="text-[11px] font-black text-amber-400/80 uppercase tracking-wider flex items-center gap-1.5">🥇 GIẢI NHẤT (300 điểm)</p>
                       <p className="text-sm font-black text-white mt-1.5 tracking-wide">
                         {prizeStandings.first ? prizeStandings.first.user_name : 'Chưa có'}
                       </p>
@@ -2052,7 +2053,7 @@ const DC13Page: React.FC = () => {
                   {/* Hạng Nhì */}
                   <div className="bg-gradient-to-b from-slate-300/15 via-slate-400/5 to-slate-950/20 border border-slate-400/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(148,163,184,0.08)] hover:border-slate-300 hover:shadow-[0_0_30px_rgba(148,163,184,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
-                      <p className="text-[11px] font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">🥈 GIẢI NHÌ (200K điểm)</p>
+                      <p className="text-[11px] font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">🥈 GIẢI NHÌ (200 điểm)</p>
                       <p className="text-sm font-black text-white mt-1.5 tracking-wide">
                         {prizeStandings.second ? prizeStandings.second.user_name : 'Chưa có'}
                       </p>
@@ -2065,7 +2066,7 @@ const DC13Page: React.FC = () => {
                   {/* Hạng Ba */}
                   <div className="bg-gradient-to-b from-amber-850/20 via-amber-900/5 to-slate-950/20 border border-amber-900/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(120,53,4,0.08)] hover:border-amber-700 hover:shadow-[0_0_30px_rgba(120,53,4,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
-                      <p className="text-[11px] font-black text-amber-600 uppercase tracking-wider flex items-center gap-1.5">🥉 GIẢI BA (100K điểm)</p>
+                      <p className="text-[11px] font-black text-amber-600 uppercase tracking-wider flex items-center gap-1.5">🥉 GIẢI BA (100 điểm)</p>
                       <p className="text-sm font-black text-white mt-1.5 tracking-wide">
                         {prizeStandings.third ? prizeStandings.third.user_name : 'Chưa có'}
                       </p>
@@ -2156,7 +2157,7 @@ const DC13Page: React.FC = () => {
                                 <td className="py-3.5 px-5 text-center font-black text-rose-400">{p.losses}</td>
                                 <td className="py-3.5 px-5 text-center font-bold text-slate-500">{p.pending}</td>
                                 <td className={`py-3.5 px-5 text-right font-black ${p.total_penalty < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
-                                  {p.total_penalty === 0 ? '0 điểm' : `${p.total_penalty.toLocaleString('vi-VN')} điểm`}
+                                  {p.total_penalty === 0 ? '0 điểm' : `${formatVND(p.total_penalty)} điểm`}
                                 </td>
                               </tr>
                             );
@@ -2188,7 +2189,7 @@ const DC13Page: React.FC = () => {
                             </div>
                             <div className="text-right shrink-0">
                               <p className={`text-sm font-black ${p.total_penalty < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
-                                {p.total_penalty === 0 ? '0 điểm' : `${p.total_penalty.toLocaleString('vi-VN')} điểm`}
+                                {p.total_penalty === 0 ? '0 điểm' : `${formatVND(p.total_penalty)} điểm`}
                               </p>
                               <p className="text-[8px] text-slate-500 font-bold">{p.total_bets} trận</p>
                             </div>
@@ -2200,7 +2201,7 @@ const DC13Page: React.FC = () => {
 
                   <div className={leaderboardTab === 'overview' ? 'block' : 'hidden'}>
                     {/* Bảng tổng quan (Overview Matrix) */}
-                    <div 
+                    <div
                       style={{ maxHeight: standingsHeight ? `${standingsHeight}px` : '550px' }}
                       className="overflow-auto custom-scrollbar p-2 relative"
                     >
@@ -2317,7 +2318,7 @@ const DC13Page: React.FC = () => {
                   <div className="bg-slate-900/40 border border-white/[0.04] rounded-2xl p-4 hover:border-rose-500/20 transition-all duration-300 shadow-sm">
                     <p className="text-sm font-black text-rose-400 mb-1.5">💸 PHẠT ĐIỂM THUA CUỢC</p>
                     <ul className="text-sm text-slate-400 font-semibold leading-relaxed list-disc pl-4 space-y-1">
-                      <li>Mỗi trận đoán <span className="text-rose-400 font-black">Sai (Thua)</span>: Phạt <span className="text-rose-400 font-black">-{PENALTY_AMOUNT.toLocaleString('vi-VN')} điểm</span>.</li>
+                      <li>Mỗi trận đoán <span className="text-rose-400 font-black">Sai (Thua)</span>: Phạt <span className="text-rose-400 font-black">-{formatVND(PENALTY_AMOUNT)} điểm</span>.</li>
                       <li>Đoán <span className="text-emerald-400 font-black">Đúng (Thắng)</span>: <span className="text-emerald-400 font-black">0 điểm</span> (thắng không được điểm, nhưng không bị trừ phạt).</li>
                       <li>Trận đấu kết quả <span className="text-slate-300 font-bold">Hòa</span>: <span className="text-slate-300 font-bold">0 điểm</span> (không mất điểm phạt).</li>
                     </ul>
@@ -2341,15 +2342,15 @@ const DC13Page: React.FC = () => {
                     <div className="space-y-3 border-b border-white/5 pb-3">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-slate-300">🥇 Giải Nhất:</span>
-                        <span className="font-black text-cyan-300 text-sm">300.000 điểm</span>
+                        <span className="font-black text-cyan-300 text-sm">300 điểm</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-slate-300">🥈 Giải Nhì:</span>
-                        <span className="font-black text-cyan-300 text-sm">200.000 điểm</span>
+                        <span className="font-black text-cyan-300 text-sm">200 điểm</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-slate-300">🥉 Giải Ba:</span>
-                        <span className="font-black text-cyan-300 text-sm">100.000 điểm</span>
+                        <span className="font-black text-cyan-300 text-sm">100 điểm</span>
                       </div>
                     </div>
                     <p className="text-[12px] text-slate-500 font-bold leading-normal">
@@ -2367,7 +2368,7 @@ const DC13Page: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between text-xs border-t border-white/5 pt-3">
                       <span className="font-bold text-rose-300">🎁 Phần thưởng:</span>
-                      <span className="font-black text-rose-400 text-sm">100.000 điểm</span>
+                      <span className="font-black text-rose-400 text-sm">100 điểm</span>
                     </div>
                   </div>
                 </div>
@@ -3260,9 +3261,9 @@ const DC13Page: React.FC = () => {
                 <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest">Số tiền dự đoán (đ)</label>
                 <div className="w-full bg-slate-900 border border-white/10 rounded-2xl px-4 py-3.5 text-white font-mono font-bold flex justify-between items-center">
                   <span>Số tiền cược cố định:</span>
-                  <span className="text-cyan-400 text-lg">20.000đ</span>
+                  <span className="text-cyan-400 text-lg">20đ</span>
                 </div>
-                <p className="text-[10px] text-slate-500 mt-1.5 italic">Mỗi lượt dự đoán vô địch được cố định là 20.000đ theo luật chơi mới.</p>
+                <p className="text-[10px] text-slate-500 mt-1.5 italic">Mỗi lượt dự đoán vô địch được cố định là 20đ theo luật chơi mới.</p>
               </div>
 
               {/* Estimated Rewards display */}
@@ -3278,15 +3279,15 @@ const DC13Page: React.FC = () => {
                   <div className="p-4 rounded-2xl bg-slate-950/60 border border-white/5 space-y-2 text-xs">
                     <div className="flex justify-between items-center text-slate-400">
                       <span>Điểm dự đoán (Gốc):</span>
-                      <span className="font-mono text-slate-200 font-bold">20.000 điểm</span>
+                      <span className="font-mono text-slate-200 font-bold">20 điểm</span>
                     </div>
                     <div className="flex justify-between items-center text-cyan-400">
                       <span>Điểm thắng chia quỹ dự kiến:</span>
-                      <span className="font-mono font-black">+{Math.round(estWinnings).toLocaleString('vi-VN')} điểm</span>
+                      <span className="font-mono font-black">+{formatVND(Math.round(estWinnings))} điểm</span>
                     </div>
                     <div className="border-t border-white/5 my-2 pt-2 flex justify-between items-center text-emerald-400 font-bold">
                       <span>Tổng thực nhận dự kiến:</span>
-                      <span className="font-mono font-black text-sm">{Math.round(estTotal).toLocaleString('vi-VN')} điểm</span>
+                      <span className="font-mono font-black text-sm">{formatVND(Math.round(estTotal))} điểm</span>
                     </div>
                     <p className="text-[9px] text-slate-500 text-center italic mt-1">Lưu ý: Đây là số liệu dự kiến nếu đội tuyển này vô địch, dựa trên số lượng cược hiện tại.</p>
                   </div>
@@ -3346,22 +3347,22 @@ const DC13Page: React.FC = () => {
                 <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest">Gía trị dự đoán mới (điểm)</label>
                 <input
                   type="number"
-                  min={20000}
-                  step={10000}
+                  min={20}
+                  step={10}
                   className="w-full bg-slate-900 border border-white/10 rounded-2xl px-4 py-3 text-white text-base focus:border-cyan-500 outline-none transition-all font-mono font-bold"
-                  placeholder="Ví dụ: 100000"
+                  placeholder="Ví dụ: 100"
                   value={editOutrightAmount}
                   onChange={e => {
                     const val = e.target.value;
                     setEditOutrightAmount(val === '' ? '' : Number(val));
                   }}
                 />
-                <p className="text-[10px] text-slate-500 mt-1.5 italic">Dự đoán tối thiểu 20.000 điểm.</p>
+                <p className="text-[10px] text-slate-500 mt-1.5 italic">Dự đoán tối thiểu 20 điểm.</p>
               </div>
 
               {/* Estimated Rewards display */}
-              {Number(editOutrightAmount) >= 20000 && (() => {
-                const refBet = Number(editOutrightAmount);
+              {Number(editOutrightAmount) >= 20 && (() => {
+                const refBet = Number(editOutrightAmount) * 1000;
                 const oldAmount = editingOutrightBet.amount;
                 const diff = refBet - oldAmount;
 
@@ -3378,15 +3379,15 @@ const DC13Page: React.FC = () => {
                   <div className="p-4 rounded-2xl bg-slate-950/60 border border-white/5 space-y-2 text-xs">
                     <div className="flex justify-between items-center text-slate-400">
                       <span>Gía trị dự đoán mới (Gốc):</span>
-                      <span className="font-mono text-slate-200 font-bold">{refBet.toLocaleString('vi-VN')} điểm</span>
+                      <span className="font-mono text-slate-200 font-bold">{formatVND(refBet)} điểm</span>
                     </div>
                     <div className="flex justify-between items-center text-cyan-400">
                       <span>Điểm thắng chia quỹ dự kiến:</span>
-                      <span className="font-mono font-black">+{estWinnings.toLocaleString('vi-VN')} điểm</span>
+                      <span className="font-mono font-black">+{formatVND(estWinnings)} điểm</span>
                     </div>
                     <div className="border-t border-white/5 my-2 pt-2 flex justify-between items-center text-emerald-400 font-bold">
                       <span>Tổng thực nhận dự kiến:</span>
-                      <span className="font-mono font-black text-sm">{estTotal.toLocaleString('vi-VN')} điểm</span>
+                      <span className="font-mono font-black text-sm">{formatVND(estTotal)} điểm</span>
                     </div>
                     <p className="text-[9px] text-slate-500 text-center italic mt-1">Dự tính dựa trên tổng quỹ dự đoán hiện tại nếu bạn đổi thành dự đoán mới.</p>
                   </div>
@@ -3403,7 +3404,7 @@ const DC13Page: React.FC = () => {
                 Hủy
               </button>
               <button
-                disabled={outrightSubmitting || !editOutrightAmount || Number(editOutrightAmount) < 20000}
+                disabled={outrightSubmitting || !editOutrightAmount || Number(editOutrightAmount) < 20}
                 onClick={handleUpdateDC13OutrightBet}
                 className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-xs font-black uppercase tracking-widest transition-all hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
