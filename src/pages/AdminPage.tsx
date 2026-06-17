@@ -17,6 +17,24 @@ const AdminPage: React.FC = () => {
   const [allBets, setAllBets] = useState<any[]>([]);
   const [refunds, setRefunds] = useState<any[]>([]);
 
+  const [contributedInput, setContributedInput] = useState(() => {
+    return localStorage.getItem('admin_contributed_fund') || '';
+  });
+
+  const contributedValue = useMemo(() => {
+    const num = parseInt(contributedInput.replace(/\D/g, ''), 10);
+    return isNaN(num) ? 0 : num;
+  }, [contributedInput]);
+
+  const handleContributedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value.replace(/\D/g, '');
+    let formatted = '';
+    if (rawVal) {
+      formatted = Number(rawVal).toLocaleString('vi-VN');
+    }
+    setContributedInput(formatted);
+    localStorage.setItem('admin_contributed_fund', formatted);
+  };
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const ctx = useContext(AppContext);
@@ -373,6 +391,8 @@ const AdminPage: React.FC = () => {
     };
   }, [matches, allBets, refunds]);
 
+  const remainingFund = contributedValue + adminStats.houseProfit;
+
   return (
 
     <div className="min-h-screen bg-[#080808] relative overflow-hidden text-white font-sans">
@@ -453,6 +473,40 @@ const AdminPage: React.FC = () => {
                   <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Lời/Lãi nhà cái (Thực tế)</p>
                   <p className={`text-lg md:text-xl font-black mt-1 font-mono ${adminStats.houseProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {adminStats.houseProfit > 0 ? '+' : ''}{formatVND(adminStats.houseProfit)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Fund Section */}
+              <div className="relative z-10 mt-5 pt-5 border-t border-white/5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Số tiền đã đóng (Input) */}
+                <div className="bg-black/30 rounded-2xl p-4 border border-white/5 flex flex-col justify-between">
+                  <label htmlFor="contributed-fund-input" className="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-1">
+                    Số tiền quỹ đã đóng
+                  </label>
+                  <div className="relative flex items-center mt-1">
+                    <input
+                      id="contributed-fund-input"
+                      type="text"
+                      value={contributedInput}
+                      onChange={handleContributedChange}
+                      placeholder="Nhập số tiền..."
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-base font-black text-white outline-none focus:border-emerald-500/50 transition-all font-mono text-center"
+                    />
+                    {contributedValue > 0 && (
+                      <span className="absolute right-4 text-xs font-bold text-slate-500 pointer-events-none">
+                        VND
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Số tiền còn lại (Display) */}
+                <div className="bg-black/30 rounded-2xl p-4 border border-white/5 text-center flex flex-col justify-between bg-gradient-to-br from-black/60 to-indigo-950/10 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-8 h-8 bg-indigo-500/10 rounded-bl-full pointer-events-none" />
+                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Số tiền còn lại (Quỹ +/- Lời lãi)</p>
+                  <p className={`text-lg md:text-xl font-black mt-3.5 font-mono ${remainingFund >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {remainingFund > 0 ? '+' : ''}{formatVND(remainingFund)}
                   </p>
                 </div>
               </div>
