@@ -1040,6 +1040,31 @@ const DC13Page: React.FC = () => {
     });
   })();
 
+  const standingsContainerRef = useRef<HTMLDivElement>(null);
+  const [standingsHeight, setStandingsHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    const measureHeight = () => {
+      if (standingsContainerRef.current) {
+        const height = standingsContainerRef.current.offsetHeight;
+        if (height > 0) {
+          setStandingsHeight(height);
+        }
+      }
+    };
+
+    // Measure initially and on dependency updates
+    measureHeight();
+
+    if (typeof ResizeObserver !== 'undefined' && standingsContainerRef.current) {
+      const observer = new ResizeObserver(() => {
+        measureHeight();
+      });
+      observer.observe(standingsContainerRef.current);
+      return () => observer.disconnect();
+    }
+  }, [leaderboardTab, playerStats]);
+
   const finishedMatches = useMemo(() => {
     return matches.filter(m => 
       m.league !== 'TIP Futsal league' && 
@@ -2096,92 +2121,95 @@ const DC13Page: React.FC = () => {
                     </div>
                   </div>
 
-                  {leaderboardTab === 'standings' ? (
-                    <>
-                      {/* Desktop table */}
-                      <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="text-[11px] font-black text-slate-300 uppercase tracking-widest border-b border-white/5 bg-slate-900/10">
-                              <th className="py-3 px-5 text-left">#</th>
-                              <th className="py-3 px-5 text-left">Người chơi</th>
-                              <th className="py-3 px-5 text-center">Tổng bet</th>
-                              <th className="py-3 px-5 text-center">Thắng</th>
-                              <th className="py-3 px-5 text-center">Thua</th>
-                              <th className="py-3 px-5 text-center">Đang chờ</th>
-                              <th className="py-3 px-5 text-right">Tổng phạt</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {playerStats.map((p, i) => {
-                              const isCurrentUser = p.user_id === user?.id;
-                              return (
-                                <tr key={p.user_name} className={`border-b border-white/5 transition-colors ${isCurrentUser ? 'bg-cyan-500/10 hover:bg-cyan-500/15 text-cyan-300 font-extrabold' : 'hover:bg-white/[0.03]'}`}>
-                                  <td className="py-3.5 px-5">
-                                    <span className={`w-7 h-7 inline-flex items-center justify-center rounded-lg text-[10px] font-black ${i === 0 ? 'bg-amber-500/20 text-amber-400' :
-                                      i === 1 ? 'bg-slate-400/20 text-slate-300' :
-                                        i === 2 ? 'bg-orange-500/20 text-orange-400' :
-                                          'bg-white/5 text-slate-500'
-                                      }`}>
-                                      {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
-                                    </span>
-                                  </td>
-                                  <td className={`py-3.5 px-5 font-black ${isCurrentUser ? 'text-cyan-300' : 'text-white'}`}>{p.user_name} {isCurrentUser && '(Bạn)'}</td>
-                                  <td className="py-3.5 px-5 text-center font-bold text-slate-400">{p.total_bets}</td>
-                                  <td className="py-3.5 px-5 text-center font-black text-emerald-400">{p.wins}</td>
-                                  <td className="py-3.5 px-5 text-center font-black text-rose-400">{p.losses}</td>
-                                  <td className="py-3.5 px-5 text-center font-bold text-slate-500">{p.pending}</td>
-                                  <td className={`py-3.5 px-5 text-right font-black ${p.total_penalty < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
-                                    {p.total_penalty === 0 ? '0 điểm' : `${p.total_penalty.toLocaleString('vi-VN')} điểm`}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* Mobile cards */}
-                      <div className="md:hidden space-y-1 p-2">
-                        {playerStats.map((p, i) => {
-                          const isCurrentUser = p.user_id === user?.id;
-                          return (
-                            <div key={p.user_name} className={`rounded-xl p-3 flex items-center gap-3 border transition-colors ${isCurrentUser ? 'bg-cyan-500/10 border-cyan-500/25' : 'bg-white/[0.02] border-transparent'}`}>
-                              <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-black shrink-0 ${i === 0 ? 'bg-amber-500/20 text-amber-400' :
-                                i === 1 ? 'bg-slate-400/20 text-slate-300' :
-                                  i === 2 ? 'bg-orange-500/20 text-orange-400' :
-                                    'bg-white/5 text-slate-500'
-                                }`}>
-                                {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
-                              </span>
-                              <div className="flex-1 min-w-0">
-                                <p className={`text-xs font-black truncate ${isCurrentUser ? 'text-cyan-300' : 'text-white'}`}>{p.user_name} {isCurrentUser && '(Bạn)'}</p>
-                                <div className="flex gap-3 mt-0.5">
-                                  <span className="text-[9px] text-emerald-400 font-bold">W:{p.wins}</span>
-                                  <span className="text-[9px] text-rose-400 font-bold">L:{p.losses}</span>
-                                  <span className="text-[9px] text-slate-500 font-bold">P:{p.pending}</span>
-                                </div>
-                              </div>
-                              <div className="text-right shrink-0">
-                                <p className={`text-sm font-black ${p.total_penalty < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+                  <div ref={standingsContainerRef} className={leaderboardTab === 'standings' ? 'block' : 'hidden'}>
+                    {/* Desktop table */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-[11px] font-black text-slate-300 uppercase tracking-widest border-b border-white/5 bg-slate-900/10">
+                            <th className="py-3 px-5 text-left">#</th>
+                            <th className="py-3 px-5 text-left">Người chơi</th>
+                            <th className="py-3 px-5 text-center">Tổng bet</th>
+                            <th className="py-3 px-5 text-center">Thắng</th>
+                            <th className="py-3 px-5 text-center">Thua</th>
+                            <th className="py-3 px-5 text-center">Đang chờ</th>
+                            <th className="py-3 px-5 text-right">Tổng phạt</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {playerStats.map((p, i) => {
+                            const isCurrentUser = p.user_id === user?.id;
+                            return (
+                              <tr key={p.user_name} className={`border-b border-white/5 transition-colors ${isCurrentUser ? 'bg-cyan-500/10 hover:bg-cyan-500/15 text-cyan-300 font-extrabold' : 'hover:bg-white/[0.03]'}`}>
+                                <td className="py-3.5 px-5">
+                                  <span className={`w-7 h-7 inline-flex items-center justify-center rounded-lg text-[10px] font-black ${i === 0 ? 'bg-amber-500/20 text-amber-400' :
+                                    i === 1 ? 'bg-slate-400/20 text-slate-300' :
+                                      i === 2 ? 'bg-orange-500/20 text-orange-400' :
+                                        'bg-white/5 text-slate-500'
+                                    }`}>
+                                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+                                  </span>
+                                </td>
+                                <td className={`py-3.5 px-5 font-black ${isCurrentUser ? 'text-cyan-300' : 'text-white'}`}>{p.user_name} {isCurrentUser && '(Bạn)'}</td>
+                                <td className="py-3.5 px-5 text-center font-bold text-slate-400">{p.total_bets}</td>
+                                <td className="py-3.5 px-5 text-center font-black text-emerald-400">{p.wins}</td>
+                                <td className="py-3.5 px-5 text-center font-black text-rose-400">{p.losses}</td>
+                                <td className="py-3.5 px-5 text-center font-bold text-slate-500">{p.pending}</td>
+                                <td className={`py-3.5 px-5 text-right font-black ${p.total_penalty < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
                                   {p.total_penalty === 0 ? '0 điểm' : `${p.total_penalty.toLocaleString('vi-VN')} điểm`}
-                                </p>
-                                <p className="text-[8px] text-slate-500 font-bold">{p.total_bets} trận</p>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile cards */}
+                    <div className="md:hidden space-y-1 p-2">
+                      {playerStats.map((p, i) => {
+                        const isCurrentUser = p.user_id === user?.id;
+                        return (
+                          <div key={p.user_name} className={`rounded-xl p-3 flex items-center gap-3 border transition-colors ${isCurrentUser ? 'bg-cyan-500/10 border-cyan-500/25' : 'bg-white/[0.02] border-transparent'}`}>
+                            <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-black shrink-0 ${i === 0 ? 'bg-amber-500/20 text-amber-400' :
+                              i === 1 ? 'bg-slate-400/20 text-slate-300' :
+                                i === 2 ? 'bg-orange-500/20 text-orange-400' :
+                                  'bg-white/5 text-slate-500'
+                              }`}>
+                              {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-xs font-black truncate ${isCurrentUser ? 'text-cyan-300' : 'text-white'}`}>{p.user_name} {isCurrentUser && '(Bạn)'}</p>
+                              <div className="flex gap-3 mt-0.5">
+                                <span className="text-[9px] text-emerald-400 font-bold">W:{p.wins}</span>
+                                <span className="text-[9px] text-rose-400 font-bold">L:{p.losses}</span>
+                                <span className="text-[9px] text-slate-500 font-bold">P:{p.pending}</span>
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
-                    </>
-                  ) : (
-                    /* Bảng tổng quan (Overview Matrix) */
-                    <div className="overflow-x-auto custom-scrollbar p-2">
+                            <div className="text-right shrink-0">
+                              <p className={`text-sm font-black ${p.total_penalty < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+                                {p.total_penalty === 0 ? '0 điểm' : `${p.total_penalty.toLocaleString('vi-VN')} điểm`}
+                              </p>
+                              <p className="text-[8px] text-slate-500 font-bold">{p.total_bets} trận</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className={leaderboardTab === 'overview' ? 'block' : 'hidden'}>
+                    {/* Bảng tổng quan (Overview Matrix) */}
+                    <div 
+                      style={{ maxHeight: standingsHeight ? `${standingsHeight}px` : '550px' }}
+                      className="overflow-auto custom-scrollbar p-2 relative"
+                    >
                       <table className="w-full text-xs border-collapse">
                         <thead>
                           <tr className="border-b border-white/5 bg-slate-900/10">
-                            <th className="py-3 px-4 text-left font-black uppercase text-slate-400 sticky left-0 bg-[#09101b] z-20 whitespace-nowrap min-w-[180px]">Trận đấu</th>
+                            <th className="py-3 px-4 text-left font-black uppercase text-slate-400 sticky top-0 left-0 bg-[#09101b] z-30 whitespace-nowrap min-w-[180px] shadow-[inset_0_-1px_0_rgba(255,255,255,0.05)]">Trận đấu</th>
                             {playerStats.map(p => (
-                              <th key={p.user_id} className="py-3 px-3 text-center font-black uppercase text-cyan-300 whitespace-nowrap min-w-[90px] border-l border-white/5 bg-slate-900/10">
+                              <th key={p.user_id} className="py-3 px-3 text-center font-black uppercase text-cyan-300 whitespace-nowrap min-w-[90px] border-l border-white/5 bg-[#09101b] sticky top-0 z-20 shadow-[inset_0_-1px_0_rgba(255,255,255,0.05)]">
                                 {p.user_name.replace('_DC13', '')}
                               </th>
                             ))}
@@ -2250,7 +2278,7 @@ const DC13Page: React.FC = () => {
                         </tbody>
                       </table>
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
             </div>

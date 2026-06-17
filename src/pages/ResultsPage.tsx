@@ -33,6 +33,10 @@ const ResultsPage: React.FC = () => {
           if (r.user_name === 'Bet Thủ Thua Đủ' && r.amount === 50000 && (r.id === '84a39e33-37ac-4161-bfe3-3624cc42df9d' || r.refunded_at.startsWith('2026-06-15T04:30'))) {
             return false;
           }
+          // Remove the incorrect 100.000 refund for Tài F on 2026-06-17
+          if (r.user_name === 'Tài F' && r.amount === 100000 && (r.id === '011ff1b0-f503-4098-a355-1320665422f0' || r.refunded_at.startsWith('2026-06-17'))) {
+            return false;
+          }
           return true;
         })
         .map(r => {
@@ -419,8 +423,13 @@ const ResultsPage: React.FC = () => {
           totalAmountOnMatch += bet.amount;
         });
 
-        // The user lost this match if their net payout is negative
-        const isLoss = netPayout < 0;
+        // Check if the user placed bets on both sides of the match (hedging)
+        const hasBetA = bets.some(b => b.option === 'teamA' || b.option === match.team_a_name);
+        const hasBetB = bets.some(b => b.option === 'teamB' || b.option === match.team_b_name);
+        const isHedged = hasBetA && hasBetB;
+
+        // The user lost this match if their net payout is negative and they did not hedge (bet on both sides)
+        const isLoss = netPayout < 0 && !isHedged;
 
         if (isLoss) {
           current++;

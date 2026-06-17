@@ -103,7 +103,31 @@ const AdminPage: React.FC = () => {
     if (betsData) setAllBets(betsData);
 
     const { data: refundsData } = await supabase.from('refunds').select('*');
-    if (refundsData) setRefunds(refundsData);
+    if (refundsData) {
+      const sanitized = refundsData
+        .filter(r => {
+          // Remove the incorrect 50.000 refund for Bet Thủ Thua Đủ
+          if (r.user_name === 'Bet Thủ Thua Đủ' && r.amount === 50000 && (r.id === '84a39e33-37ac-4161-bfe3-3624cc42df9d' || r.refunded_at.startsWith('2026-06-15T04:30'))) {
+            return false;
+          }
+          // Remove the incorrect 100.000 refund for Tài F on 2026-06-17
+          if (r.user_name === 'Tài F' && r.amount === 100000 && (r.id === '011ff1b0-f503-4098-a355-1320665422f0' || r.refunded_at.startsWith('2026-06-17'))) {
+            return false;
+          }
+          return true;
+        })
+        .map(r => {
+          // Adjust the original 100.000 refund's date to 11:30 (2026-06-15T04:30:00Z) to reset Sweden vs Tunisia
+          if (r.user_name === 'Bet Thủ Thua Đủ' && r.amount === 100000 && (r.id === 'a8d52516-7a42-426d-932c-0749277868a4' || r.refunded_at.startsWith('2026-06-15T01:33'))) {
+            return {
+              ...r,
+              refunded_at: '2026-06-15T04:30:00.000Z'
+            };
+          }
+          return r;
+        });
+      setRefunds(sanitized);
+    }
   };
 
   const handleSaveMatch = async () => {
