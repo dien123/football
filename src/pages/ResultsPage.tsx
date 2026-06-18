@@ -859,8 +859,8 @@ const ResultsPage: React.FC = () => {
             </div>
 
             {(() => {
-              const totalRefunded = refunds.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-              const houseBalance = -results.totalPayout - (selectedMatchId === 'all' ? totalRefunded : 0);
+              //const totalRefunded = refunds.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+              //const houseBalance = -results.totalPayout - (selectedMatchId === 'all' ? totalRefunded : 0);
 
               return (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
