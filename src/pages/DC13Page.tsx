@@ -7,6 +7,7 @@ import { formatVND, normalizeBetAmount } from '../utils/format';
 
 const PENALTY_AMOUNT = 5000;
 const ADMIN_PIN = 'DC13123';
+const INACTIVE_USERS = ['ThaoNguyen_DC13', 'Ân Nguyễn_DC13', 'ndhphuc_DC13'];
 
 const DC13_TEAMS = [
   { name: "Argentina", code: "ar" },
@@ -71,6 +72,23 @@ const isDC13BettingLocked = (match: Match): boolean => {
   const now = Date.now();
   const kick = new Date(match.start_time).getTime();
   return (kick - now) / 60000 <= LOCK_MINUTES;
+};
+
+// ─── Helper: Check if user is inactive (stopped playing but keeps data) ──────
+const checkIsInactiveUser = async (userId: string, fullName: string | null, user: any): Promise<boolean> => {
+  if (fullName && INACTIVE_USERS.includes(fullName)) return true;
+  if (user?.user_metadata?.full_name && INACTIVE_USERS.includes(user.user_metadata.full_name)) return true;
+  
+  const { data: profile } = await supabase
+    .from('dc13_profiles')
+    .select('full_name')
+    .eq('id', userId)
+    .maybeSingle();
+    
+  if (profile?.full_name && INACTIVE_USERS.includes(profile.full_name)) {
+    return true;
+  }
+  return false;
 };
 
 // ─── Player Stats Type ───────────────────────────────────────────────────────
@@ -413,6 +431,12 @@ const DC13Page: React.FC = () => {
       if (!user) setShowAuthModal(true);
       return;
     }
+    const isInactive = await checkIsInactiveUser(user.id, fullName, user);
+    if (isInactive) {
+      alert('Tài khoản của bạn đã dừng tham gia giải đấu DC 13!');
+      setOutrightBettingOn(null);
+      return;
+    }
     const alreadyBet = outrightBets.some(b => b.user_id === user.id && b.team_name === outrightBettingOn.name);
     if (alreadyBet) {
       alert(`Bạn đã dự đoán đội ${outrightBettingOn.name} rồi!`);
@@ -443,7 +467,14 @@ const DC13Page: React.FC = () => {
   };
 
   const handleUpdateDC13OutrightBet = async () => {
-    if (!editingOutrightBet) return;
+    if (!editingOutrightBet || !user) return;
+    const isInactive = await checkIsInactiveUser(user.id, fullName, user);
+    if (isInactive) {
+      alert('Tài khoản của bạn đã dừng tham gia giải đấu DC 13!');
+      setEditingOutrightBet(null);
+      setEditOutrightAmount('');
+      return;
+    }
     const betVal = normalizeBetAmount(Number(editOutrightAmount));
     if (!editOutrightAmount || Number(editOutrightAmount) < 20) {
       alert('Gía trị tối thiểu là 20đ');
@@ -469,6 +500,12 @@ const DC13Page: React.FC = () => {
   };
 
   const handleDeleteDC13OutrightBet = async (betId: string) => {
+    if (!user) return;
+    const isInactive = await checkIsInactiveUser(user.id, fullName, user);
+    if (isInactive) {
+      alert('Tài khoản của bạn đã dừng tham gia giải đấu DC 13!');
+      return;
+    }
     if (!window.confirm('Bạn có chắc chắn muốn xóa lượt dự đoán này?')) return;
     try {
       const { error } = await supabase
@@ -540,6 +577,14 @@ const DC13Page: React.FC = () => {
   const handlePlaceBet = async (chosenTeam: string) => {
     if (!betMatch || !user) return;
 
+    const isInactive = await checkIsInactiveUser(user.id, fullName, user);
+    if (isInactive) {
+      alert('Tài khoản của bạn đã dừng tham gia giải đấu DC 13!');
+      setShowBetModal(false);
+      setBetMatch(null);
+      return;
+    }
+
     // Check if match betting is locked 30m before kickoff
     if (isDC13BettingLocked(betMatch)) {
       if (!betMatch.dc13_handicap_set) {
@@ -606,6 +651,12 @@ const DC13Page: React.FC = () => {
   };
 
   const handleDeleteBet = async (betId: string) => {
+    if (!user) return;
+    const isInactive = await checkIsInactiveUser(user.id, fullName, user);
+    if (isInactive) {
+      alert('Tài khoản của bạn đã dừng tham gia giải đấu DC 13!');
+      return;
+    }
     if (!window.confirm('Bạn có chắc chắn muốn hủy dự đoán cho trận đấu này?')) return;
     const { error } = await supabase
       .from('dc13_bets')
@@ -969,6 +1020,15 @@ const DC13Page: React.FC = () => {
         profiles.forEach(profile => {
           if (profile.full_name === 'Lâm Mỹ Linh') return; // Exclude Lâm Mỹ Linh!
           if (activePlayerIds.has(profile.id) && !bettedUserIds.has(profile.id)) {
+            // Stop virtual/default bets for inactive users for matches starting on or after 2026-06-18T10:00:00Z
+            if (INACTIVE_USERS.includes(profile.full_name)) {
+              const matchStartTime = new Date(match.start_time).getTime();
+              const inactiveThreshold = new Date('2026-06-18T10:00:00Z').getTime();
+              if (matchStartTime >= inactiveThreshold) {
+                return; // Do not generate virtual/default bet for them
+              }
+            }
+
             // Determine underdog team
             const favorite = match.dc13_favorite_team || 'teamA';
             const underdogTeamName = favorite === 'teamA' ? match.team_b_name : match.team_a_name;
