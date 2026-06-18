@@ -106,51 +106,11 @@ const DC13AuthModal: React.FC<DC13AuthModalProps> = ({ isOpen, onClose, onSucces
         return;
       }
 
-      // CASE 3: Not in profiles and not in Auth -> New User
+      // CASE 3: Not in profiles and not in Auth -> block registration
       if (legacySignInError?.message?.includes('Invalid login credentials')) {
-        // Check if name is taken globally in dc13_profiles
-        if (profileByName) {
-          setError(`Tên "${fullName}" đã được sử dụng bởi Email khác trong DC_13. Vui lòng dùng tên khác.`);
-          setLoading(false);
-          return;
-        }
-
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password: CONSTANT_PASSWORD,
-          options: {
-            data: {
-              full_name: fullName,
-            },
-          },
-        });
-
-        if (signUpError) throw signUpError;
-
-        alert('Tài khoản mới đã được tạo! Đang đăng nhập...');
-
-        const { data: finalSignInData, error: finalSignInError } = await supabase.auth.signInWithPassword({
-          email,
-          password: CONSTANT_PASSWORD,
-        });
-
-        if (finalSignInError) {
-          setError('Đã tạo tài khoản nhưng chưa thể đăng nhập tự động. Thử nhấn lại lần nữa nhé!');
-        } else if (finalSignInData.user) {
-          // Insert profile into dc13_profiles
-          const { error: insertError } = await supabase
-            .from('dc13_profiles')
-            .insert({
-              id: finalSignInData.user.id,
-              email: email,
-              full_name: fullName
-            });
-          if (insertError) {
-            console.error("Lỗi tạo profile DC_13:", insertError);
-          }
-          if (ctx) await ctx.refreshFullName();
-          onSuccess();
-        }
+        setError('Tài khoản không tồn tại. Vui lòng liên hệ Admin để đăng ký tài khoản!');
+        setLoading(false);
+        return;
       } else {
         throw legacySignInError;
       }

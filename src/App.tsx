@@ -12,6 +12,7 @@ import DC13Page from './pages/DC13Page';
 import HistoryPage from './pages/HistoryPage';
 
 import AdminGuard from './components/AdminGuard';
+import AuthModal from './components/AuthModal';
 import RealTimeClock from './components/RealTimeClock';
 import CountdownClock from './components/CountdownClock';
 import ScrollToTop from './components/ScrollToTop';
@@ -194,6 +195,7 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
 // ─── App Root ─────────────────────────────────────────────────────────────────
 function App() {
   const [session, setSession] = useState<Session | null>(null);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
   const [isAdminAuthenticated, setAdminAuthenticatedState] = useState(() => {
     // Cleanup old insecure key if present to prevent F12 bypass
     if (localStorage.getItem('admin_auth')) {
@@ -256,10 +258,12 @@ function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      setSessionLoaded(true);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      setSessionLoaded(true);
     });
 
     return () => subscription.unsubscribe();
@@ -272,6 +276,39 @@ function App() {
       setFullName('');
     }
   }, [session]);
+
+  if (!sessionLoaded) {
+    return (
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+        <div className="text-emerald-500 font-black animate-pulse uppercase tracking-widest text-xs">Đang tải cấu hình...</div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <AppContext.Provider value={{
+        isAdminAuthenticated,
+        setAdminAuthenticated,
+        session: null,
+        user: null,
+        fullName: '',
+        refreshFullName
+      }}>
+        <ToastProvider>
+          <div className="min-h-screen bg-[#080808] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-[#080808]" />
+            <AuthModal 
+              isOpen={true} 
+              onClose={() => {}} 
+              onSuccess={() => {}} 
+              hideClose={true}
+            />
+          </div>
+        </ToastProvider>
+      </AppContext.Provider>
+    );
+  }
 
   return (
     <AppContext.Provider value={{
