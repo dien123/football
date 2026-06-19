@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useContext } from 'react';
+import { useState, useEffect, useMemo, useContext, Fragment } from 'react';
 import { Match, Bet } from '../types';
 import { supabase } from '../lib/supabase';
 import { formatVND } from '../utils/format';
@@ -322,6 +322,8 @@ const ResultsPage: React.FC = () => {
       const isTeamA = bet.option === 'teamA' || bet.option === match.team_a_name;
       const selectedTeamName = isTeamA ? match.team_a_name : match.team_b_name;
 
+      const isLeg2 = new Date(match.start_time).getTime() >= new Date('2026-06-18T18:00:00+07:00').getTime();
+
       betDetails.push({
         matchId: match.id,
         matchName: `${match.team_a_name} vs ${match.team_b_name}`,
@@ -329,7 +331,8 @@ const ResultsPage: React.FC = () => {
         chosenTeam: selectedTeamName,
         amount: bet.amount,
         outcome: res.outcome,
-        payout: res.payout
+        payout: res.payout,
+        isLeg2
       });
     });
 
@@ -788,7 +791,7 @@ const ResultsPage: React.FC = () => {
                       <p className="text-2xl font-black text-slate-300 mt-1 font-mono">{formatVND(customCalcResults.totalAmount)}</p>
                     </div>
                     <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
-                      <p className="text-[10px] text-slate-500 uppercase font-black">Tổng Lời / Lãi ròng</p>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Tổng</p>
                       <p className={`text-2xl font-black mt-1 font-mono ${customCalcResults.totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                         {customCalcResults.totalProfit > 0 ? '+' : ''}{formatVND(customCalcResults.totalProfit)}
                       </p>
@@ -801,41 +804,59 @@ const ResultsPage: React.FC = () => {
                       <span>✓/✗</span> Chọn các trận đấu muốn cộng dồn kết quả:
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
-                      {customCalcResults.betDetails.map(detail => {
+                      {customCalcResults.betDetails.map((detail, index) => {
                         const isChecked = !!calcSelectedMatches[detail.matchId];
+                        const showDivider = index > 0 && !detail.isLeg2 && customCalcResults.betDetails[index - 1]?.isLeg2;
                         return (
-                          <div
-                            key={detail.matchId}
-                            onClick={() => handleToggleMatch(detail.matchId)}
-                            className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${isChecked
-                              ? 'bg-cyan-950/10 border-cyan-500/30'
-                              : 'bg-black/25 border-white/5 opacity-60 hover:opacity-85'
-                              }`}
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all ${isChecked
-                                ? 'bg-cyan-500 border-cyan-400 text-black'
-                                : 'bg-transparent border-slate-600'
-                                }`}>
-                                {isChecked && <span className="font-bold text-xs">✓</span>}
+                          <Fragment key={detail.matchId}>
+                            {showDivider && (
+                              <div className="col-span-full flex items-center gap-3 my-2 select-none">
+                                <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-slate-700/50 to-slate-700/50" />
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 bg-[#222] px-3 py-1 rounded-full border border-white/5 shadow-md shrink-0">
+                                  Hết Lượt 1 • Bắt đầu Lượt 2
+                                </span>
+                                <div className="flex-1 h-[1px] bg-gradient-to-l from-transparent via-slate-700/50 to-slate-700/50" />
                               </div>
-                              <div className="min-w-0">
-                                <p className="font-black text-slate-200 text-xs truncate">{detail.matchName}</p>
-                                <p className="text-[10px] text-slate-500 mt-0.5 truncate font-semibold">
-                                  Chọn: <span className="text-slate-300 font-bold">{detail.chosenTeam}</span> ({formatVND(detail.amount)})
+                            )}
+                            <div
+                              onClick={() => handleToggleMatch(detail.matchId)}
+                              className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${isChecked
+                                ? 'bg-cyan-950/10 border-cyan-500/30'
+                                : 'bg-black/25 border-white/5 opacity-60 hover:opacity-85'
+                                }`}
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all ${isChecked
+                                  ? 'bg-cyan-500 border-cyan-400 text-black'
+                                  : 'bg-transparent border-slate-600'
+                                  }`}>
+                                  {isChecked && <span className="font-bold text-xs">✓</span>}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="font-black text-slate-200 text-xs truncate">{detail.matchName}</p>
+                                    <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider shrink-0 select-none ${detail.isLeg2
+                                      ? 'bg-purple-500/15 text-purple-400 border border-purple-500/20'
+                                      : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'}`}>
+                                      {detail.isLeg2 ? 'Lượt 2' : 'Lượt 1'}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-500 mt-0.5 truncate font-semibold">
+                                    Chọn: <span className="text-slate-300 font-bold">{detail.chosenTeam}</span> ({formatVND(detail.amount)})
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="text-right shrink-0">
+                                <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-black border ${getOutcomeColorCls(detail.outcome)}`}>
+                                  {getOutcomeLabel(detail.outcome)}
+                                </span>
+                                <p className={`text-[10px] font-black font-mono mt-0.5 ${detail.payout >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                  {detail.payout > 0 ? '+' : ''}{formatVND(detail.payout)}
                                 </p>
                               </div>
                             </div>
-
-                            <div className="text-right shrink-0">
-                              <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-black border ${getOutcomeColorCls(detail.outcome)}`}>
-                                {getOutcomeLabel(detail.outcome)}
-                              </span>
-                              <p className={`text-[10px] font-black font-mono mt-0.5 ${detail.payout >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                {detail.payout > 0 ? '+' : ''}{formatVND(detail.payout)}
-                              </p>
-                            </div>
-                          </div>
+                          </Fragment>
                         );
                       })}
                     </div>
@@ -897,17 +918,15 @@ const ResultsPage: React.FC = () => {
             <div className="bg-[#222] rounded-2xl border border-white/5 overflow-hidden shadow-2xl overflow-x-auto">
               <div className="min-w-[750px]">
                 <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-black/40 text-[11px] font-black uppercase text-slate-500 border-b border-white/5">
-                  <span className="col-span-2">Người chơi</span>
-                  <span className="col-span-3">Lựa chọn</span>
-                  <span className="col-span-3">Đội thắng</span>
-                  <span className="col-span-2 text-right">Gía trị</span>
-                  <span className="col-span-2 text-right">Kết quả</span>
+                  <span className="col-span-4">Người chơi</span>
+                  <span className="col-span-4">Lựa chọn</span>
+                  <span className="col-span-4">Đội thắng</span>
                 </div>
                 <div className="divide-y divide-white/5">
                   {results.betResults.length > 0 ? (isExpanded ? results.betResults : results.betResults.slice(0, 10)).map((bet: any) => (
                     <div key={bet.id} className="grid grid-cols-12 gap-4 px-6 py-4 text-xs items-center hover:bg-white/5 transition-colors">
-                      <span className="col-span-2 font-black text-[14px] text-slate-400 truncate">{bet.user_name}</span>
-                      <div className="col-span-3 flex flex-col gap-1">
+                      <span className="col-span-4 font-black text-[14px] text-slate-400 truncate">{bet.user_name}</span>
+                      <div className="col-span-4 flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           {bet.selectedTeamCode && (
                             <img src={`https://flagcdn.com/w20/${bet.selectedTeamCode.toLowerCase()}.png`} alt="" className="w-4 h-3 object-cover rounded-sm shadow-sm" />
@@ -918,7 +937,7 @@ const ResultsPage: React.FC = () => {
                           <span className="text-[10px] text-slate-600 truncate font-black uppercase tracking-tighter">{bet.matchName}</span>
                         )}
                       </div>
-                      <div className="col-span-3">
+                      <div className="col-span-4">
                         <div className="flex items-center gap-2">
                           {bet.winningCode && (
                             <img src={`https://flagcdn.com/w20/${bet.winningCode.toLowerCase()}.png`} alt="" className="w-4 h-3 object-cover rounded-sm" />
@@ -928,17 +947,6 @@ const ResultsPage: React.FC = () => {
                             <span className="text-slate-500 ml-2 font-mono text-[14px] font-medium">({bet.matchScore})</span>
                           </span>
                         </div>
-                      </div>
-                      <span className="col-span-2 text-right font-mono text-slate-300 text-[12px]">{formatVND(bet.amount)}</span>
-                      <div className="col-span-2 text-right flex flex-col items-end gap-1">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${getOutcomeColorCls(bet.outcome)}`}>
-                          {getOutcomeLabel(bet.outcome)}
-                        </span>
-                        {bet.payout !== 0 && (
-                          <span className={`text-[9px] font-black ${bet.payout > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                            {bet.payout > 0 ? '+' : ''}{formatVND(bet.payout)}
-                          </span>
-                        )}
                       </div>
                     </div>
                   )) : (
@@ -983,28 +991,14 @@ const ResultsPage: React.FC = () => {
               <div className="bg-[#1a1a1a] rounded-3xl border border-white/10 overflow-hidden shadow-2xl overflow-x-auto">
                 <div className="min-w-[750px]">
                   <div className="grid grid-cols-12 gap-4 px-8 py-5 bg-gradient-to-r from-amber-500/10 to-transparent text-[11px] font-black uppercase text-slate-400 border-b border-white/10 select-none">
-                    <span className="col-span-1 text-center">Hạng</span>
-                    <span className="col-span-4">Người chơi</span>
+                    <span className="col-span-2 text-center">Hạng</span>
+                    <span className="col-span-7">Người chơi</span>
                     <button
                       onClick={() => handleSortLeaderboard('wins')}
-                      className={`col-span-2 text-right font-black uppercase tracking-wider flex items-center justify-end gap-1 hover:text-white transition-colors ml-auto ${leaderboardSortField === 'wins' ? 'text-amber-400 font-black' : 'text-slate-400'
+                      className={`col-span-3 text-right font-black uppercase tracking-wider flex items-center justify-end gap-1 hover:text-white transition-colors ml-auto ${leaderboardSortField === 'wins' ? 'text-amber-400 font-black' : 'text-slate-400'
                         }`}
                     >
                       Thắng {leaderboardSortField === 'wins' ? (leaderboardSortOrder === 'desc' ? '▼' : '▲') : '⇅'}
-                    </button>
-                    <button
-                      onClick={() => handleSortLeaderboard('totalAmount')}
-                      className={`col-span-2 text-right font-black uppercase tracking-wider flex items-center justify-end gap-1 hover:text-white transition-colors ml-auto ${leaderboardSortField === 'totalAmount' ? 'text-amber-400 font-black' : 'text-slate-400'
-                        }`}
-                    >
-                      Tổng {leaderboardSortField === 'totalAmount' ? (leaderboardSortOrder === 'desc' ? '▼' : '▲') : '⇅'}
-                    </button>
-                    <button
-                      onClick={() => handleSortLeaderboard('totalProfit')}
-                      className={`col-span-3 text-right font-black uppercase tracking-wider flex items-center justify-end gap-1 hover:text-white transition-colors ml-auto ${leaderboardSortField === 'totalProfit' ? 'text-amber-400 font-black' : 'text-slate-400'
-                        }`}
-                    >
-                      Thặng dư {leaderboardSortField === 'totalProfit' ? (leaderboardSortOrder === 'desc' ? '▼' : '▲') : '⇅'}
                     </button>
                   </div>
 
@@ -1019,7 +1013,7 @@ const ResultsPage: React.FC = () => {
                           key={user.name}
                           className={`grid grid-cols-12 gap-4 px-8 py-5 items-center hover:bg-white/5 transition-all group ${isTop3 ? 'bg-amber-500/5' : ''}`}
                         >
-                          <div className="col-span-1 flex justify-center">
+                          <div className="col-span-2 flex justify-center">
                             <span className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-black ${rank === 1 ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/40' :
                               rank === 2 ? 'bg-slate-300 text-black shadow-lg shadow-slate-300/40' :
                                 rank === 3 ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/40' :
@@ -1029,27 +1023,15 @@ const ResultsPage: React.FC = () => {
                             </span>
                           </div>
 
-                          <div className="col-span-4 flex items-center gap-3">
+                          <div className="col-span-7 flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 border border-white/10 flex items-center justify-center text-[10px] font-black text-white group-hover:scale-110 transition-transform">
                               {user.name.substring(0, 1).toUpperCase()}
                             </div>
                             <span className="font-black text-slate-100 group-hover:text-amber-400 transition-colors truncate">{user.name}</span>
                           </div>
 
-                          <div className="col-span-2 text-right">
-                            <span className="text-sm font-black text-white">{user.wins}</span>
-                          </div>
-
-                          <div className="col-span-2 text-right">
-                            <span className="text-[12px] font-black text-slate-400 font-mono">{formatVND(user.totalAmount)}</span>
-                          </div>
-
                           <div className="col-span-3 text-right">
-                            <div className="flex flex-col items-end">
-                              <span className={`text-base font-black font-mono ${user.totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                {user.totalProfit > 0 ? '+' : ''}{formatVND(user.totalProfit)}
-                              </span>
-                            </div>
+                            <span className="text-sm font-black text-white">{user.wins}</span>
                           </div>
                         </div>
                       );
