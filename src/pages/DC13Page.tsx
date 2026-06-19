@@ -7,7 +7,7 @@ import { formatVND, normalizeBetAmount } from '../utils/format';
 
 const PENALTY_AMOUNT = 5000;
 const ADMIN_PIN = 'DC13123';
-const INACTIVE_USERS = ['ThaoNguyen_DC13', 'Ân Nguyễn_DC13', 'ndhphuc_DC13'];
+const INACTIVE_USERS = ['ThaoNguyen_DC13', 'Ân Nguyễn_DC13', 'ndhphuc_DC13', 'Ngọc Tiến', 'Trần Huy', 'HuyLe_DC13'];
 
 const DC13_TEAMS = [
   { name: "Argentina", code: "ar" },
@@ -360,6 +360,27 @@ const DC13Page: React.FC = () => {
     setLoading(true);
     Promise.all([fetchMatches(), fetchBets(), fetchDC13OutrightData(), fetchProfiles()]).finally(() => setLoading(false));
   }, [fetchMatches, fetchBets, fetchDC13OutrightData, fetchProfiles]);
+
+  // Scroll active date button to center
+  useEffect(() => {
+    const centerActiveButton = (scroller: HTMLDivElement | null) => {
+      if (!scroller) return;
+      const activeButton = scroller.querySelector('[data-active="true"]');
+      if (activeButton) {
+        const scrollerRect = scroller.getBoundingClientRect();
+        const activeRect = activeButton.getBoundingClientRect();
+        const scrollLeft = scroller.scrollLeft + (activeRect.left - scrollerRect.left) - (scrollerRect.width / 2) + (activeRect.width / 2);
+        scroller.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+      }
+    };
+
+    const timer = setTimeout(() => {
+      centerActiveButton(scrollerRef.current);
+      centerActiveButton(adminScrollerRef.current);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [selectedDate, filter]);
 
   // const handleCloseRuleModal = () => {
   //   setShowRuleModal(false);
@@ -1350,6 +1371,7 @@ const DC13Page: React.FC = () => {
                     return (
                       <button
                         key={date}
+                        data-active={isActive}
                         onClick={() => handleSelectDate(date)}
                         className={`flex flex-col items-center min-w-[55px] py-1.5 rounded-xl border transition-all shrink-0 ${isActive
                           ? 'bg-gradient-to-b from-cyan-500/25 to-cyan-600/10 border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.25)] text-white scale-[1.02]'
@@ -2826,6 +2848,7 @@ const DC13Page: React.FC = () => {
                           return (
                             <button
                               key={date}
+                              data-active={isActive}
                               onClick={() => handleSelectDate(date)}
                               className={`flex flex-col items-center min-w-[55px] py-1.5 rounded-xl border transition-all shrink-0 ${isActive
                                 ? 'bg-cyan-500/20 border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.2)] text-white'

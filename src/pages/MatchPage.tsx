@@ -53,6 +53,26 @@ const MatchPage: React.FC = () => {
     };
   }, []);
 
+  // Scroll active date button to center
+  useEffect(() => {
+    const centerActiveButton = (scroller: HTMLDivElement | null) => {
+      if (!scroller) return;
+      const activeButton = scroller.querySelector('[data-active="true"]');
+      if (activeButton) {
+        const scrollerRect = scroller.getBoundingClientRect();
+        const activeRect = activeButton.getBoundingClientRect();
+        const scrollLeft = scroller.scrollLeft + (activeRect.left - scrollerRect.left) - (scrollerRect.width / 2) + (activeRect.width / 2);
+        scroller.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+      }
+    };
+
+    const timer = setTimeout(() => {
+      centerActiveButton(scrollerRef.current);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [selectedDate, filter]);
+
   const fetchMatches = async () => {
     const { data, error } = await supabase
       .from('matches')
@@ -320,6 +340,7 @@ const MatchPage: React.FC = () => {
                           return (
                             <button
                               key={date}
+                              data-active={isActive}
                               onClick={() => setSelectedDate(date)}
                               className={`flex flex-col items-center min-w-[64px] py-1.5 rounded-xl border transition-all shrink-0 ${isActive
                                 ? 'bg-emerald-500/20 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)] text-white'

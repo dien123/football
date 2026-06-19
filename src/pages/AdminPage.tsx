@@ -67,6 +67,26 @@ const AdminPage: React.FC = () => {
     fetchMatches();
   }, []);
 
+  // Scroll active date button to center
+  useEffect(() => {
+    const centerActiveButton = (scroller: HTMLDivElement | null) => {
+      if (!scroller) return;
+      const activeButton = scroller.querySelector('[data-active="true"]');
+      if (activeButton) {
+        const scrollerRect = scroller.getBoundingClientRect();
+        const activeRect = activeButton.getBoundingClientRect();
+        const scrollLeft = scroller.scrollLeft + (activeRect.left - scrollerRect.left) - (scrollerRect.width / 2) + (activeRect.width / 2);
+        scroller.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+      }
+    };
+
+    const timer = setTimeout(() => {
+      centerActiveButton(scrollerRef.current);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [selectedDate, filter]);
+
   const fetchMatches = async () => {
     const { data, error } = await supabase
       .from('matches')
@@ -563,7 +583,7 @@ const AdminPage: React.FC = () => {
                   {uniqueDates.map(d => {
                     const isActive = selectedDate === d && (filter === 'date' || filter === 'unplayed');
                     return (
-                      <button key={d} onClick={() => { setSelectedDate(d); }} className={`min-w-[55px] md:min-w-[65px] h-12 md:h-14 rounded-xl md:rounded-2xl flex flex-col items-center justify-center transition-all border ${isActive ? 'bg-emerald-600 border-emerald-500 shadow-lg shadow-emerald-900/40' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
+                      <button key={d} data-active={isActive} onClick={() => { setSelectedDate(d); }} className={`min-w-[55px] md:min-w-[65px] h-12 md:h-14 rounded-xl md:rounded-2xl flex flex-col items-center justify-center transition-all border ${isActive ? 'bg-emerald-600 border-emerald-500 shadow-lg shadow-emerald-900/40' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
                         <span className="text-[7px] font-black opacity-60 uppercase mb-0.5">{getWeekday(d)}</span>
                         <span className="text-xs md:text-sm font-black">{d.split('/')[0]}</span>
                       </button>
