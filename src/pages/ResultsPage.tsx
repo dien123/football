@@ -734,7 +734,8 @@ const ResultsPage: React.FC = () => {
           </section>
 
           {/* Custom Bet Result Calculator Section */}
-          <section className="animate-fade-in">
+          {isAdmin && (
+            <section className="animate-fade-in">
             <div className="flex items-center gap-2 mb-2 text-[12px] font-black uppercase tracking-[0.2em] text-cyan-400">
               <span className="w-4 h-4 rounded-full bg-cyan-500/20 flex items-center justify-center">🧮</span>
               Bộ Tính Toán Kết Quả Tùy Chọn
@@ -871,6 +872,7 @@ const ResultsPage: React.FC = () => {
               )}
             </div>
           </section>
+          )}
 
           {/* Statistics Cards */}
           <section className="animate-fade-in">
