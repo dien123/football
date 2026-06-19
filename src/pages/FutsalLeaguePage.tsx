@@ -193,7 +193,7 @@ const FutsalLeaguePage: React.FC = () => {
                       <th className="px-4 py-5 text-center">Trận</th>
                       <th className="px-4 py-5 text-center">T - H - B</th>
                       <th className="px-4 py-5 text-center">HS</th>
-                      <th className="px-6 py-5 text-center text-emerald-400">Điểm</th>
+                      <th className="px-6 py-5 text-center text-emerald-400">Point</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 font-bold text-[14px]">

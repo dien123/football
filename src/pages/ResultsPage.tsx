@@ -906,7 +906,7 @@ const ResultsPage: React.FC = () => {
                     <p className={`text-xl md:text-2xl font-black font-mono ${houseBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {houseBalance > 0 ? '+' : ''}{formatVND(houseBalance)}
                     </p>
-                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Tổng điểm</p>
+                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Tổng point</p>
                     {selectedMatchId === 'all' && totalRefunded > 0 && (
                       <p className="text-[8px] text-slate-600 font-bold mt-0.5 uppercase">
                         (Đã hoàn: {formatVND(totalRefunded)})

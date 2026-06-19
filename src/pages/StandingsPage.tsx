@@ -476,7 +476,7 @@ const StandingsPage: React.FC = () => {
                     </p>
                   </div>
                   <div className="bg-cyan-500/10 border border-cyan-500/10 rounded-xl p-2.5">
-                    <p className="text-cyan-500 text-[9px] uppercase mb-1">Điểm</p>
+                    <p className="text-cyan-500 text-[9px] uppercase mb-1">Point</p>
                     <p className="text-cyan-400 text-sm font-mono">{selectedTeamStats.points}</p>
                   </div>
                 </div>

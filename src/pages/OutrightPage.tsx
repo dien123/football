@@ -558,7 +558,7 @@ export default function OutrightPage() {
             <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-wider text-slate-400 font-mono">
               <div className="flex items-center gap-2 bg-black/40 border border-white/5 px-4 py-2 rounded-2xl">
                 <span>Tổng:</span>
-                <span className="text-emerald-400 font-black">{formatVND(totalPool)}₫</span>
+                <span className="text-emerald-400 font-black">{formatVND(totalPool)}</span>
               </div>
             </div>
           </div>
@@ -699,7 +699,7 @@ export default function OutrightPage() {
               <div className="space-y-8">
                 <div>
                   <div className="flex justify-between mb-4">
-                    <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest">Gía trị bạn muốn (đ)</label>
+                    <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest">Số point bạn muốn</label>
                   </div>
                   <input type="number"
                     value={amount}
@@ -707,12 +707,12 @@ export default function OutrightPage() {
                     placeholder="Nhập (tối thiểu 20)..."
                     className="w-full bg-black border border-white/10 rounded-3xl px-8 py-6 text-xl font-black text-center text-white focus:border-indigo-500 transition-all font-mono" />
                   {amount !== '' && Number(amount) > 0 && Number(amount) < 20000 && (
-                    <p className="text-rose-400 text-[11px] font-bold mt-2 text-center">⚠ Mức tối thiểu là 20</p>
+                    <p className="text-rose-400 text-[11px] font-bold mt-2 text-center">⚠ Mức tối thiểu là 20 point</p>
                   )}
                   <div className="grid grid-cols-5 gap-3 mt-4">
                     {[20000, 50000, 100000, 200000, 500000].map(val => (
                       <button key={val} onClick={() => setAmount(val)} className={`py-3 rounded-2xl text-[11px] font-black transition-all border ${amount === val ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-white/5 border-white/5 text-slate-400'}`}>
-                        {val / 1000}K
+                        {val / 1000} point
                       </button>
                     ))}
                   </div>
@@ -906,8 +906,8 @@ export default function OutrightPage() {
                                 <span className="font-black text-slate-200 uppercase text-xs">{b.user_name}</span>
                               </div>
                             </td>
-                            <td className="py-5 text-center text-slate-400 font-mono text-xs">{b.amount.toLocaleString('vi-VN')}₫</td>
-                            <td className="py-5 text-right font-black text-emerald-400 font-mono text-sm">{Math.round(prize).toLocaleString('vi-VN')}₫</td>
+                            <td className="py-5 text-center text-slate-400 font-mono text-xs">{formatVND(b.amount)}</td>
+                            <td className="py-5 text-right font-black text-emerald-400 font-mono text-sm">{formatVND(Math.round(prize))}</td>
                           </tr>
                         );
                       });
@@ -926,8 +926,8 @@ export default function OutrightPage() {
                     {(() => {
                       const winnerBets = bets.filter(b => b.team_name === winner);
                       const teamTotal = winnerBets.reduce((sum, b) => sum + b.amount, 0);
-                      return teamTotal.toLocaleString('vi-VN');
-                    })()}₫
+                      return formatVND(teamTotal);
+                    })()}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-[10px] font-black text-indigo-400 uppercase font-mono">
@@ -944,8 +944,8 @@ export default function OutrightPage() {
                       const winnerBets = bets.filter(b => b.team_name === winner);
                       const teamTotal = winnerBets.reduce((sum, b) => sum + b.amount, 0);
                       const totalPayout = teamTotal * winnerOdds;
-                      return totalPayout.toLocaleString('vi-VN');
-                    })()}₫
+                      return formatVND(totalPayout);
+                    })()}
                   </span>
                 </div>
               </div>

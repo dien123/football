@@ -205,6 +205,18 @@ function App() {
   });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [fullName, setFullName] = useState<string>('');
+  const [showBeerPopup, setShowBeerPopup] = useState(false);
+
+  useEffect(() => {
+    if (session && !sessionStorage.getItem('beer_popup_shown')) {
+      setShowBeerPopup(true);
+    }
+  }, [session]);
+
+  const handleCloseBeerPopup = () => {
+    sessionStorage.setItem('beer_popup_shown', 'true');
+    setShowBeerPopup(false);
+  };
 
   const setAdminAuthenticated = (val: boolean) => {
     setAdminAuthenticatedState(val);
@@ -411,6 +423,39 @@ function App() {
             </div>
             <Footer />
             <ScrollToTop />
+
+            {/* Beer Penalty Announcement Popup */}
+            {showBeerPopup && (
+              <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 animate-in fade-in duration-200">
+                {/* Backdrop overlay */}
+                <div 
+                  className="absolute inset-0 bg-black/80 backdrop-blur-md" 
+                  onClick={handleCloseBeerPopup} 
+                />
+                
+                {/* Glassmorphic Modal Card */}
+                <div className="relative z-10 w-full max-w-sm bg-[#141414]/95 border border-amber-500/30 rounded-[32px] overflow-hidden shadow-2xl p-8 text-center shadow-[0_0_50px_rgba(245,158,11,0.15)] animate-in zoom-in-95 duration-300">
+                  <div className="w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                    🍻
+                  </div>
+                  
+                  <h3 className="text-xl font-black text-amber-400 uppercase tracking-tight mb-3">
+                    Thông Báo Cuối Mùa! 🎉
+                  </h3>
+                  
+                  <p className="text-sm text-slate-300 leading-relaxed font-semibold mb-6">
+                    Mọi người lưu ý: Hệ thống sẽ tính tổng point vào cuối mùa giải. Thành viên nào có số <span className="text-rose-400 font-extrabold uppercase">point âm nhiều nhất</span> sẽ vinh dự <span className="text-amber-400 font-extrabold uppercase">tài trợ chầu nhậu</span> cho cả nhóm! 🍻🥳
+                  </p>
+                  
+                  <button
+                    onClick={handleCloseBeerPopup}
+                    className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-amber-500/25"
+                  >
+                    Ok nhận kèo luôn! 🍻
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </BrowserRouter>
       </ToastProvider>
