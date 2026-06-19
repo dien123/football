@@ -7,7 +7,7 @@ import { formatVND, normalizeBetAmount } from '../utils/format';
 
 const PENALTY_AMOUNT = 5000;
 const ADMIN_PIN = 'DC13123';
-const INACTIVE_USERS = ['ThaoNguyen_DC13', 'Ân Nguyễn_DC13', 'ndhphuc_DC13', 'Ngọc Tiến', 'Trần Huy', 'HuyLe_DC13'];
+const INACTIVE_USERS: string[] = [];
 
 const DC13_TEAMS = [
   { name: "Argentina", code: "ar" },
@@ -2123,7 +2123,7 @@ const DC13Page: React.FC = () => {
                   <div className="bg-gradient-to-b from-amber-500/15 via-amber-600/5 to-slate-950/20 border border-amber-500/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(245,158,11,0.08)] hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
                       <p className="text-[11px] font-black text-amber-400/80 uppercase tracking-wider flex items-center gap-1.5">🥇 GIẢI NHẤT (300 điểm)</p>
-                      <p className="text-sm font-black text-white mt-1.5 tracking-wide">
+                      <p className={`text-sm font-black mt-1.5 tracking-wide ${prizeStandings.first && INACTIVE_USERS.includes(prizeStandings.first.user_name) ? 'text-rose-400' : 'text-white'}`}>
                         {prizeStandings.first ? prizeStandings.first.user_name : 'Chưa có'}
                       </p>
                     </div>
@@ -2136,7 +2136,7 @@ const DC13Page: React.FC = () => {
                   <div className="bg-gradient-to-b from-slate-300/15 via-slate-400/5 to-slate-950/20 border border-slate-400/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(148,163,184,0.08)] hover:border-slate-300 hover:shadow-[0_0_30px_rgba(148,163,184,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
                       <p className="text-[11px] font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">🥈 GIẢI NHÌ (200 điểm)</p>
-                      <p className="text-sm font-black text-white mt-1.5 tracking-wide">
+                      <p className={`text-sm font-black mt-1.5 tracking-wide ${prizeStandings.second && INACTIVE_USERS.includes(prizeStandings.second.user_name) ? 'text-rose-400' : 'text-white'}`}>
                         {prizeStandings.second ? prizeStandings.second.user_name : 'Chưa có'}
                       </p>
                     </div>
@@ -2149,7 +2149,7 @@ const DC13Page: React.FC = () => {
                   <div className="bg-gradient-to-b from-amber-850/20 via-amber-900/5 to-slate-950/20 border border-amber-900/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(120,53,4,0.08)] hover:border-amber-700 hover:shadow-[0_0_30px_rgba(120,53,4,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
                       <p className="text-[11px] font-black text-amber-600 uppercase tracking-wider flex items-center gap-1.5">🥉 GIẢI BA (100 điểm)</p>
-                      <p className="text-sm font-black text-white mt-1.5 tracking-wide">
+                      <p className={`text-sm font-black mt-1.5 tracking-wide ${prizeStandings.third && INACTIVE_USERS.includes(prizeStandings.third.user_name) ? 'text-rose-400' : 'text-white'}`}>
                         {prizeStandings.third ? prizeStandings.third.user_name : 'Chưa có'}
                       </p>
                     </div>
@@ -2162,7 +2162,7 @@ const DC13Page: React.FC = () => {
                   <div className="bg-gradient-to-b from-rose-500/15 via-rose-600/5 to-slate-950/20 border border-rose-500/30 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] shadow-[0_0_25px_rgba(244,63,94,0.08)] hover:border-rose-400 hover:shadow-[0_0_30px_rgba(244,63,94,0.18)] hover:scale-[1.02] transition-all duration-300">
                     <div>
                       <p className="text-[10px] font-black text-rose-400 uppercase tracking-wider flex items-center gap-1.5">🍋 MÂM XÔI VÀNG (100K điểm)</p>
-                      <p className="text-sm font-black text-white mt-1.5 tracking-wide">
+                      <p className={`text-sm font-black mt-1.5 tracking-wide ${prizeStandings.raspberry && INACTIVE_USERS.includes(prizeStandings.raspberry.user_name) ? 'text-rose-400' : 'text-white'}`}>
                         {prizeStandings.raspberry ? prizeStandings.raspberry.user_name : 'Chưa có'}
                       </p>
                     </div>
@@ -2222,8 +2222,13 @@ const DC13Page: React.FC = () => {
                         <tbody>
                           {playerStats.map((p, i) => {
                             const isCurrentUser = p.user_id === user?.id;
+                            const isInactive = INACTIVE_USERS.includes(p.user_name);
                             return (
-                              <tr key={p.user_name} className={`border-b border-white/5 transition-colors ${isCurrentUser ? 'bg-cyan-500/10 hover:bg-cyan-500/15 text-cyan-300 font-extrabold' : 'hover:bg-white/[0.03]'}`}>
+                              <tr key={p.user_name} className={`border-b border-white/5 transition-colors ${
+                                isInactive ? 'bg-rose-950/15 hover:bg-rose-950/25 text-rose-300/80' :
+                                isCurrentUser ? 'bg-cyan-500/10 hover:bg-cyan-500/15 text-cyan-300 font-extrabold' : 
+                                'hover:bg-white/[0.03]'
+                              }`}>
                                 <td className="py-3.5 px-5">
                                   <span className={`w-7 h-7 inline-flex items-center justify-center rounded-lg text-[10px] font-black ${i === 0 ? 'bg-amber-500/20 text-amber-400' :
                                     i === 1 ? 'bg-slate-400/20 text-slate-300' :
@@ -2233,7 +2238,9 @@ const DC13Page: React.FC = () => {
                                     {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
                                   </span>
                                 </td>
-                                <td className={`py-3.5 px-5 font-black ${isCurrentUser ? 'text-cyan-300' : 'text-white'}`}>{p.user_name} {isCurrentUser && '(Bạn)'}</td>
+                                <td className={`py-3.5 px-5 font-black ${isInactive ? 'text-rose-400' : isCurrentUser ? 'text-cyan-300' : 'text-white'}`}>
+                                  {p.user_name} {isCurrentUser && '(Bạn)'} {isInactive && <span className="text-[10px] text-rose-500/80 ml-1.5 font-bold">(Dừng chơi)</span>}
+                                </td>
                                 <td className="py-3.5 px-5 text-center font-bold text-slate-400">{p.total_bets}</td>
                                 <td className="py-3.5 px-5 text-center font-black text-emerald-400">{p.wins}</td>
                                 <td className="py-3.5 px-5 text-center font-black text-rose-400">{p.losses}</td>
@@ -2252,8 +2259,13 @@ const DC13Page: React.FC = () => {
                     <div className="md:hidden space-y-1 p-2">
                       {playerStats.map((p, i) => {
                         const isCurrentUser = p.user_id === user?.id;
+                        const isInactive = INACTIVE_USERS.includes(p.user_name);
                         return (
-                          <div key={p.user_name} className={`rounded-xl p-3 flex items-center gap-3 border transition-colors ${isCurrentUser ? 'bg-cyan-500/10 border-cyan-500/25' : 'bg-white/[0.02] border-transparent'}`}>
+                          <div key={p.user_name} className={`rounded-xl p-3 flex items-center gap-3 border transition-colors ${
+                            isInactive ? 'bg-rose-950/10 border-rose-950/20' :
+                            isCurrentUser ? 'bg-cyan-500/10 border-cyan-500/25' : 
+                            'bg-white/[0.02] border-transparent'
+                          }`}>
                             <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-black shrink-0 ${i === 0 ? 'bg-amber-500/20 text-amber-400' :
                               i === 1 ? 'bg-slate-400/20 text-slate-300' :
                                 i === 2 ? 'bg-orange-500/20 text-orange-400' :
@@ -2262,7 +2274,9 @@ const DC13Page: React.FC = () => {
                               {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
                             </span>
                             <div className="flex-1 min-w-0">
-                              <p className={`text-xs font-black truncate ${isCurrentUser ? 'text-cyan-300' : 'text-white'}`}>{p.user_name} {isCurrentUser && '(Bạn)'}</p>
+                              <p className={`text-xs font-black truncate ${isInactive ? 'text-rose-400' : isCurrentUser ? 'text-cyan-300' : 'text-white'}`}>
+                                {p.user_name} {isCurrentUser && '(Bạn)'} {isInactive && '(Dừng chơi)'}
+                              </p>
                               <div className="flex gap-3 mt-0.5">
                                 <span className="text-[9px] text-emerald-400 font-bold">W:{p.wins}</span>
                                 <span className="text-[9px] text-rose-400 font-bold">L:{p.losses}</span>
@@ -2291,11 +2305,14 @@ const DC13Page: React.FC = () => {
                         <thead>
                           <tr className="border-b border-white/5 bg-slate-900/10">
                             <th className="py-3 px-4 text-left font-black uppercase text-slate-400 sticky top-0 left-0 bg-[#09101b] z-30 whitespace-nowrap min-w-[180px] shadow-[inset_0_-1px_0_rgba(255,255,255,0.05)]">Trận đấu</th>
-                            {playerStats.map(p => (
-                              <th key={p.user_id} className="py-3 px-3 text-center font-black uppercase text-cyan-300 whitespace-nowrap min-w-[90px] border-l border-white/5 bg-[#09101b] sticky top-0 z-20 shadow-[inset_0_-1px_0_rgba(255,255,255,0.05)]">
-                                {p.user_name.replace('_DC13', '')}
-                              </th>
-                            ))}
+                            {playerStats.map(p => {
+                              const isInactive = INACTIVE_USERS.includes(p.user_name);
+                              return (
+                                <th key={p.user_id} className={`py-3 px-3 text-center font-black uppercase whitespace-nowrap min-w-[90px] border-l border-white/5 bg-[#09101b] sticky top-0 z-20 shadow-[inset_0_-1px_0_rgba(255,255,255,0.05)] ${isInactive ? 'text-rose-500/70 font-semibold' : 'text-cyan-300'}`}>
+                                  {p.user_name.replace('_DC13', '')} {isInactive && <span className="text-[9px] text-rose-500 block font-normal">(Dừng)</span>}
+                                </th>
+                              );
+                            })}
                           </tr>
                         </thead>
                         <tbody>
