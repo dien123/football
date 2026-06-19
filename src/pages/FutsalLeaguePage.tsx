@@ -261,6 +261,7 @@ const FutsalLeaguePage: React.FC = () => {
           option={selectedOption}
           onSave={handleSaveBet}
           initialUserName={user?.user_metadata?.full_name}
+          isAdmin={false}
         />
       )}
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} onSuccess={() => setAuthModalOpen(false)} />

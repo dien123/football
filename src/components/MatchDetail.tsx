@@ -88,6 +88,9 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
   const totalB = betsB.reduce((sum, b) => sum + b.amount, 0);
   const totalPool = totalA + totalB;
 
+  const isTeamALocked = totalA > 3000000;
+  const isTeamBLocked = totalB > 3000000;
+
   const startTime = new Date(match.start_time);
   const timeStr = startTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   const dateStr = startTime.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -216,9 +219,9 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
           <div className="space-y-4 relative">
             <div className="absolute -left-14 top-1/3 -translate-y-1/2 text-4xl animate-bounce hidden xl:block pointer-events-none">👉</div>
             <button
-              onClick={() => (isAdmin || (match.status !== 'finished' && !isBettingLockedManually)) && onBet('teamA')}
-              disabled={!isAdmin && (match.status === 'finished' || isBettingLockedManually)}
-              className={`w-full bg-slate-900/60 border border-white/10 rounded-[32px] p-8 transition-all relative overflow-hidden shadow-2xl backdrop-blur-md group ${(isAdmin || (match.status !== 'finished' && !isBettingLockedManually)) ? 'hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98]' : 'opacity-60 cursor-not-allowed'}
+              onClick={() => (isAdmin || (match.status !== 'finished' && !isBettingLockedManually && !isTeamALocked)) && onBet('teamA')}
+              disabled={!isAdmin && (match.status === 'finished' || isBettingLockedManually || isTeamALocked)}
+              className={`w-full bg-slate-900/60 border border-white/10 rounded-[32px] p-8 transition-all relative overflow-hidden shadow-2xl backdrop-blur-md group ${(isAdmin || (match.status !== 'finished' && !isBettingLockedManually && !isTeamALocked)) ? 'hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98]' : 'opacity-60 cursor-not-allowed'}
                 }`}
             >
               <div className="flex flex-col items-center">
@@ -236,6 +239,11 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
                 <div className="inline-block px-10 py-1.5 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-indigo-300 text-[16px] font-black">
                   Rate: {formatRate(match.rate_a)}
                 </div>
+                {isTeamALocked && (
+                  <div className="mt-3 inline-block px-4 py-1 bg-rose-500/20 border border-rose-500/30 rounded-full text-rose-400 text-xs font-black uppercase tracking-wider animate-pulse">
+                    🔒 Đầy point (&gt;3000)
+                  </div>
+                )}
               </div>
             </button>
 
@@ -284,9 +292,9 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
           <div className="space-y-4 relative">
             <div className="absolute -right-14 top-1/3 -translate-y-1/2 text-4xl animate-bounce hidden xl:block pointer-events-none">👈</div>
             <button
-              onClick={() => (isAdmin || (match.status !== 'finished' && !isBettingLockedManually)) && onBet('teamB')}
-              disabled={!isAdmin && (match.status === 'finished' || isBettingLockedManually)}
-              className={`w-full bg-slate-900/60 border border-white/10 rounded-[32px] p-8 transition-all relative overflow-hidden shadow-2xl backdrop-blur-md group ${(isAdmin || (match.status !== 'finished' && !isBettingLockedManually)) ? 'hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98]' : 'opacity-60 cursor-not-allowed'}
+              onClick={() => (isAdmin || (match.status !== 'finished' && !isBettingLockedManually && !isTeamBLocked)) && onBet('teamB')}
+              disabled={!isAdmin && (match.status === 'finished' || isBettingLockedManually || isTeamBLocked)}
+              className={`w-full bg-slate-900/60 border border-white/10 rounded-[32px] p-8 transition-all relative overflow-hidden shadow-2xl backdrop-blur-md group ${(isAdmin || (match.status !== 'finished' && !isBettingLockedManually && !isTeamBLocked)) ? 'hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98]' : 'opacity-60 cursor-not-allowed'}
                 }`}
             >
               <div className="flex flex-col items-center">
@@ -304,6 +312,11 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
                 <div className="inline-block px-10 py-1.5 bg-rose-500/20 border border-rose-500/30 rounded-full text-rose-300 text-[16px] font-black">
                   Rate: {formatRate(match.rate_b)}
                 </div>
+                {isTeamBLocked && (
+                  <div className="mt-3 inline-block px-4 py-1 bg-rose-500/20 border border-rose-500/30 rounded-full text-rose-400 text-xs font-black uppercase tracking-wider animate-pulse">
+                    🔒 Đầy point (&gt;3000)
+                  </div>
+                )}
               </div>
             </button>
 

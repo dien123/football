@@ -413,6 +413,8 @@ const MatchPage: React.FC = () => {
           initialUserName={user?.user_metadata?.full_name}
           initialAmount={editingBet?.amount}
           isEditing={!!editingBet}
+          isAdmin={isAdmin}
+          editingBetId={editingBet?.id}
         />
       )}
 

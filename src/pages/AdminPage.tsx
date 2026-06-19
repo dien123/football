@@ -43,6 +43,40 @@ const AdminPage: React.FC = () => {
     localStorage.setItem('admin_contributed_fund', formatted);
   };
 
+  const [outsideBetInput, setOutsideBetInput] = useState(() => {
+    return localStorage.getItem('admin_outside_bet_fund') || '';
+  });
+
+  const outsideBetValue = useMemo(() => {
+    if (!outsideBetInput || outsideBetInput === '-') return 0;
+    const isNeg = outsideBetInput.startsWith('-');
+    const cleaned = outsideBetInput.replace(/[^\d]/g, '');
+    const num = parseInt(cleaned, 10);
+    if (isNaN(num)) return 0;
+    return (isNeg ? -num : num) * 1000;
+  }, [outsideBetInput]);
+
+  const handleOutsideBetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value;
+    let cleaned = rawVal.replace(/[^\d-]/g, '');
+    if (cleaned.includes('-')) {
+      const isNegative = cleaned.startsWith('-');
+      cleaned = (isNegative ? '-' : '') + cleaned.replace(/-/g, '');
+    }
+    
+    let formatted = cleaned;
+    if (cleaned && cleaned !== '-') {
+      const isNeg = cleaned.startsWith('-');
+      const numStr = isNeg ? cleaned.slice(1) : cleaned;
+      if (numStr) {
+        formatted = (isNeg ? '-' : '') + Number(numStr).toLocaleString('vi-VN');
+      }
+    }
+    
+    setOutsideBetInput(formatted);
+    localStorage.setItem('admin_outside_bet_fund', formatted);
+  };
+
   const scrollerRef = useRef<HTMLDivElement>(null);
   const ctx = useContext(AppContext);
   if (!ctx) return null;
@@ -442,7 +476,7 @@ const AdminPage: React.FC = () => {
     };
   }, [matches, allBets, refunds]);
 
-  const remainingFund = contributedValue + adminStats.houseProfit;
+  const remainingFund = contributedValue + adminStats.houseProfit + outsideBetValue;
 
   return (
 
@@ -529,11 +563,11 @@ const AdminPage: React.FC = () => {
               </div>
 
               {/* Fund Section */}
-              <div className="relative z-10 mt-5 pt-5 border-t border-white/5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="relative z-10 mt-5 pt-5 border-t border-white/5 grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* (Input) */}
                 <div className="bg-black/30 rounded-2xl p-4 border border-white/5 flex flex-col justify-between">
                   <label htmlFor="contributed-fund-input" className="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-1">
-                    Input
+                    Input (Đầu mùa)
                   </label>
                   <div className="relative flex items-center mt-1">
                     <input
@@ -544,10 +578,27 @@ const AdminPage: React.FC = () => {
                       placeholder="Nhập ..."
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-base font-black text-white outline-none focus:border-emerald-500/50 transition-all font-mono text-center"
                     />
-                    {contributedValue > 0 && (
-                      <span className="absolute right-4 text-xs font-bold text-slate-500 pointer-events-none">
+                  </div>
+                </div>
 
-                      </span>
+                {/* Kèo ngoài (Point) */}
+                <div className="bg-black/30 rounded-2xl p-4 border border-white/5 flex flex-col justify-between">
+                  <label htmlFor="outside-bet-input" className="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-1">
+                    Kèo ngoài (Point)
+                  </label>
+                  <div className="relative flex flex-col justify-center mt-1">
+                    <input
+                      id="outside-bet-input"
+                      type="text"
+                      value={outsideBetInput}
+                      onChange={handleOutsideBetChange}
+                      placeholder="Ví dụ: -50 hoặc 100"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-base font-black text-white outline-none focus:border-emerald-500/50 transition-all font-mono text-center"
+                    />
+                    {outsideBetValue !== 0 && (
+                      <p className="text-[10px] mt-1 font-bold text-center text-slate-400">
+                        {outsideBetValue > 0 ? 'Cộng thêm' : 'Khấu trừ'} {formatVND(Math.abs(outsideBetValue))}
+                      </p>
                     )}
                   </div>
                 </div>
