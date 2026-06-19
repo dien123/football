@@ -230,7 +230,18 @@ const ResultsPage: React.FC = () => {
   // Helper for computing refund based on lost matches in a streak
   const getRefundAmount = (losingMatches: { amount: number }[]) => {
     const len = losingMatches.length;
-    if (len < 3) return 0;
+    if (len < 4) return 0;
+
+    // Check if there is any 5-match window with total >= 500,000
+    let hasFiveMatchTier = false;
+    for (let i = 0; i <= len - 5; i++) {
+      const windowSum = losingMatches.slice(i, i + 5).reduce((sum, item) => sum + item.amount, 0);
+      if (windowSum >= 500000) {
+        hasFiveMatchTier = true;
+        break;
+      }
+    }
+    if (hasFiveMatchTier) return 100000;
 
     // Check if there is any 4-match window with total >= 400,000
     let hasFourMatchTier = false;
@@ -241,18 +252,7 @@ const ResultsPage: React.FC = () => {
         break;
       }
     }
-    if (hasFourMatchTier) return 100000;
-
-    // Check if there is any 3-match window with total >= 300,000
-    let hasThreeMatchTier = false;
-    for (let i = 0; i <= len - 3; i++) {
-      const windowSum = losingMatches.slice(i, i + 3).reduce((sum, item) => sum + item.amount, 0);
-      if (windowSum >= 300000) {
-        hasThreeMatchTier = true;
-        break;
-      }
-    }
-    if (hasThreeMatchTier) return 50000;
+    if (hasFourMatchTier) return 50000;
 
     return 0;
   };
@@ -478,7 +478,7 @@ const ResultsPage: React.FC = () => {
       const currentTotalAmount = currentLosingMatches.reduce((sum, item) => sum + item.amount, 0);
       const maxTotalAmount = longestLosingMatches.reduce((sum, item) => sum + item.amount, 0);
 
-      if (max >= 3 || current >= 3) {
+      if (max >= 4 || current >= 4) {
         streaks[userName] = {
           name: userName,
           currentStreak: current,
@@ -569,15 +569,15 @@ const ResultsPage: React.FC = () => {
                 {/* Visual striking benefits badge */}
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
                   <div className="bg-[#1f1215] border border-rose-500/30 rounded-2xl px-5 py-3.5 text-center flex-1 md:flex-none shadow-lg">
-                    <p className="text-[12px] text-rose-400 font-bold uppercase tracking-wider">Thua 3 lần liên tiếp</p>
+                    <p className="text-[12px] text-rose-400 font-bold uppercase tracking-wider">Thua 4 lần liên tiếp</p>
                     <p className="text-lg font-black text-amber-400 mt-1">Hoàn 50</p>
-                    <p className="text-[12px] text-slate-500 font-bold mt-1">(Tổng dự đoán ≥ 300)</p>
+                    <p className="text-[12px] text-slate-500 font-bold mt-1">(Tổng dự đoán ≥ 400)</p>
                   </div>
                   <div className="bg-[#2a1318] border border-rose-500/40 rounded-2xl px-5 py-3.5 text-center flex-1 md:flex-none shadow-lg relative overflow-hidden">
                     <div className="absolute -top-3 -right-3 w-8 h-8 bg-rose-500/20 rotate-45" />
-                    <p className="text-[12px] text-rose-300 font-bold uppercase tracking-wider">Thua 4 lần liên tiếp trở lên</p>
+                    <p className="text-[12px] text-rose-300 font-bold uppercase tracking-wider">Thua 5 lần liên tiếp trở lên</p>
                     <p className="text-lg font-black text-amber-300 mt-1">Hoàn 100</p>
-                    <p className="text-[12px] text-rose-400/75 font-bold mt-1">(Tổng dự đoán ≥ 400)</p>
+                    <p className="text-[12px] text-rose-400/75 font-bold mt-1">(Tổng dự đoán ≥ 500)</p>
                   </div>
                 </div>
               </div>
@@ -585,7 +585,7 @@ const ResultsPage: React.FC = () => {
               {/* Leaderboard of Losing Streaks */}
               <div className="mt-6">
                 <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <span>📉</span> Thành viên đang trong chuỗi thua (từ 3 lần trở lên)
+                  <span>📉</span> Thành viên đang trong chuỗi thua (từ 4 lần trở lên)
                 </p>
 
                 {userStreaks.length > 0 ? (
@@ -651,11 +651,11 @@ const ResultsPage: React.FC = () => {
                                     </button>
                                   )}
                                 </>
-                              ) : streak.currentStreak >= 3 ? (
+                              ) : streak.currentStreak >= 4 ? (
                                 <>
                                   <p className="text-[10px] font-black text-amber-500 uppercase tracking-wider">Thiếu Tổng </p>
                                   <p className="text-[9px] text-slate-500 mt-0.5">
-                                    Yêu cầu {formatVND(streak.currentStreak === 3 ? 300000 : 400000)}
+                                    Yêu cầu {formatVND(streak.currentStreak === 4 ? 400000 : 500000)}
                                   </p>
                                 </>
                               ) : (
@@ -677,7 +677,7 @@ const ResultsPage: React.FC = () => {
                   </div>
                 ) : (
                   <div className="bg-white/[0.02] border border-dashed border-white/5 rounded-2xl py-8 text-center text-slate-500 font-bold text-xs uppercase tracking-widest">
-                    🎉 Hiện tại chưa có người chơi nào chạm mốc chuỗi thua liên tiếp ≥ 3 trận!
+                    🎉 Hiện tại chưa có người chơi nào chạm mốc chuỗi thua liên tiếp ≥ 4 trận!
                   </div>
                 )}
               </div>
@@ -1151,15 +1151,15 @@ const ResultsPage: React.FC = () => {
                       {formatVND(getRefundAmount(selectedLossUser.currentStreakMatches || []))}
                     </p>
                   </div>
-                ) : selectedLossUser.currentStreak >= 3 ? (
+                ) : selectedLossUser.currentStreak >= 4 ? (
                   <div className="text-left">
                     <p className="text-[9px] text-amber-500 font-black uppercase tracking-wider">Chưa đủ tổng</p>
                     <p className="text-[10px] font-bold text-slate-400">
-                      Tổng : {formatVND(selectedLossUser.currentTotalAmount)} / {formatVND(selectedLossUser.currentStreak === 3 ? 300000 : 400000)}
+                      Tổng : {formatVND(selectedLossUser.currentTotalAmount)} / {formatVND(selectedLossUser.currentStreak === 4 ? 400000 : 500000)}
                     </p>
                   </div>
                 ) : (
-                  <p className="text-[11px] font-bold text-slate-500">Chưa đạt chuỗi thua 3 trận</p>
+                  <p className="text-[11px] font-bold text-slate-500">Chưa đạt chuỗi thua 4 trận</p>
                 )}
               </div>
               <div className="flex items-center gap-3">
