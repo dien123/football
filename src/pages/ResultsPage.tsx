@@ -263,25 +263,21 @@ const ResultsPage: React.FC = () => {
     return [...new Set(names)].sort();
   }, [allBets]);
 
-  const playerMatches = useMemo(() => {
-    if (!calcPlayer) return [];
-    const playerBets = allBets.filter(b => b.user_name === calcPlayer);
-    const matchIds = new Set(playerBets.map(b => b.match_id));
-    return matches.filter(m => matchIds.has(m.id));
-  }, [calcPlayer, allBets, matches]);
 
-  // Automatically check all matches of the selected player by default when they change
+
+  // Automatically check all bets of the selected player by default when they change
   useEffect(() => {
     if (calcPlayer) {
       const initialSelected: Record<string, boolean> = {};
-      playerMatches.forEach(m => {
-        initialSelected[m.id] = true;
+      const playerBets = allBets.filter(b => b.user_name === calcPlayer);
+      playerBets.forEach(bet => {
+        initialSelected[bet.id] = true;
       });
       setCalcSelectedMatches(initialSelected);
     } else {
       setCalcSelectedMatches({});
     }
-  }, [calcPlayer, playerMatches]);
+  }, [calcPlayer, allBets]);
 
   const customCalcResults = useMemo(() => {
     if (!calcPlayer) return { totalAmount: 0, totalProfit: 0, matchesCount: 0, betDetails: [] };
@@ -297,7 +293,7 @@ const ResultsPage: React.FC = () => {
       const match = matches.find(m => m.id === bet.match_id);
       if (!match) return;
 
-      const isChecked = !!calcSelectedMatches[match.id];
+      const isChecked = !!calcSelectedMatches[bet.id];
 
       const res = calculateBetResult(
         bet.option,
@@ -325,6 +321,7 @@ const ResultsPage: React.FC = () => {
       const isLeg2 = new Date(match.start_time).getTime() >= new Date('2026-06-18T18:00:00+07:00').getTime();
 
       betDetails.push({
+        betId: bet.id,
         matchId: match.id,
         matchName: `${match.team_a_name} vs ${match.team_b_name}`,
         matchScore: `${match.score_a} - ${match.score_b}`,
@@ -347,25 +344,27 @@ const ResultsPage: React.FC = () => {
     return { totalAmount, totalProfit, matchesCount, betDetails };
   }, [calcPlayer, calcSelectedMatches, allBets, matches]);
 
-  const handleToggleMatch = (matchId: string) => {
+  const handleToggleMatch = (betId: string) => {
     setCalcSelectedMatches(prev => ({
       ...prev,
-      [matchId]: !prev[matchId]
+      [betId]: !prev[betId]
     }));
   };
 
   const handleSelectAllMatches = () => {
     const updated: Record<string, boolean> = {};
-    playerMatches.forEach(m => {
-      updated[m.id] = true;
+    const playerBets = allBets.filter(b => b.user_name === calcPlayer);
+    playerBets.forEach(bet => {
+      updated[bet.id] = true;
     });
     setCalcSelectedMatches(updated);
   };
 
   const handleDeselectAllMatches = () => {
     const updated: Record<string, boolean> = {};
-    playerMatches.forEach(m => {
-      updated[m.id] = false;
+    const playerBets = allBets.filter(b => b.user_name === calcPlayer);
+    playerBets.forEach(bet => {
+      updated[bet.id] = false;
     });
     setCalcSelectedMatches(updated);
   };
@@ -806,10 +805,10 @@ const ResultsPage: React.FC = () => {
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
                       {customCalcResults.betDetails.map((detail, index) => {
-                        const isChecked = !!calcSelectedMatches[detail.matchId];
+                        const isChecked = !!calcSelectedMatches[detail.betId];
                         const showDivider = index > 0 && !detail.isLeg2 && customCalcResults.betDetails[index - 1]?.isLeg2;
                         return (
-                          <Fragment key={detail.matchId}>
+                          <Fragment key={detail.betId}>
                             {showDivider && (
                               <div className="col-span-full flex items-center gap-3 my-2 select-none">
                                 <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-slate-700/50 to-slate-700/50" />
@@ -820,7 +819,7 @@ const ResultsPage: React.FC = () => {
                               </div>
                             )}
                             <div
-                              onClick={() => handleToggleMatch(detail.matchId)}
+                              onClick={() => handleToggleMatch(detail.betId)}
                               className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${isChecked
                                 ? 'bg-cyan-950/10 border-cyan-500/30'
                                 : 'bg-black/25 border-white/5 opacity-60 hover:opacity-85'
