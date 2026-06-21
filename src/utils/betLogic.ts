@@ -104,7 +104,7 @@ export const isMatchBettingLocked = (match: Match): boolean => {
   if (match.betting_open === false) return true; // Force Closed
 
   // Mặc định tự động theo thời gian thực
-  const LOCK_MINUTES = 30;
+  const LOCK_MINUTES = match.lock_minutes || 30;
   const now = new Date().getTime();
   const kick = new Date(match.start_time).getTime();
   const diffMinutes = (kick - now) / 60000;

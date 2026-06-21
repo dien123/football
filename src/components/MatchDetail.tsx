@@ -431,7 +431,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({
               <span className="text-lg shrink-0 mt-0.5">🔒</span>
               <div>
                 <h4 className="font-bold text-slate-200 mb-1">Đóng nhận tự động</h4>
-                <p className="text-slate-400 font-medium">Hệ thống tự động khóa và dừng trước thời gian trận đấu diễn ra <strong className="text-indigo-300">30 phút</strong>.</p>
+                <p className="text-slate-400 font-medium">Hệ thống tự động khóa và dừng trước thời gian trận đấu diễn ra <strong className="text-indigo-300">{match.lock_minutes || 30} phút</strong>.</p>
               </div>
             </div>
 

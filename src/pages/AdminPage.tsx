@@ -208,6 +208,10 @@ const AdminPage: React.FC = () => {
       }
     }
 
+    if (payload.lock_minutes === undefined || payload.lock_minutes === null) {
+      payload.lock_minutes = 30;
+    }
+
     let error;
     if (id) {
       if (payload.status === 'scheduled') {
@@ -229,13 +233,29 @@ const AdminPage: React.FC = () => {
   };
 
   const handleUpdateBettingStatus = async (matchId: string, status: string) => {
-    let value: boolean | null = null;
-    if (status === 'open') value = true;
-    else if (status === 'closed') value = false;
+    let betting_open: boolean | null = null;
+    let lock_minutes = 30;
+
+    const currentMatch = matches.find(m => m.id === matchId);
+    const existingLockMinutes = currentMatch?.lock_minutes || 30;
+
+    if (status === 'open') {
+      betting_open = true;
+      lock_minutes = existingLockMinutes;
+    } else if (status === 'closed') {
+      betting_open = false;
+      lock_minutes = existingLockMinutes;
+    } else if (status === 'auto_45') {
+      betting_open = null;
+      lock_minutes = 45;
+    } else { // auto_30
+      betting_open = null;
+      lock_minutes = 30;
+    }
 
     const { error } = await supabase
       .from('matches')
-      .update({ betting_open: value })
+      .update({ betting_open, lock_minutes })
       .eq('id', matchId);
 
     if (!error) {
@@ -661,7 +681,7 @@ const AdminPage: React.FC = () => {
                     <input className={inputCls} placeholder="Mã Cờ (vd: fr, de, en)" value={editingMatch?.team_b_code || ''} onChange={e => setEditingMatch({ ...editingMatch, team_b_code: e.target.value.toLowerCase() })} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-6 md:mt-8">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-6 mt-6 md:mt-8">
                   <div>
                     <label className={labelCls}>Kèo được chấp - {editingMatch?.team_a_name || 'Đội A'}</label>
                     <input
@@ -716,6 +736,17 @@ const AdminPage: React.FC = () => {
                   </div>
                   <div><label className={labelCls}>Ăn A</label><input type="number" step="0.01" className={inputCls} value={editingMatch?.rate_a || 1} onChange={e => setEditingMatch({ ...editingMatch, rate_a: parseFloat(e.target.value) })} /></div>
                   <div><label className={labelCls}>Ăn B</label><input type="number" step="0.01" className={inputCls} value={editingMatch?.rate_b || 1} onChange={e => setEditingMatch({ ...editingMatch, rate_b: parseFloat(e.target.value) })} /></div>
+                  <div>
+                    <label className={labelCls}>Khóa cược</label>
+                    <select
+                      className={inputCls}
+                      value={editingMatch?.lock_minutes || 30}
+                      onChange={e => setEditingMatch({ ...editingMatch, lock_minutes: parseInt(e.target.value, 10) })}
+                    >
+                      <option value={30} className="bg-[#111]">30 phút</option>
+                      <option value={45} className="bg-[#111]">45 phút</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="mt-6 md:mt-8 flex gap-3 md:gap-4">
                   <button onClick={handleSaveMatch} className="flex-1 bg-emerald-600 py-3 md:py-5 rounded-xl md:rounded-2xl font-black uppercase text-xs md:text-sm">LƯU TRẬN ĐẤU</button>
@@ -791,13 +822,21 @@ const AdminPage: React.FC = () => {
                         {m.status !== 'finished' && (
                           <div className="flex items-center">
                             <select
-                              value={m.betting_open === true ? 'open' : (m.betting_open === false ? 'closed' : 'auto')}
+                              value={
+                                m.betting_open === true
+                                  ? 'open'
+                                  : (m.betting_open === false
+                                      ? 'closed'
+                                      : (m.lock_minutes === 45 ? 'auto_45' : 'auto_30')
+                                    )
+                              }
                               onChange={(e) => handleUpdateBettingStatus(m.id, e.target.value)}
                               className="bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-[9px] md:text-[11px] font-black text-slate-300 focus:border-emerald-500 outline-none cursor-pointer hover:border-white/20 transition-colors h-9 md:h-11"
                             >
-                              <option value="auto">🔄 Tự động (30m)</option>
-                              <option value="open">🟢 Mở  (Ghi đè)</option>
-                              <option value="closed">🔴 Đóng  (Ghi đè)</option>
+                              <option value="auto_30" className="bg-[#111]">🔄 Tự động (30m)</option>
+                              <option value="auto_45" className="bg-[#111]">🔄 Tự động (45m)</option>
+                              <option value="open" className="bg-[#111]">🟢 Mở  (Ghi đè)</option>
+                              <option value="closed" className="bg-[#111]">🔴 Đóng  (Ghi đè)</option>
                             </select>
                           </div>
                         )}

@@ -380,7 +380,7 @@ const DC13Page: React.FC = () => {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [selectedDate, filter]);
+  }, [selectedDate, filter, matches, adminAuthed]);
 
   // const handleCloseRuleModal = () => {
   //   setShowRuleModal(false);

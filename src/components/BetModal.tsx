@@ -226,7 +226,7 @@ const BetModal: React.FC<BetModalProps> = ({
               <span>📌 Quy định & Điều khoản</span>
             </div>
             <ul className="text-[12px] text-slate-400 space-y-1 list-disc pl-4 font-semibold leading-relaxed">
-              <li>Đóng nhận trước giờ thi đấu <strong className="text-indigo-300">30 phút</strong>.</li>
+              <li>Đóng nhận trước giờ thi đấu <strong className="text-indigo-300">{match.lock_minutes || 30} phút</strong>.</li>
               <li>Chỉ tính trong <strong className="text-indigo-300">thời gian thi đấu chính thức</strong> (không gồm hiệp phụ/luân lưu).</li>
             </ul>
           </div>
