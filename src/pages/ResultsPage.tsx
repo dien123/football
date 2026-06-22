@@ -735,142 +735,142 @@ const ResultsPage: React.FC = () => {
           {/* Custom Bet Result Calculator Section */}
           {isAdmin && (
             <section className="animate-fade-in">
-            <div className="flex items-center gap-2 mb-2 text-[12px] font-black uppercase tracking-[0.2em] text-cyan-400">
-              <span className="w-4 h-4 rounded-full bg-cyan-500/20 flex items-center justify-center">🧮</span>
-              Bộ Tính Toán Kết Quả Tùy Chọn
-            </div>
-
-            <div className="bg-gradient-to-br from-cyan-950/20 via-slate-900/50 to-black/45 rounded-3xl border border-cyan-500/20 p-6 shadow-xl relative overflow-hidden">
-              {/* Decorative background glow */}
-              <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-36 h-36 bg-cyan-600/5 rounded-full blur-2xl pointer-events-none" />
-
-              <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-white/5">
-                <div className="w-full md:w-1/2">
-                  <label className="block text-[10px] font-black text-slate-500 mb-1.5 uppercase tracking-widest">Chọn người chơi cần tính</label>
-                  <select
-                    value={calcPlayer}
-                    onChange={(e) => setCalcPlayer(e.target.value)}
-                    className="w-full bg-[#111] border border-white/10 text-white rounded-xl px-4 py-3 focus:border-cyan-500 outline-none cursor-pointer text-sm shadow-md"
-                  >
-                    <option value="">-- Chọn một người chơi --</option>
-                    {uniquePlayers.map(name => (
-                      <option key={name} value={name}>{name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {calcPlayer && (
-                  <div className="flex gap-2 self-end w-full md:w-auto">
-                    <button
-                      onClick={handleSelectAllMatches}
-                      className="flex-1 md:flex-none px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
-                    >
-                      Chọn tất cả
-                    </button>
-                    <button
-                      onClick={handleDeselectAllMatches}
-                      className="flex-1 md:flex-none px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-white/5 text-slate-300 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
-                    >
-                      Bỏ chọn tất cả
-                    </button>
-                  </div>
-                )}
+              <div className="flex items-center gap-2 mb-2 text-[12px] font-black uppercase tracking-[0.2em] text-cyan-400">
+                <span className="w-4 h-4 rounded-full bg-cyan-500/20 flex items-center justify-center">🧮</span>
+                Bộ Tính Toán Kết Quả Tùy Chọn
               </div>
 
-              {calcPlayer ? (
-                <div className="relative z-10 mt-6 space-y-6">
-                  {/* Results cards summary */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
-                      <p className="text-[10px] text-slate-500 uppercase font-black">Trận đấu đã chọn</p>
-                      <p className="text-2xl font-black text-white mt-1">{customCalcResults.matchesCount} trận</p>
-                    </div>
-                    <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
-                      <p className="text-[10px] text-slate-500 uppercase font-black">Tổng </p>
-                      <p className="text-2xl font-black text-slate-300 mt-1 font-mono">{formatVND(customCalcResults.totalAmount)}</p>
-                    </div>
-                    <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
-                      <p className="text-[10px] text-slate-500 uppercase font-black">Tổng</p>
-                      <p className={`text-2xl font-black mt-1 font-mono ${customCalcResults.totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {customCalcResults.totalProfit > 0 ? '+' : ''}{formatVND(customCalcResults.totalProfit)}
-                      </p>
-                    </div>
+              <div className="bg-gradient-to-br from-cyan-950/20 via-slate-900/50 to-black/45 rounded-3xl border border-cyan-500/20 p-6 shadow-xl relative overflow-hidden">
+                {/* Decorative background glow */}
+                <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-36 h-36 bg-cyan-600/5 rounded-full blur-2xl pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-white/5">
+                  <div className="w-full md:w-1/2">
+                    <label className="block text-[10px] font-black text-slate-500 mb-1.5 uppercase tracking-widest">Chọn người chơi cần tính</label>
+                    <select
+                      value={calcPlayer}
+                      onChange={(e) => setCalcPlayer(e.target.value)}
+                      className="w-full bg-[#111] border border-white/10 text-white rounded-xl px-4 py-3 focus:border-cyan-500 outline-none cursor-pointer text-sm shadow-md"
+                    >
+                      <option value="">-- Chọn một người chơi --</option>
+                      {uniquePlayers.map(name => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
                   </div>
 
-                  {/* Checklist of matches */}
-                  <div className="space-y-3">
-                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                      <span>✓/✗</span> Chọn các trận đấu muốn cộng dồn kết quả:
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
-                      {customCalcResults.betDetails.map((detail, index) => {
-                        const isChecked = !!calcSelectedMatches[detail.betId];
-                        const showDivider = index > 0 && !detail.isLeg2 && customCalcResults.betDetails[index - 1]?.isLeg2;
-                        return (
-                          <Fragment key={detail.betId}>
-                            {showDivider && (
-                              <div className="col-span-full flex items-center gap-3 my-2 select-none">
-                                <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-slate-700/50 to-slate-700/50" />
-                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 bg-[#222] px-3 py-1 rounded-full border border-white/5 shadow-md shrink-0">
-                                  Hết Lượt 1 • Bắt đầu Lượt 2
-                                </span>
-                                <div className="flex-1 h-[1px] bg-gradient-to-l from-transparent via-slate-700/50 to-slate-700/50" />
-                              </div>
-                            )}
-                            <div
-                              onClick={() => handleToggleMatch(detail.betId)}
-                              className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${isChecked
-                                ? 'bg-cyan-950/10 border-cyan-500/30'
-                                : 'bg-black/25 border-white/5 opacity-60 hover:opacity-85'
-                                }`}
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all ${isChecked
-                                  ? 'bg-cyan-500 border-cyan-400 text-black'
-                                  : 'bg-transparent border-slate-600'
-                                  }`}>
-                                  {isChecked && <span className="font-bold text-xs">✓</span>}
+                  {calcPlayer && (
+                    <div className="flex gap-2 self-end w-full md:w-auto">
+                      <button
+                        onClick={handleSelectAllMatches}
+                        className="flex-1 md:flex-none px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                      >
+                        Chọn tất cả
+                      </button>
+                      <button
+                        onClick={handleDeselectAllMatches}
+                        className="flex-1 md:flex-none px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-white/5 text-slate-300 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                      >
+                        Bỏ chọn tất cả
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {calcPlayer ? (
+                  <div className="relative z-10 mt-6 space-y-6">
+                    {/* Results cards summary */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
+                        <p className="text-[10px] text-slate-500 uppercase font-black">Trận đấu đã chọn</p>
+                        <p className="text-2xl font-black text-white mt-1">{customCalcResults.matchesCount} trận</p>
+                      </div>
+                      <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
+                        <p className="text-[10px] text-slate-500 uppercase font-black">Tổng </p>
+                        <p className="text-2xl font-black text-slate-300 mt-1 font-mono">{formatVND(customCalcResults.totalAmount)}</p>
+                      </div>
+                      <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-center">
+                        <p className="text-[10px] text-slate-500 uppercase font-black">Tổng</p>
+                        <p className={`text-2xl font-black mt-1 font-mono ${customCalcResults.totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {customCalcResults.totalProfit > 0 ? '+' : ''}{formatVND(customCalcResults.totalProfit)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Checklist of matches */}
+                    <div className="space-y-3">
+                      <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <span>✓/✗</span> Chọn các trận đấu muốn cộng dồn kết quả:
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
+                        {customCalcResults.betDetails.map((detail, index) => {
+                          const isChecked = !!calcSelectedMatches[detail.betId];
+                          const showDivider = index > 0 && !detail.isLeg2 && customCalcResults.betDetails[index - 1]?.isLeg2;
+                          return (
+                            <Fragment key={detail.betId}>
+                              {showDivider && (
+                                <div className="col-span-full flex items-center gap-3 my-2 select-none">
+                                  <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-slate-700/50 to-slate-700/50" />
+                                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 bg-[#222] px-3 py-1 rounded-full border border-white/5 shadow-md shrink-0">
+                                    Hết Lượt 1 • Bắt đầu Lượt 2
+                                  </span>
+                                  <div className="flex-1 h-[1px] bg-gradient-to-l from-transparent via-slate-700/50 to-slate-700/50" />
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <p className="font-black text-slate-200 text-xs truncate">{detail.matchName}</p>
-                                    <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider shrink-0 select-none ${detail.isLeg2
-                                      ? 'bg-purple-500/15 text-purple-400 border border-purple-500/20'
-                                      : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'}`}>
-                                      {detail.isLeg2 ? 'Lượt 2' : 'Lượt 1'}
-                                    </span>
+                              )}
+                              <div
+                                onClick={() => handleToggleMatch(detail.betId)}
+                                className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${isChecked
+                                  ? 'bg-cyan-950/10 border-cyan-500/30'
+                                  : 'bg-black/25 border-white/5 opacity-60 hover:opacity-85'
+                                  }`}
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all ${isChecked
+                                    ? 'bg-cyan-500 border-cyan-400 text-black'
+                                    : 'bg-transparent border-slate-600'
+                                    }`}>
+                                    {isChecked && <span className="font-bold text-xs">✓</span>}
                                   </div>
-                                  <p className="text-[10px] text-slate-500 mt-0.5 truncate font-semibold">
-                                    Chọn: <span className="text-slate-300 font-bold">{detail.chosenTeam}</span> ({formatVND(detail.amount)})
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <p className="font-black text-slate-200 text-xs truncate">{detail.matchName}</p>
+                                      <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider shrink-0 select-none ${detail.isLeg2
+                                        ? 'bg-purple-500/15 text-purple-400 border border-purple-500/20'
+                                        : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'}`}>
+                                        {detail.isLeg2 ? 'Lượt 2' : 'Lượt 1'}
+                                      </span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 mt-0.5 truncate font-semibold">
+                                      Chọn: <span className="text-slate-300 font-bold">{detail.chosenTeam}</span> ({formatVND(detail.amount)})
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="text-right shrink-0">
+                                  <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-black border ${getOutcomeColorCls(detail.outcome)}`}>
+                                    {getOutcomeLabel(detail.outcome)}
+                                  </span>
+                                  <p className={`text-[10px] font-black font-mono mt-0.5 ${detail.payout >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    {detail.payout > 0 ? '+' : ''}{formatVND(detail.payout)}
                                   </p>
                                 </div>
                               </div>
-
-                              <div className="text-right shrink-0">
-                                <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-black border ${getOutcomeColorCls(detail.outcome)}`}>
-                                  {getOutcomeLabel(detail.outcome)}
-                                </span>
-                                <p className={`text-[10px] font-black font-mono mt-0.5 ${detail.payout >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                  {detail.payout > 0 ? '+' : ''}{formatVND(detail.payout)}
-                                </p>
-                              </div>
-                            </div>
-                          </Fragment>
-                        );
-                      })}
+                            </Fragment>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div className="py-6 text-center">
-                  <p className="text-xs text-slate-500 italic">
-                    Vui lòng chọn 1 người chơi từ danh sách để bắt đầu tính toán tùy chọn.
-                  </p>
-                </div>
-              )}
-            </div>
-          </section>
+                ) : (
+                  <div className="py-6 text-center">
+                    <p className="text-xs text-slate-500 italic">
+                      Vui lòng chọn 1 người chơi từ danh sách để bắt đầu tính toán tùy chọn.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
           )}
 
           {/* Statistics Cards */}
@@ -890,28 +890,22 @@ const ResultsPage: React.FC = () => {
                     <p className="text-2xl md:text-3xl font-black text-white">{results.betResults.length}</p>
                     <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Tổng lượt</p>
                   </div>
-                  <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02]">
-                    <p className="text-2xl md:text-3xl font-black text-emerald-400">{results.totalWinners}</p>
-                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Số lượt Thắng</p>
-                  </div>
-                  {/* <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02]">
-                    <p className={`text-xl md:text-2xl font-black font-mono ${results.totalPayout >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {results.totalPayout > 0 ? '+' : ''}{formatVND(results.totalPayout)}
-                    </p>
-                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Thặng dư</p>
-                  </div> */}
-                  {/* <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02] relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-rose-500 to-amber-500" />
-                    <p className={`text-xl md:text-2xl font-black font-mono ${houseBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {houseBalance > 0 ? '+' : ''}{formatVND(houseBalance)}
-                    </p>
-                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Tổng point</p>
-                    {selectedMatchId === 'all' && totalRefunded > 0 && (
-                      <p className="text-[8px] text-slate-600 font-bold mt-0.5 uppercase">
-                        (Đã hoàn: {formatVND(totalRefunded)})
-                      </p>
-                    )}
-                  </div> */}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 </div>
               );
             })()}
