@@ -39,12 +39,14 @@ const DC13AuthModal: React.FC<DC13AuthModalProps> = ({ isOpen, onClose, onSucces
       return;
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     try {
       // 0. Identity Lookup in dc13_profiles
       const { data: profileByEmail } = await supabase
         .from('dc13_profiles')
         .select('*')
-        .eq('email', email)
+        .eq('email', normalizedEmail)
         .maybeSingle();
 
       const { data: profileByName } = await supabase
@@ -62,7 +64,7 @@ const DC13AuthModal: React.FC<DC13AuthModalProps> = ({ isOpen, onClose, onSucces
         }
 
         const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
+          email: normalizedEmail,
           password: CONSTANT_PASSWORD,
         });
 
@@ -75,13 +77,13 @@ const DC13AuthModal: React.FC<DC13AuthModalProps> = ({ isOpen, onClose, onSucces
       // CASE 2: No profile in dc13_profiles - but user might exist in Auth
       // Try to sign in first with constant password
       const { data: legacySignInData, error: legacySignInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password: CONSTANT_PASSWORD,
       });
 
       if (!legacySignInError && legacySignInData.user) {
         // User exists in Auth but had no dc13_profile. Let's create it.
-        if (profileByName && profileByName.email !== email) {
+        if (profileByName && profileByName.email.toLowerCase() !== normalizedEmail) {
           setError(`Tên "${fullName}" đã được sử dụng bởi Email khác trong DC_13. Vui lòng dùng tên khác.`);
           await supabase.auth.signOut();
           setLoading(false);
@@ -92,7 +94,7 @@ const DC13AuthModal: React.FC<DC13AuthModalProps> = ({ isOpen, onClose, onSucces
           .from('dc13_profiles')
           .insert({
             id: legacySignInData.user.id,
-            email: email,
+            email: normalizedEmail,
             full_name: fullName
           });
 

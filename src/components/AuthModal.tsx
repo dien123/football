@@ -40,12 +40,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
       return;
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     try {
       // 0. Identity Lookup
       const { data: profileByEmail } = await supabase
         .from('profiles')
         .select('*')
-        .eq('email', email)
+        .eq('email', normalizedEmail)
         .maybeSingle();
 
       const { data: profileByName } = await supabase
@@ -63,7 +65,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
         }
 
         const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
+          email: normalizedEmail,
           password: CONSTANT_PASSWORD,
         });
 
@@ -76,14 +78,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
       // CASE 2: No profile found - but user might exist in Auth (Legacy sync issue)
       // Try to sign in first with constant password
       const { data: legacySignInData, error: legacySignInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password: CONSTANT_PASSWORD,
       });
 
       if (!legacySignInError && legacySignInData.user) {
         // User exists in Auth but had no profile. Let's create it.
         // First check if the name they want to use is taken by someone else's profile
-        if (profileByName && profileByName.email !== email) {
+        if (profileByName && profileByName.email.toLowerCase() !== normalizedEmail) {
           setError(`Tên "${fullName}" đã được sử dụng bởi Email khác. Vui lòng dùng tên khác.`);
           await supabase.auth.signOut();
           setLoading(false);
@@ -94,7 +96,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
           .from('profiles')
           .insert({
             id: legacySignInData.user.id,
-            email: email,
+            email: normalizedEmail,
             full_name: fullName
           });
 
