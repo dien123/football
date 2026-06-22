@@ -153,7 +153,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
           {/* <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 backdrop-blur-sm border border-white/30">
             🏟️
           </div> */}
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Chào mừng bạn!</h2>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Vibe Coding</h2>
           {/* <p className="text-emerald-100 text-xs mt-2 opacity-80 uppercase font-bold tracking-widest">Gia nhập cộng đồng World Cup</p> */}
         </div>
 
@@ -194,7 +194,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
             disabled={loading}
             className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 text-white font-black py-4 rounded-xl shadow-lg shadow-emerald-900/40 transition-all uppercase tracking-widest text-xs active:scale-[0.98]"
           >
-            {loading ? 'Đang kết nối...' : 'Bắt đầu ngay 🚀'}
+            {loading ? 'Đang kết nối...' : 'Enter 🚀'}
           </button>
         </form>
       </div>

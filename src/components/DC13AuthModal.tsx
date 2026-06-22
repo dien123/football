@@ -149,7 +149,7 @@ const DC13AuthModal: React.FC<DC13AuthModalProps> = ({ isOpen, onClose, onSucces
             🎯
           </div>
           <h2 className="text-2xl font-black text-white uppercase tracking-tight">WorldCup DC_13</h2>
-          <p className="text-cyan-100 text-xs mt-2 opacity-80 uppercase font-bold tracking-widest">Đăng ký tham gia dự đoán</p>
+          <p className="text-cyan-100 text-xs mt-2 opacity-80 uppercase font-bold tracking-widest">Đăng ký</p>
         </div>
 
         <form onSubmit={handleJoin} className="p-8 space-y-5">
@@ -189,7 +189,7 @@ const DC13AuthModal: React.FC<DC13AuthModalProps> = ({ isOpen, onClose, onSucces
             disabled={loading}
             className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 text-white font-black py-4 rounded-xl shadow-lg shadow-cyan-900/40 transition-all uppercase tracking-widest text-xs active:scale-[0.98]"
           >
-            {loading ? 'Đang kết nối...' : 'Bắt đầu ngay 🚀'}
+            {loading ? 'Đang kết nối...' : 'Enter 🚀'}
           </button>
         </form>
       </div>
