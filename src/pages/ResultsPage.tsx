@@ -889,8 +889,7 @@ const ResultsPage: React.FC = () => {
             </div>
 
             {(() => {
-              //const totalRefunded = refunds.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-              //const houseBalance = -results.totalPayout - (selectedMatchId === 'all' ? totalRefunded : 0);
+
 
               return (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -903,7 +902,6 @@ const ResultsPage: React.FC = () => {
                     <p className="text-2xl md:text-3xl font-black text-emerald-400">{results.totalWinners}</p>
                     <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Số lượt Thắng</p>
                   </div>
-
 
 
 
