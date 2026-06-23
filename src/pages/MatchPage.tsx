@@ -619,7 +619,7 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
                         return (
                           <div key={idx} className="flex items-center justify-between text-[13px] animate-fade-in group/bet">
                             <span className="text-slate-300 font-bold truncate">{bet.user_name} {isOwner && "(Bạn)"}</span>
-                            <span className="text-emerald-400 font-mono font-bold">{bet.amount.toLocaleString("vi-VN")}</span>
+                            <span className="text-emerald-400 font-mono font-bold">{formatVND(bet.amount)}</span>
                           </div>
                         );
                       })
@@ -641,7 +641,7 @@ const BetListModal: React.FC<BetListModalProps> = ({ isOpen, onClose, match }) =
                         return (
                           <div key={idx} className="flex items-center justify-between text-[13px] animate-fade-in group/bet">
                             <span className="text-slate-300 font-bold truncate">{bet.user_name} {isOwner && "(Bạn)"}</span>
-                            <span className="text-emerald-400 font-mono font-bold">{bet.amount.toLocaleString("vi-VN")}</span>
+                            <span className="text-emerald-400 font-mono font-bold">{formatVND(bet.amount)}</span>
                           </div>
                         );
                       })
