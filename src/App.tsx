@@ -18,7 +18,7 @@ import CountdownClock from './components/CountdownClock';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/Footer';
 import { supabase } from './lib/supabase';
-import { checkAdminSession, setAdminSession } from './utils/security';
+import { checkAdminSession, setAdminSession, initAntiDevTools } from './utils/security';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 interface AppContextType {
@@ -268,6 +268,9 @@ function App() {
   };
 
   useEffect(() => {
+    // Chặn F12 / DevTools chống xem mã nguồn
+    initAntiDevTools();
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setSessionLoaded(true);
