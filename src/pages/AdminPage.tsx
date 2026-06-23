@@ -1070,16 +1070,61 @@ const AdminPage: React.FC = () => {
                               <td className="px-6 py-3.5 text-center text-slate-500">{idx + 1}</td>
                               <td className="px-6 py-3.5 text-slate-200 font-bold">{log.user_name}</td>
                               <td className="px-6 py-3.5">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${log.option === historyMatch.team_a_name || log.option === 'teamA' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
-                                  {log.option === 'teamA' ? historyMatch.team_a_name : (log.option === 'teamB' ? historyMatch.team_b_name : log.option)}
-                                </span>
+                                {log.old_option && log.old_option !== log.option ? (
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase bg-slate-500/10 text-slate-400 border border-slate-500/20 line-through`}>
+                                      {log.old_option === 'teamA' ? historyMatch.team_a_name : (log.old_option === 'teamB' ? historyMatch.team_b_name : log.old_option)}
+                                    </span>
+                                    <span className="text-slate-500 text-[10px]">➔</span>
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${log.option === historyMatch.team_a_name || log.option === 'teamA' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                                      {log.option === 'teamA' ? historyMatch.team_a_name : (log.option === 'teamB' ? historyMatch.team_b_name : log.option)}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${log.option === historyMatch.team_a_name || log.option === 'teamA' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                                    {log.option === 'teamA' ? historyMatch.team_a_name : (log.option === 'teamB' ? historyMatch.team_b_name : log.option)}
+                                  </span>
+                                )}
                               </td>
-                              <td className="px-6 py-3.5 text-right font-bold text-emerald-400">
-                                {formatVND(log.amount)}
+                              <td className="px-6 py-3.5 text-right font-bold">
+                                {log.old_amount !== undefined && log.old_amount !== null && Number(log.old_amount) !== Number(log.amount) ? (
+                                  <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-1.5 font-mono">
+                                    <span className="text-slate-500 line-through text-[10px]">
+                                      {formatVND(log.old_amount)}
+                                    </span>
+                                    <span className="text-slate-500 text-[10px] hidden sm:inline">➔</span>
+                                    <span className="text-emerald-400">
+                                      {formatVND(log.amount)}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-emerald-400">
+                                    {formatVND(log.amount)}
+                                  </span>
+                                )}
                               </td>
                               <td className="px-6 py-3.5 text-center">
-                                <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${log.action === 'INSERT' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
-                                  {log.action === 'INSERT' ? 'ĐẶT MỚI' : 'THAY ĐỔI'}
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                                  log.action === 'INSERT' 
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                    : (log.old_option && log.old_option !== log.option && log.old_amount !== undefined && log.old_amount !== null && Number(log.old_amount) !== Number(log.amount))
+                                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                      : (log.old_option && log.old_option !== log.option)
+                                        ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                                        : (log.old_amount !== undefined && log.old_amount !== null && Number(log.old_amount) !== Number(log.amount))
+                                          ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+                                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                }`}>
+                                  {log.action === 'INSERT' 
+                                    ? 'ĐẶT MỚI' 
+                                    : (log.old_option && log.old_option !== log.option && log.old_amount !== undefined && log.old_amount !== null && Number(log.old_amount) !== Number(log.amount))
+                                      ? 'SỬA ĐỘI & ĐIỂM'
+                                      : (log.old_option && log.old_option !== log.option)
+                                        ? 'ĐỔI ĐỘI'
+                                        : (log.old_amount !== undefined && log.old_amount !== null && Number(log.old_amount) !== Number(log.amount))
+                                          ? 'SỬA ĐIỂM'
+                                          : 'THAY ĐỔI'
+                                  }
                                 </span>
                               </td>
                               <td className="px-6 py-3.5 text-right text-slate-500">
