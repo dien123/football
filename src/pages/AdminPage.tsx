@@ -16,6 +16,11 @@ const AdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'matches' | 'outright'>('matches');
   const [allBets, setAllBets] = useState<any[]>([]);
   const [refunds, setRefunds] = useState<any[]>([]);
+  const [historyMatch, setHistoryMatch] = useState<Match | null>(null);
+  const [activeHistoryTab, setActiveHistoryTab] = useState<'current' | 'logs'>('current');
+  const [matchBets, setMatchBets] = useState<any[]>([]);
+  const [matchLogs, setMatchLogs] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const [contributedInput, setContributedInput] = useState(() => {
     const saved = localStorage.getItem('admin_contributed_fund') || '';
@@ -63,7 +68,7 @@ const AdminPage: React.FC = () => {
       const isNegative = cleaned.startsWith('-');
       cleaned = (isNegative ? '-' : '') + cleaned.replace(/-/g, '');
     }
-    
+
     let formatted = cleaned;
     if (cleaned && cleaned !== '-') {
       const isNeg = cleaned.startsWith('-');
@@ -72,7 +77,7 @@ const AdminPage: React.FC = () => {
         formatted = (isNeg ? '-' : '') + Number(numStr).toLocaleString('vi-VN');
       }
     }
-    
+
     setOutsideBetInput(formatted);
     localStorage.setItem('admin_outside_bet_fund', formatted);
   };
@@ -190,6 +195,85 @@ const AdminPage: React.FC = () => {
       setRefunds(sanitized);
     }
   };
+
+  const handleShowMatchHistory = (match: Match) => {
+    setHistoryMatch(match);
+    setActiveHistoryTab('current');
+  };
+
+  const fetchHistoryData = async (matchId: string) => {
+    setLoadingHistory(true);
+    try {
+      const { data: betsData, error: betsError } = await supabase
+        .from('bets')
+        .select('*')
+        .eq('match_id', matchId)
+        .order('created_at', { ascending: false });
+
+      if (!betsError) {
+        setMatchBets(betsData || []);
+      }
+
+      const { data: logsData, error: logsError } = await supabase
+        .from('bet_logs')
+        .select('*')
+        .eq('match_id', matchId)
+        .order('created_at', { ascending: false });
+
+      if (!logsError) {
+        setMatchLogs(logsData || []);
+      }
+    } catch (err) {
+      console.error('Error fetching history:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleDeleteLogs = async (matchId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử sửa đổi của trận này?')) {
+      return;
+    }
+    const { error } = await supabase
+      .from('bet_logs')
+      .delete()
+      .eq('match_id', matchId);
+
+    if (error) {
+      alert('Lỗi khi xóa lịch sử: ' + error.message);
+    } else {
+      alert('Xóa lịch sử sửa đổi thành công!');
+      fetchHistoryData(matchId);
+    }
+  };
+
+  useEffect(() => {
+    if (!historyMatch) return;
+
+    fetchHistoryData(historyMatch.id);
+
+    const channel = supabase
+      .channel(`realtime-admin-match-history-${historyMatch.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bets', filter: `match_id=eq.${historyMatch.id}` },
+        () => {
+          fetchHistoryData(historyMatch.id);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bet_logs', filter: `match_id=eq.${historyMatch.id}` },
+        () => {
+          fetchHistoryData(historyMatch.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [historyMatch]);
 
   const handleSaveMatch = async () => {
     if (!editingMatch) return;
@@ -804,6 +888,13 @@ const AdminPage: React.FC = () => {
                         {localScores[m.id] && <button onClick={() => handleQuickUpdateResult(m)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-emerald-500 text-black rounded-full shadow-lg shadow-emerald-500/20 hover:scale-110 active:scale-95 transition-all text-[10px] md:text-xs">✅</button>}
                         <button onClick={() => setEditingMatch(m)} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full border border-white/10 transition-all text-[10px] md:text-xs" title="Sửa trận đấu">✏️</button>
                         <button
+                          onClick={() => handleShowMatchHistory(m)}
+                          title="Lịch sử cược & thay đổi"
+                          className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-indigo-600 hover:text-white rounded-full border border-white/10 transition-all text-[10px] md:text-xs"
+                        >
+                          ⏰
+                        </button>
+                        <button
                           onClick={() => handleExportMatchBets(m)}
                           title="Xuất Excel trận này"
                           className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-white/10 hover:bg-emerald-600 hover:text-white rounded-full border border-white/10 transition-all text-[10px] md:text-xs"
@@ -826,9 +917,9 @@ const AdminPage: React.FC = () => {
                                 m.betting_open === true
                                   ? 'open'
                                   : (m.betting_open === false
-                                      ? 'closed'
-                                      : (m.lock_minutes === 45 ? 'auto_45' : 'auto_30')
-                                    )
+                                    ? 'closed'
+                                    : (m.lock_minutes === 45 ? 'auto_45' : 'auto_30')
+                                  )
                               }
                               onChange={(e) => handleUpdateBettingStatus(m.id, e.target.value)}
                               className="bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-[9px] md:text-[11px] font-black text-slate-300 focus:border-emerald-500 outline-none cursor-pointer hover:border-white/20 transition-colors h-9 md:h-11"
@@ -869,6 +960,175 @@ const AdminPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* MODAL LỊCH SỬ SỬA ĐỔI CƯỢC */}
+      {historyMatch && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/85 backdrop-blur-md" onClick={() => setHistoryMatch(null)} />
+          <div className="relative z-10 w-full max-w-4xl bg-[#141414] rounded-[32px] shadow-2xl border border-white/10 overflow-hidden animate-in zoom-in-95 duration-300">
+            {/* Header */}
+            <div className="relative bg-[#1e293b]/90 pl-6 pr-16 sm:pl-8 sm:pr-20 py-6 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <span className="text-emerald-500 text-xs font-black uppercase tracking-widest mb-1.5 block">LỊCH SỬ THAY ĐỔI THỜI GIAN THỰC</span>
+                <h2 className="text-xl font-black text-white uppercase tracking-tight">
+                  {historyMatch.team_a_name} <span className="text-slate-500 px-1">vs</span> {historyMatch.team_b_name}
+                </h2>
+              </div>
+              <div className="flex gap-2 p-1 bg-black/40 rounded-2xl border border-white/5">
+                <button
+                  onClick={() => setActiveHistoryTab('current')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${activeHistoryTab === 'current' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                >
+                  Lượt dự đoán hiện tại
+                </button>
+                <button
+                  onClick={() => setActiveHistoryTab('logs')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${activeHistoryTab === 'logs' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                >
+                  Lịch sử sửa đổi
+                </button>
+              </div>
+              <button
+                onClick={() => setHistoryMatch(null)}
+                className="absolute top-5 right-5 sm:right-6 text-slate-400 hover:text-white hover:bg-white/10 w-9 h-9 rounded-full flex items-center justify-center transition-all text-xl font-bold"
+                title="Đóng"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-8 py-6 max-h-[60vh] overflow-y-auto min-h-[300px]">
+              {loadingHistory ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-3">
+                  <div className="w-8 h-8 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                  <span className="text-slate-500 text-xs uppercase font-black tracking-wider animate-pulse">Đang tải dữ liệu...</span>
+                </div>
+              ) : activeHistoryTab === 'current' ? (
+                /* Tab 1: Current Active Bets */
+                <div className="space-y-4">
+                  <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-black/60 text-slate-400 uppercase font-black tracking-wider border-b border-white/10">
+                          <th className="px-6 py-3.5 text-center w-16">STT</th>
+                          <th className="px-6 py-3.5">Tài khoản</th>
+                          <th className="px-6 py-3.5">Lựa chọn</th>
+                          <th className="px-6 py-3.5 text-right">Giá trị</th>
+                          <th className="px-6 py-3.5 text-right">Thời điểm đặt</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 font-mono">
+                        {matchBets.length > 0 ? (
+                          matchBets.map((bet, idx) => (
+                            <tr key={bet.id} className="hover:bg-white/5 transition-colors">
+                              <td className="px-6 py-3.5 text-center text-slate-500">{idx + 1}</td>
+                              <td className="px-6 py-3.5 text-slate-200 font-bold">{bet.user_name}</td>
+                              <td className="px-6 py-3.5">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${bet.option === historyMatch.team_a_name || bet.option === 'teamA' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                                  {bet.option === 'teamA' ? historyMatch.team_a_name : (bet.option === 'teamB' ? historyMatch.team_b_name : bet.option)}
+                                </span>
+                              </td>
+                              <td className="px-6 py-3.5 text-right font-bold text-emerald-400">
+                                {formatVND(bet.amount)}
+                              </td>
+                              <td className="px-6 py-3.5 text-right text-slate-500">
+                                {new Date(bet.created_at).toLocaleString('vi-VN')}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5} className="text-center py-14 text-slate-500 font-bold uppercase tracking-widest text-[10px]">
+                              Chưa có lượt dự đoán nào cho trận đấu này
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                /* Tab 2: Modification Logs */
+                <div className="space-y-4">
+                  <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-black/60 text-slate-400 uppercase font-black tracking-wider border-b border-white/10">
+                          <th className="px-6 py-3.5 text-center w-16">ID (STT)</th>
+                          <th className="px-6 py-3.5">Tài khoản</th>
+                          <th className="px-6 py-3.5">Lựa chọn</th>
+                          <th className="px-6 py-3.5 text-right">Giá trị</th>
+                          <th className="px-6 py-3.5 text-center">Hành động</th>
+                          <th className="px-6 py-3.5 text-right">Thời gian</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 font-mono">
+                        {matchLogs.length > 0 ? (
+                          matchLogs.map((log, idx) => (
+                            <tr key={log.id} className="hover:bg-white/5 transition-colors">
+                              <td className="px-6 py-3.5 text-center text-slate-500">{idx + 1}</td>
+                              <td className="px-6 py-3.5 text-slate-200 font-bold">{log.user_name}</td>
+                              <td className="px-6 py-3.5">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${log.option === historyMatch.team_a_name || log.option === 'teamA' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                                  {log.option === 'teamA' ? historyMatch.team_a_name : (log.option === 'teamB' ? historyMatch.team_b_name : log.option)}
+                                </span>
+                              </td>
+                              <td className="px-6 py-3.5 text-right font-bold text-emerald-400">
+                                {formatVND(log.amount)}
+                              </td>
+                              <td className="px-6 py-3.5 text-center">
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${log.action === 'INSERT' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                                  {log.action === 'INSERT' ? 'ĐẶT MỚI' : 'THAY ĐỔI'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-3.5 text-right text-slate-500">
+                                {new Date(log.created_at).toLocaleString('vi-VN')}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="text-center py-14 text-slate-500 font-bold uppercase tracking-widest text-[10px]">
+                              Chưa có lịch sử thay đổi nào được ghi nhận
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Button xóa lịch sử (Chỉ kích hoạt khi trận đấu kết thúc) */}
+                  <div className="flex justify-end pt-2">
+                    {historyMatch.status === 'finished' ? (
+                      <button
+                        onClick={() => handleDeleteLogs(historyMatch.id)}
+                        className="px-5 py-2.5 bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 text-rose-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-rose-950/20"
+                      >
+                        🗑️ Xóa toàn bộ lịch sử  trận này (Trận đấu đã kết thúc)
+                      </button>
+                    ) : (
+                      <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider bg-white/5 border border-white/5 px-3 py-2 rounded-xl italic flex items-center gap-1.5">
+                        <span>ℹ️</span> Chỉ có thể xóa lịch sử khi trận đấu đã chính thức kết thúc
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-8 py-6 border-t border-white/10 bg-black/40 flex justify-end">
+              <button
+                onClick={() => setHistoryMatch(null)}
+                className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
