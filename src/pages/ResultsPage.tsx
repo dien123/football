@@ -86,8 +86,8 @@ const ResultsPage: React.FC = () => {
       // Fetch ALL bets for ALL finished matches in World Cup
       const matchIds = wcMatches.map(m => m.id);
       if (matchIds.length > 0) {
-        const selectColumns = isAdmin 
-          ? '*' 
+        const selectColumns = isAdmin
+          ? '*'
           : 'id, match_id, user_name, option, created_at, user_id';
 
         const { data: betsData, error: betsError } = await (supabase
@@ -111,8 +111,8 @@ const ResultsPage: React.FC = () => {
   }, [selectedMatchId]);
 
   const fetchBets = async (matchId: string) => {
-    const selectColumns = isAdmin 
-      ? '*' 
+    const selectColumns = isAdmin
+      ? '*'
       : 'id, match_id, user_name, option, created_at, user_id';
 
     const { data, error } = await (supabase
@@ -889,8 +889,8 @@ const ResultsPage: React.FC = () => {
             </div>
 
             {(() => {
-              const totalRefunded = refunds.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-              const houseBalance = -results.totalPayout - (selectedMatchId === 'all' ? totalRefunded : 0);
+              //const totalRefunded = refunds.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+              //const houseBalance = -results.totalPayout - (selectedMatchId === 'all' ? totalRefunded : 0);
 
               return (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -902,24 +902,6 @@ const ResultsPage: React.FC = () => {
                   <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02]">
                     <p className="text-2xl md:text-3xl font-black text-emerald-400">{results.totalWinners}</p>
                     <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Số lượt Thắng</p>
-                  </div>
-                  <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02]">
-                    <p className={`text-xl md:text-2xl font-black font-mono ${results.totalPayout >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {results.totalPayout > 0 ? '+' : ''}{formatVND(results.totalPayout)}
-                    </p>
-                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Thặng dư</p>
-                  </div>
-                  <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/5 text-center shadow-xl transition-transform hover:scale-[1.02] relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-rose-500 to-amber-500" />
-                    <p className={`text-xl md:text-2xl font-black font-mono ${houseBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {houseBalance > 0 ? '+' : ''}{formatVND(houseBalance)}
-                    </p>
-                    <p className="text-[9px] md:text-[10px] text-slate-500 mt-1 uppercase font-black">Tổng point</p>
-                    {selectedMatchId === 'all' && totalRefunded > 0 && (
-                      <p className="text-[8px] text-slate-600 font-bold mt-0.5 uppercase">
-                        (Đã hoàn: {formatVND(totalRefunded)})
-                      </p>
-                    )}
                   </div>
 
 
