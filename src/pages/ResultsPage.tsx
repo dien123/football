@@ -93,7 +93,8 @@ const ResultsPage: React.FC = () => {
         const { data: betsData, error: betsError } = await (supabase
           .from('bets') as any)
           .select(selectColumns)
-          .in('match_id', matchIds);
+          .in('match_id', matchIds)
+          .limit(10000);
 
         if (!betsError) {
           setAllBets(betsData || []);

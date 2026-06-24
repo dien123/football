@@ -309,7 +309,8 @@ const DC13Page: React.FC = () => {
     const { data } = await supabase
       .from('dc13_bets')
       .select('*, dc13_profiles(full_name)')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(10000);
     if (data) {
       const filtered = data.filter((b: any) =>
         b.user_name !== 'Lâm Mỹ Linh' &&
