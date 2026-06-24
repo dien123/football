@@ -1,8 +1,8 @@
 import { createContext, useEffect, useContext, useState } from 'react';
-import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
 import { ToastProvider } from './components/Toast';
-import MatchPage from './pages/MatchPage';
+// import MatchPage from './pages/MatchPage';
 import FutsalLeaguePage from './pages/FutsalLeaguePage';
 import ResultsPage from './pages/ResultsPage';
 import StandingsPage from './pages/StandingsPage';
@@ -410,7 +410,7 @@ function App() {
             {/* Spacer for fixed top nav (28px warning + 80px nav = 108px) */}
             <div className="h-[108px]" />
             <Routes>
-              <Route path="/" element={<MatchPage />} />
+              <Route path="/" element={<Navigate to="/standings" replace />} />
               <Route path="/futsal" element={<FutsalLeaguePage />} />
               <Route path="/results" element={<AdminGuard><ResultsPage /></AdminGuard>} />
               <Route path="/standings" element={<StandingsPage />} />
