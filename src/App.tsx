@@ -65,7 +65,7 @@ interface NavBarProps {
 function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
   const ctx = useContext(AppContext);
   if (!ctx) return null;
-  const { session, user, isAdminAuthenticated, setAdminAuthenticated, fullName } = ctx;
+  const { session, user, setAdminAuthenticated, fullName } = ctx;
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -109,17 +109,17 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
       {/* Main nav row */}
       <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between h-20">
         {/* Brand / Logo */}
-        <NavLink to="/" className="flex items-center gap-2 text-emerald-400 font-black tracking-widest text-base shrink-0" onClick={() => setMobileOpen(false)}>
+        <NavLink to="/standings" className="flex items-center gap-2 text-emerald-400 font-black tracking-widest text-base shrink-0" onClick={() => setMobileOpen(false)}>
           <span>⚽</span>
           <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Az</span>
         </NavLink>
 
         {/* Desktop Nav Links */}
         <div className="hidden lg:flex items-center gap-1.5 flex-1 justify-center px-2">
-          <NavLink to="/" className={linkCls} end>Dự đoán</NavLink>
+          {/* <NavLink to="/" className={linkCls} end>Dự đoán</NavLink> */}
           <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
-          {isAdminAuthenticated && <NavLink to="/results" className={linkCls}>Kết Quả - Thống Kê</NavLink>}
-          <NavLink to="/history" className={linkCls}>Lịch sử User</NavLink>
+          {/* {isAdminAuthenticated && <NavLink to="/results" className={linkCls}>Kết Quả - Thống Kê</NavLink>} */}
+          {/* <NavLink to="/history" className={linkCls}>Lịch sử User</NavLink> */}
 
           {/* <NavLink to="/outright" className={outrightCls}>
             Dự đoán Vô Địch
@@ -142,7 +142,7 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
               <span className="relative inline-flex rounded-full h-4 w-8 bg-gradient-to-r from-cyan-400 to-teal-400 text-[8px] items-center justify-center text-slate-950 font-black">NEW</span>
             </span>
           </NavLink>
-          <NavLink to="/admin" className={linkCls}>Admin</NavLink>
+          {/* <NavLink to="/admin" className={linkCls}>Admin</NavLink> */}
         </div>
 
         {/* Desktop Right side (session) */}
@@ -345,20 +345,20 @@ function App() {
                 }`}
             >
               <div className="flex flex-col items-center justify-start p-6 space-y-4 h-full overflow-y-auto pb-20">
-                <NavLink to="/" className={mobileLinkCls} onClick={() => setMobileOpen(false)} end>
+                {/* <NavLink to="/" className={mobileLinkCls} onClick={() => setMobileOpen(false)} end>
                   Dự đoán
-                </NavLink>
+                </NavLink> */}
                 <NavLink to="/standings" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
                   Bảng Xếp Hạng
                 </NavLink>
-                {isAdminAuthenticated && (
+                {/* {isAdminAuthenticated && (
                   <NavLink to="/results" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
                     Kết Quả - Thống Kê
                   </NavLink>
-                )}
-                <NavLink to="/history" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
+                )} */}
+                {/* <NavLink to="/history" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
                   Lịch sử User
-                </NavLink>
+                </NavLink> */}
 
 
                 {/* <NavLink to="/outright" className={mobileOutrightCls} onClick={() => setMobileOpen(false)}>
@@ -382,9 +382,9 @@ function App() {
                   </span>
                 </NavLink>
 
-                <NavLink to="/admin" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
+                {/* <NavLink to="/admin" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
                   Admin
-                </NavLink>
+                </NavLink> */}
 
                 {session && (
                   <div className="w-full pt-6 border-t border-white/5 flex flex-col items-center gap-3">
