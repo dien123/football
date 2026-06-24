@@ -7,7 +7,7 @@ import { formatVND, normalizeBetAmount } from '../utils/format';
 
 const PENALTY_AMOUNT = 5000;
 const ADMIN_PIN = 'DC13123';
-const INACTIVE_USERS: string[] = [];
+const INACTIVE_USERS: string[] = ['Dien_dc13'];
 
 const DC13_TEAMS = [
   { name: "Argentina", code: "ar" },
