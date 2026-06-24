@@ -326,7 +326,17 @@ const ResultsPage: React.FC = () => {
       const isTeamA = bet.option === 'teamA' || bet.option === match.team_a_name;
       const selectedTeamName = isTeamA ? match.team_a_name : match.team_b_name;
 
-      const isLeg2 = new Date(match.start_time).getTime() >= new Date('2026-06-18T18:00:00+07:00').getTime();
+      const getRound = (startTimeStr: string) => {
+        const time = new Date(startTimeStr).getTime();
+        const round2Threshold = new Date('2026-06-18T18:00:00+07:00').getTime();
+        const round3Threshold = new Date('2026-06-24T12:00:00+07:00').getTime();
+        if (time >= round3Threshold) return 3;
+        if (time >= round2Threshold) return 2;
+        return 1;
+      };
+
+      const round = getRound(match.start_time);
+      const isLeg2 = round >= 2;
 
       betDetails.push({
         betId: bet.id,
@@ -337,7 +347,8 @@ const ResultsPage: React.FC = () => {
         amount: bet.amount,
         outcome: res.outcome,
         payout: res.payout,
-        isLeg2
+        isLeg2,
+        round
       });
     });
 
@@ -814,10 +825,22 @@ const ResultsPage: React.FC = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
                         {customCalcResults.betDetails.map((detail, index) => {
                           const isChecked = !!calcSelectedMatches[detail.betId];
-                          const showDivider = index > 0 && !detail.isLeg2 && customCalcResults.betDetails[index - 1]?.isLeg2;
+                          const prevRound = customCalcResults.betDetails[index - 1]?.round || (customCalcResults.betDetails[index - 1]?.isLeg2 ? 2 : 1);
+                          const currRound = detail.round || (detail.isLeg2 ? 2 : 1);
+                          const showRound3To2Divider = index > 0 && prevRound === 3 && currRound === 2;
+                          const showRound2To1Divider = index > 0 && prevRound === 2 && currRound === 1;
                           return (
                             <Fragment key={detail.betId}>
-                              {showDivider && (
+                              {showRound3To2Divider && (
+                                <div className="col-span-full flex items-center gap-3 my-2 select-none">
+                                  <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-slate-700/50 to-slate-700/50" />
+                                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 bg-[#222] px-3 py-1 rounded-full border border-white/5 shadow-md shrink-0">
+                                    Hết Lượt 2 • Bắt đầu Lượt 3
+                                  </span>
+                                  <div className="flex-1 h-[1px] bg-gradient-to-l from-transparent via-slate-700/50 to-slate-700/50" />
+                                </div>
+                              )}
+                              {showRound2To1Divider && (
                                 <div className="col-span-full flex items-center gap-3 my-2 select-none">
                                   <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-slate-700/50 to-slate-700/50" />
                                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 bg-[#222] px-3 py-1 rounded-full border border-white/5 shadow-md shrink-0">
@@ -843,10 +866,14 @@ const ResultsPage: React.FC = () => {
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2 flex-wrap">
                                       <p className="font-black text-slate-200 text-xs truncate">{detail.matchName}</p>
-                                      <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider shrink-0 select-none ${detail.isLeg2
-                                        ? 'bg-purple-500/15 text-purple-400 border border-purple-500/20'
-                                        : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'}`}>
-                                        {detail.isLeg2 ? 'Lượt 2' : 'Lượt 1'}
+                                      <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider shrink-0 select-none ${
+                                        currRound === 3
+                                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                                          : currRound === 2
+                                            ? 'bg-purple-500/15 text-purple-400 border border-purple-500/20'
+                                            : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                                      }`}>
+                                        Lượt {currRound}
                                       </span>
                                     </div>
                                     <p className="text-[10px] text-slate-500 mt-0.5 truncate font-semibold">
