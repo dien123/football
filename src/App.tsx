@@ -45,11 +45,11 @@ const mobileLinkCls = ({ isActive }: { isActive: boolean }) =>
 //     : 'text-amber-400 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/10'
 //   }`;
 
-const mobileFutsalCls = ({ isActive }: { isActive: boolean }) =>
-  `w-full max-w-[280px] text-center py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all relative ${isActive
-    ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]'
-    : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10'
-  }`;
+// const mobileFutsalCls = ({ isActive }: { isActive: boolean }) =>
+//   `w-full max-w-[280px] text-center py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all relative ${isActive
+//     ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]'
+//     : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10'
+//   }`;
 
 const mobileDC13Cls = ({ isActive }: { isActive: boolean }) =>
   `w-full max-w-[280px] text-center py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all relative ${isActive
@@ -65,7 +65,7 @@ interface NavBarProps {
 function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
   const ctx = useContext(AppContext);
   if (!ctx) return null;
-  const { session, user, setAdminAuthenticated, fullName } = ctx;
+  const { session, user, isAdminAuthenticated, setAdminAuthenticated, fullName } = ctx;
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -85,11 +85,11 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
   //     : 'text-amber-400 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
   //   }`;
 
-  const futsalCls = ({ isActive }: { isActive: boolean }) =>
-    `px-3 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest whitespace-nowrap transition-all relative group ${isActive
-      ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]'
-      : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
-    }`;
+  // const futsalCls = ({ isActive }: { isActive: boolean }) =>
+  //   `px-3 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest whitespace-nowrap transition-all relative group ${isActive
+  //     ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]'
+  //     : 'text-blue-400 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+  //   }`;
 
   const dc13Cls = ({ isActive }: { isActive: boolean }) =>
     `px-3 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest whitespace-nowrap transition-all relative group ${isActive
@@ -118,7 +118,7 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
         <div className="hidden lg:flex items-center gap-1.5 flex-1 justify-center px-2">
           <NavLink to="/" className={linkCls} end>Dự đoán</NavLink>
           <NavLink to="/standings" className={linkCls}>Bảng Xếp Hạng</NavLink>
-          <NavLink to="/results" className={linkCls}>Kết Quả - Thống Kê</NavLink>
+          {isAdminAuthenticated && <NavLink to="/results" className={linkCls}>Kết Quả - Thống Kê</NavLink>}
           <NavLink to="/history" className={linkCls}>Lịch sử User</NavLink>
 
           {/* <NavLink to="/outright" className={outrightCls}>
@@ -128,13 +128,13 @@ function NavBar({ mobileOpen, setMobileOpen }: NavBarProps) {
               <span className="relative inline-flex rounded-full h-4 w-10 bg-amber-500 text-[7px] items-center justify-center text-black font-black">WINNER</span>
             </span>
           </NavLink> */}
-          <NavLink to="/futsal" className={futsalCls}>
+          {/* <NavLink to="/futsal" className={futsalCls}>
             TIP Futsal 2026
             <span className="absolute -top-2 -right-2 flex h-4 w-7">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-4 w-8 bg-rose-500 text-[8px] items-center justify-center text-white font-black">HOT</span>
             </span>
-          </NavLink>
+          </NavLink> */}
           <NavLink to="/dc13" className={dc13Cls}>
             DC 13
             <span className="absolute -top-2 -right-2 flex h-4 w-8">
@@ -351,9 +351,11 @@ function App() {
                 <NavLink to="/standings" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
                   Bảng Xếp Hạng
                 </NavLink>
-                <NavLink to="/results" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
-                  Kết Quả - Thống Kê
-                </NavLink>
+                {isAdminAuthenticated && (
+                  <NavLink to="/results" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
+                    Kết Quả - Thống Kê
+                  </NavLink>
+                )}
                 <NavLink to="/history" className={mobileLinkCls} onClick={() => setMobileOpen(false)}>
                   Lịch sử User
                 </NavLink>
@@ -366,12 +368,12 @@ function App() {
                   </span>
                 </NavLink> */}
 
-                <NavLink to="/futsal" className={mobileFutsalCls} onClick={() => setMobileOpen(false)}>
+                {/* <NavLink to="/futsal" className={mobileFutsalCls} onClick={() => setMobileOpen(false)}>
                   TIP Futsal 2026
                   <span className="absolute top-4 right-6 bg-rose-500 text-[8px] px-2.5 py-0.5 rounded-full text-white font-black">
                     HOT
                   </span>
-                </NavLink>
+                </NavLink> */}
 
                 <NavLink to="/dc13" className={mobileDC13Cls} onClick={() => setMobileOpen(false)}>
                   DC 13
@@ -410,7 +412,7 @@ function App() {
             <Routes>
               <Route path="/" element={<MatchPage />} />
               <Route path="/futsal" element={<FutsalLeaguePage />} />
-              <Route path="/results" element={<ResultsPage />} />
+              <Route path="/results" element={<AdminGuard><ResultsPage /></AdminGuard>} />
               <Route path="/standings" element={<StandingsPage />} />
               <Route path="/outright" element={<OutrightPage />} />
               <Route path="/dc13" element={<DC13Page />} />

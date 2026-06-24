@@ -9,6 +9,8 @@ import { AppContext } from '../App';
 import { isMatchBettingLocked } from '../utils/betLogic';
 import { formatVND } from '../utils/format';
 
+const CUTOFF_FILTER_TIME = new Date('2026-06-24T18:00:00+07:00').getTime();
+
 const MatchPage: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +84,7 @@ const MatchPage: React.FC = () => {
     if (!error && data) {
       setMatches(data);
       if (data.length > 0 && !selectedDate) {
-        const wcMatches = data.filter(m => m.league !== 'TIP Futsal league');
+        const wcMatches = data.filter(m => m.league !== 'TIP Futsal league' && new Date(m.start_time).getTime() >= CUTOFF_FILTER_TIME);
         const wcDates = [...new Set(wcMatches.map(m => new Date(m.start_time).toLocaleDateString('vi-VN')))].sort((a, b) => {
           const [da, ma, ya] = a.split('/').map(Number);
           const [db, mb, yb] = b.split('/').map(Number);
@@ -208,7 +210,7 @@ const MatchPage: React.FC = () => {
   };
 
   const uniqueDates = [...new Set(matches
-    .filter(m => m.league !== 'TIP Futsal league')
+    .filter(m => m.league !== 'TIP Futsal league' && new Date(m.start_time).getTime() >= CUTOFF_FILTER_TIME)
     .map(m => new Date(m.start_time).toLocaleDateString('vi-VN'))
   )].sort((a, b) => {
     const [da, ma, ya] = a.split('/').map(Number);
@@ -217,8 +219,8 @@ const MatchPage: React.FC = () => {
   });
 
   const filteredMatches = matches.filter(m => {
-    // Isolation: Exclude TIP Futsal league
-    const isWC = m.league !== 'TIP Futsal league';
+    // Isolation: Exclude TIP Futsal league and legacy matches before cutoff
+    const isWC = m.league !== 'TIP Futsal league' && new Date(m.start_time).getTime() >= CUTOFF_FILTER_TIME;
     if (!isWC) return false;
 
     const isLive = m.status === 'live' || (m.status !== 'finished' && new Date(m.start_time) <= new Date());

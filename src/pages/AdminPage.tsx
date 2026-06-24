@@ -23,7 +23,11 @@ const AdminPage: React.FC = () => {
   const [loadingHistory, setLoadingHistory] = useState(false);
 
   const [contributedInput, setContributedInput] = useState(() => {
-    const saved = localStorage.getItem('admin_contributed_fund') || '';
+    const saved = localStorage.getItem('admin_contributed_fund');
+    if (saved === null) {
+      localStorage.setItem('admin_contributed_fund', '1.000');
+      return '1.000';
+    }
     const num = parseInt(saved.replace(/\D/g, ''), 10);
     if (!isNaN(num) && num >= 10000) {
       const converted = (num / 1000).toLocaleString('vi-VN');
@@ -49,7 +53,12 @@ const AdminPage: React.FC = () => {
   };
 
   const [outsideBetInput, setOutsideBetInput] = useState(() => {
-    return localStorage.getItem('admin_outside_bet_fund') || '';
+    const saved = localStorage.getItem('admin_outside_bet_fund');
+    if (saved === null) {
+      localStorage.setItem('admin_outside_bet_fund', '-1.090');
+      return '-1.090';
+    }
+    return saved;
   });
 
   const outsideBetValue = useMemo(() => {
@@ -542,8 +551,12 @@ const AdminPage: React.FC = () => {
   const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-emerald-500 outline-none";
   const labelCls = "block text-[10px] font-black text-slate-500 mb-1 uppercase";
 
-  // 18:00 local time 16/06/2026 is 2026-06-16T11:00:00Z
-  const CUTOFF_TIME = new Date('2026-06-16T11:00:00.000Z').getTime();
+  // 18:00 local time 24/06/2026 is 2026-06-24T11:00:00Z
+  const CUTOFF_TIME = new Date('2026-06-24T11:00:00.000Z').getTime();
+
+  // Carry-over values from Lượt 1 & Lượt 2 (ending 18:00 24/06)
+  const CARRY_OVER_PAYOUT = -1091.08 * 1000;
+  const CARRY_OVER_REFUNDS = 350.00 * 1000;
 
   const adminStats = useMemo(() => {
     // Filter matches that are finished, not Futsal, starting after the CUTOFF_TIME
@@ -557,7 +570,7 @@ const AdminPage: React.FC = () => {
     const targetBets = allBets.filter(b => targetMatchIds.includes(b.match_id));
 
     let totalBetsAmount = 0;
-    let totalPayout = 0;
+    let totalPayout = CARRY_OVER_PAYOUT;
 
     targetBets.forEach(bet => {
       const match = targetMatches.find(m => m.id === bet.match_id);
@@ -585,7 +598,7 @@ const AdminPage: React.FC = () => {
     const targetRefunds = refunds.filter(r =>
       new Date(r.refunded_at).getTime() >= CUTOFF_TIME
     );
-    const totalRefundsAmount = targetRefunds.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+    const totalRefundsAmount = CARRY_OVER_REFUNDS + targetRefunds.reduce((sum, r) => sum + Number(r.amount || 0), 0);
 
     // House profit/loss = -totalPayout - totalRefundsAmount
     const houseProfit = -totalPayout - totalRefundsAmount;
@@ -641,10 +654,10 @@ const AdminPage: React.FC = () => {
                     📊 Thống kê tài chính admin
                   </span>
                   <h3 className="text-base font-black text-white uppercase tracking-tight italic">
-                    Tổng <span className="text-emerald-500">(Từ 18h00 ngày 16/06)</span>
+                    Tổng <span className="text-emerald-500">(Từ 18h00 ngày 24/06)</span>
                   </h3>
                   <p className="text-[11px] text-slate-500 font-medium">
-                    Tính từ sau trận Iran vs New Zealand (không tính các trận và hoàn điểm trước thời điểm này)
+                    Tính từ sau trận Colombia vs DR Congo (không tính các trận và hoàn điểm trước thời điểm này)
                   </p>
                 </div>
 
