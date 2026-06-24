@@ -6,6 +6,9 @@ import { calculateBetResult, getOutcomeLabel } from '../utils/betLogic';
 import { formatVND } from '../utils/format';
 
 
+// 18:00 local time 24/06/2026 is 2026-06-24T11:00:00Z
+const CUTOFF_TIME = new Date('2026-06-24T11:00:00.000Z').getTime();
+
 const AdminPage: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [editingMatch, setEditingMatch] = useState<Partial<Match> | null>(null);
@@ -146,7 +149,8 @@ const AdminPage: React.FC = () => {
       setMatches(fetched);
 
       if (fetched.length > 0 && !selectedDate) {
-        const dates = [...new Set(fetched.map(m => new Date(m.start_time).toLocaleDateString('vi-VN')))].sort((a, b) => {
+        const targetFetched = fetched.filter(m => new Date(m.start_time).getTime() >= CUTOFF_TIME);
+        const dates = [...new Set(targetFetched.map(m => new Date(m.start_time).toLocaleDateString('vi-VN')))].sort((a, b) => {
           const [da, ma, ya] = a.split('/').map(Number);
           const [db, mb, yb] = b.split('/').map(Number);
           return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime();
@@ -526,6 +530,10 @@ const AdminPage: React.FC = () => {
 
   const filteredMatches = matches.filter(m => {
     if (m.id === 'WORLD_CUP_2026_WINNER_REF') return false;
+    
+    // Bỏ qua các trận đấu trước mốc CUTOFF_TIME (18h ngày 24/06) giống bên ngoài
+    if (new Date(m.start_time).getTime() < CUTOFF_TIME) return false;
+
     if (filter === 'live') return m.status === 'live';
     if (filter === 'date' && selectedDate) return new Date(m.start_time).toLocaleDateString('vi-VN') === selectedDate;
     if (filter === 'unplayed' && selectedDate) {
@@ -535,7 +543,10 @@ const AdminPage: React.FC = () => {
     return true;
   });
 
-  const uniqueDates = [...new Set(matches.map(m => new Date(m.start_time).toLocaleDateString('vi-VN')))].sort((a, b) => {
+  const uniqueDates = [...new Set(matches
+    .filter(m => new Date(m.start_time).getTime() >= CUTOFF_TIME)
+    .map(m => new Date(m.start_time).toLocaleDateString('vi-VN'))
+  )].sort((a, b) => {
     const [da, ma, ya] = a.split('/').map(Number);
     const [db, mb, yb] = b.split('/').map(Number);
     return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime();
@@ -550,9 +561,6 @@ const AdminPage: React.FC = () => {
 
   const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-emerald-500 outline-none";
   const labelCls = "block text-[10px] font-black text-slate-500 mb-1 uppercase";
-
-  // 18:00 local time 24/06/2026 is 2026-06-24T11:00:00Z
-  const CUTOFF_TIME = new Date('2026-06-24T11:00:00.000Z').getTime();
 
   // Carry-over values from Lượt 1 & Lượt 2 (ending 18:00 24/06)
   const CARRY_OVER_PAYOUT = -1091.08 * 1000;
