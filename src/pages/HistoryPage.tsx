@@ -357,13 +357,13 @@ const HistoryPage: React.FC = () => {
             onClick={() => setActiveTab('pending')}
             className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'pending' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
           >
-            Đã bet chưa đá
+            Đã dự đoán chưa đá
           </button>
           <button
             onClick={() => setActiveTab('finished')}
             className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'finished' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
           >
-            Đã bet đã đá
+            Đã dự đoán đã đá
           </button>
           <button
             onClick={() => setActiveTab('outright')}
