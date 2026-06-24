@@ -365,12 +365,6 @@ const HistoryPage: React.FC = () => {
           >
             Đã dự đoán đã đá
           </button>
-          <button
-            onClick={() => setActiveTab('outright')}
-            className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'outright' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-          >
-            Chọn Vô Địch
-          </button>
         </div>
 
         {/* LOADING INDICATOR */}
