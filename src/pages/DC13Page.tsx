@@ -306,18 +306,33 @@ const DC13Page: React.FC = () => {
   }, [matches, selectedDate]);
 
   const fetchBets = useCallback(async () => {
-    const { data } = await supabase
-      .from('dc13_bets')
-      .select('*, dc13_profiles(full_name)')
-      .order('created_at', { ascending: false })
-      .limit(10000);
-    if (data) {
-      const filtered = data.filter((b: any) =>
-        b.user_name !== 'Lâm Mỹ Linh' &&
-        b.dc13_profiles?.full_name !== 'Lâm Mỹ Linh'
-      );
-      setBets(filtered as any);
+    let allData: any[] = [];
+    let from = 0;
+    let to = 999;
+    let hasMore = true;
+    while (hasMore) {
+      const { data } = await supabase
+        .from('dc13_bets')
+        .select('*, dc13_profiles(full_name)')
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      if (data) {
+        allData = [...allData, ...data];
+        if (data.length < 1000) {
+          hasMore = false;
+        } else {
+          from += 1000;
+          to += 1000;
+        }
+      } else {
+        hasMore = false;
+      }
     }
+    const filtered = allData.filter((b: any) =>
+      b.user_name !== 'Lâm Mỹ Linh' &&
+      b.dc13_profiles?.full_name !== 'Lâm Mỹ Linh'
+    );
+    setBets(filtered as any);
   }, []);
 
   const fetchDC13OutrightData = useCallback(async () => {

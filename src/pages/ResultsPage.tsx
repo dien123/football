@@ -90,14 +90,38 @@ const ResultsPage: React.FC = () => {
           ? '*'
           : 'id, match_id, user_name, option, created_at, user_id';
 
-        const { data: betsData, error: betsError } = await (supabase
-          .from('bets') as any)
-          .select(selectColumns)
-          .in('match_id', matchIds)
-          .limit(10000);
+        let allBetsData: any[] = [];
+        let fromBets = 0;
+        let toBets = 999;
+        let hasMoreBets = true;
+        let fetchError = false;
 
-        if (!betsError) {
-          setAllBets(betsData || []);
+        while (hasMoreBets) {
+          const { data: betsData, error: betsError } = await (supabase
+            .from('bets') as any)
+            .select(selectColumns)
+            .in('match_id', matchIds)
+            .range(fromBets, toBets);
+
+          if (betsError) {
+            fetchError = true;
+            break;
+          }
+          if (betsData) {
+            allBetsData = [...allBetsData, ...betsData];
+            if (betsData.length < 1000) {
+              hasMoreBets = false;
+            } else {
+              fromBets += 1000;
+              toBets += 1000;
+            }
+          } else {
+            hasMoreBets = false;
+          }
+        }
+
+        if (!fetchError) {
+          setAllBets(allBetsData);
         }
       }
     }

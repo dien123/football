@@ -165,8 +165,28 @@ const AdminPage: React.FC = () => {
       }
     }
 
-    const { data: betsData } = await supabase.from('bets').select('*').limit(10000);
-    if (betsData) setAllBets(betsData);
+    let allBetsData: any[] = [];
+    let fromBets = 0;
+    let toBets = 999;
+    let hasMoreBets = true;
+    while (hasMoreBets) {
+      const { data } = await supabase
+        .from('bets')
+        .select('*')
+        .range(fromBets, toBets);
+      if (data) {
+        allBetsData = [...allBetsData, ...data];
+        if (data.length < 1000) {
+          hasMoreBets = false;
+        } else {
+          fromBets += 1000;
+          toBets += 1000;
+        }
+      } else {
+        hasMoreBets = false;
+      }
+    }
+    setAllBets(allBetsData);
 
     const { data: refundsData } = await supabase.from('refunds').select('*');
     if (refundsData) {
