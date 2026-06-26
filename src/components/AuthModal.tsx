@@ -17,6 +17,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
   const ctx = useContext(AppContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPasswordField, setShowPasswordField] = useState(false);
+  const [password, setPassword] = useState('');
 
   React.useEffect(() => {
     if (isOpen) {
@@ -77,46 +79,58 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
         }
 
         // Try to sign in first
+        const activePassword = showPasswordField ? password : CONSTANT_PASSWORD;
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
-          password: CONSTANT_PASSWORD,
+          password: activePassword,
         });
 
         // If user exists in db profiles but not in Supabase Auth, auto-sign up
         if (signInError && signInError.message.includes('Invalid login credentials')) {
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email: normalizedEmail,
-            password: CONSTANT_PASSWORD,
-            options: {
-              data: {
-                full_name: fullName
+          if (!showPasswordField) {
+            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+              email: normalizedEmail,
+              password: CONSTANT_PASSWORD,
+              options: {
+                data: {
+                  full_name: fullName
+                }
+              }
+            });
+
+            if (signUpError) {
+              if (signUpError.message.includes('User already registered') || signUpError.code === 'user_already_exists') {
+                setShowPasswordField(true);
+                setError('Tài khoản của bạn yêu cầu mật khẩu cá nhân. Vui lòng nhập mật khẩu.');
+                setLoading(false);
+                return;
+              }
+              throw signUpError;
+            }
+
+            if (signUpData.user) {
+              // Auto-create profiles if missing
+              if (!profileByEmail) {
+                await supabase.from('profiles').insert({
+                  id: signUpData.user.id,
+                  email: normalizedEmail,
+                  full_name: fullName
+                });
+              }
+              // Update dc13_profiles id to match the new Auth user id
+              if (dc13ProfileByEmail) {
+                await supabase
+                  .from('dc13_profiles')
+                  .update({ id: signUpData.user.id })
+                  .eq('email', normalizedEmail);
               }
             }
-          });
 
-          if (signUpError) throw signUpError;
-
-          if (signUpData.user) {
-            // Auto-create profiles if missing
-            if (!profileByEmail) {
-              await supabase.from('profiles').insert({
-                id: signUpData.user.id,
-                email: normalizedEmail,
-                full_name: fullName
-              });
-            }
-            // Update dc13_profiles id to match the new Auth user id
-            if (dc13ProfileByEmail) {
-              await supabase
-                .from('dc13_profiles')
-                .update({ id: signUpData.user.id })
-                .eq('email', normalizedEmail);
-            }
+            if (ctx) await ctx.refreshFullName();
+            onSuccess();
+            return;
           }
-
-          if (ctx) await ctx.refreshFullName();
-          onSuccess();
-          return;
+          throw signInError;
         }
 
         if (signInError) throw signInError;
@@ -145,14 +159,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
 
       // CASE 2: No profile found - but user might exist in Auth (Legacy sync issue)
       // Try to sign in first with constant password
+      const activePassword = showPasswordField ? password : CONSTANT_PASSWORD;
       const { data: legacySignInData, error: legacySignInError } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
-        password: CONSTANT_PASSWORD,
+        password: activePassword,
       });
 
       if (!legacySignInError && legacySignInData.user) {
         // User exists in Auth but had no profile. Let's create it.
-        // First check if the name they want to use is taken by someone else's profile
         if (profileByName && profileByName.email.toLowerCase() !== normalizedEmail) {
           setError(`Tên "${fullName}" đã được sử dụng bởi Email khác. Vui lòng dùng tên khác.`);
           await supabase.auth.signOut();
@@ -169,7 +183,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
           });
 
         if (insertError) {
-          // If fail to insert profile (maybe name conflict we missed), log out and fail
           await supabase.auth.signOut();
           throw insertError;
         }
@@ -179,13 +192,33 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
         return;
       }
 
-      // CASE 3: Not in profiles and not in Auth -> block registration
-      if (legacySignInError?.message?.includes('Invalid login credentials')) {
-        setError('Tài khoản không tồn tại. Vui lòng liên hệ Admin để đăng ký tài khoản!');
-        setLoading(false);
-        return;
-      } else {
-        throw legacySignInError;
+      if (legacySignInError) {
+        if (!showPasswordField && legacySignInError.message.includes('Invalid login credentials')) {
+          const { error: signUpError } = await supabase.auth.signUp({
+            email: normalizedEmail,
+            password: CONSTANT_PASSWORD,
+          });
+
+          if (signUpError && (signUpError.message.includes('User already registered') || signUpError.code === 'user_already_exists')) {
+            setShowPasswordField(true);
+            setError('Tài khoản của bạn yêu cầu mật khẩu cá nhân. Vui lòng nhập mật khẩu.');
+            setLoading(false);
+            return;
+          }
+        }
+
+        // CASE 3: Not in profiles and not in Auth -> block registration
+        if (legacySignInError.message.includes('Invalid login credentials')) {
+          if (showPasswordField) {
+            setError('Mật khẩu cá nhân không chính xác. Vui lòng thử lại.');
+          } else {
+            setError('Tài khoản không tồn tại. Vui lòng liên hệ Admin để đăng ký tài khoản!');
+          }
+          setLoading(false);
+          return;
+        } else {
+          throw legacySignInError;
+        }
       }
     } catch (err: any) {
       let msg = err.message || 'Có lỗi xảy ra, vui lòng thử lại.';
@@ -194,6 +227,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
         msg = 'Hệ thống đang bận. Vui lòng đợi 1-2 phút hoặc tắt "Confirm email" trong Supabase.';
       } else if (msg.includes('Email not confirmed')) {
         msg = 'Email chưa được xác nhận. Vui lòng tắt "Confirm email" trong cài đặt Supabase.';
+      } else if (msg.includes('Invalid login credentials')) {
+        msg = 'Mật khẩu cá nhân không chính xác. Vui lòng thử lại.';
       }
 
       setError(msg);
@@ -247,9 +282,26 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={showPasswordField}
             />
             <p className="text-[9px] text-slate-500 mt-2 italic px-1">* Dùng Gmail để nhận diện người chơi chính xác.</p>
           </div>
+
+          {showPasswordField && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Mật khẩu cá nhân</label>
+              <input
+                type="password"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none transition-all"
+                placeholder="Nhập mật khẩu riêng của bạn"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoFocus
+              />
+              <p className="text-[9px] text-amber-400 mt-2 px-1 font-semibold">* Tài khoản này đã có mật khẩu bảo mật riêng. Vui lòng nhập mật khẩu của bạn.</p>
+            </div>
+          )}
 
           {error && (
             <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-bold py-2 px-3 rounded-lg flex items-center gap-2">
