@@ -63,12 +63,48 @@ const DC13AuthModal: React.FC<DC13AuthModalProps> = ({ isOpen, onClose, onSucces
           return;
         }
 
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
           password: CONSTANT_PASSWORD,
         });
 
+        // If user exists in db dc13_profiles but not in Supabase Auth, auto-sign up
+        if (signInError && signInError.message.includes('Invalid login credentials')) {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: normalizedEmail,
+            password: CONSTANT_PASSWORD,
+            options: {
+              data: {
+                full_name: fullName
+              }
+            }
+          });
+
+          if (signUpError) throw signUpError;
+
+          if (signUpData.user) {
+            // Update dc13_profiles id to match the new Auth user id
+            await supabase
+              .from('dc13_profiles')
+              .update({ id: signUpData.user.id })
+              .eq('email', normalizedEmail);
+          }
+
+          if (ctx) await ctx.refreshFullName();
+          onSuccess();
+          return;
+        }
+
         if (signInError) throw signInError;
+
+        // If sign in succeeded, ensure dc13_profiles id is synced
+        if (signInData.user && profileByEmail.id !== signInData.user.id) {
+          await supabase
+            .from('dc13_profiles')
+            .update({ id: signInData.user.id })
+            .eq('email', normalizedEmail);
+        }
+
         if (ctx) await ctx.refreshFullName();
         onSuccess();
         return;

@@ -43,9 +43,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
     const normalizedEmail = email.trim().toLowerCase();
 
     try {
-      // 0. Identity Lookup
+      // 0. Identity Lookup in profiles and dc13_profiles
       const { data: profileByEmail } = await supabase
         .from('profiles')
+        .select('*')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+
+      const { data: dc13ProfileByEmail } = await supabase
+        .from('dc13_profiles')
         .select('*')
         .eq('email', normalizedEmail)
         .maybeSingle();
@@ -56,20 +62,82 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
         .eq('full_name', fullName)
         .maybeSingle();
 
-      // CASE 1: Email already in profiles
-      if (profileByEmail) {
-        if (profileByEmail.full_name !== fullName) {
+      // CASE 1: Email already in profiles or dc13_profiles
+      if (profileByEmail || dc13ProfileByEmail) {
+        if (profileByEmail && profileByEmail.full_name !== fullName) {
           setError(`Email đã tồn tại với tên khác. Vui lòng nhập đúng Tên "${profileByEmail.full_name}" để đăng nhập.`);
           setLoading(false);
           return;
         }
 
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        if (!profileByEmail && dc13ProfileByEmail && dc13ProfileByEmail.full_name !== fullName) {
+          setError(`Email đã đăng ký DC_13 với tên khác. Vui lòng nhập đúng Tên "${dc13ProfileByEmail.full_name}" để đăng nhập.`);
+          setLoading(false);
+          return;
+        }
+
+        // Try to sign in first
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
           password: CONSTANT_PASSWORD,
         });
 
+        // If user exists in db profiles but not in Supabase Auth, auto-sign up
+        if (signInError && signInError.message.includes('Invalid login credentials')) {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: normalizedEmail,
+            password: CONSTANT_PASSWORD,
+            options: {
+              data: {
+                full_name: fullName
+              }
+            }
+          });
+
+          if (signUpError) throw signUpError;
+
+          if (signUpData.user) {
+            // Auto-create profiles if missing
+            if (!profileByEmail) {
+              await supabase.from('profiles').insert({
+                id: signUpData.user.id,
+                email: normalizedEmail,
+                full_name: fullName
+              });
+            }
+            // Update dc13_profiles id to match the new Auth user id
+            if (dc13ProfileByEmail) {
+              await supabase
+                .from('dc13_profiles')
+                .update({ id: signUpData.user.id })
+                .eq('email', normalizedEmail);
+            }
+          }
+
+          if (ctx) await ctx.refreshFullName();
+          onSuccess();
+          return;
+        }
+
         if (signInError) throw signInError;
+
+        // If sign in succeeded, but profiles record is missing (they only had dc13_profile)
+        if (signInData.user && !profileByEmail) {
+          await supabase.from('profiles').insert({
+            id: signInData.user.id,
+            email: normalizedEmail,
+            full_name: fullName
+          });
+        }
+
+        // Also ensure dc13_profiles id is synced
+        if (signInData.user && dc13ProfileByEmail && dc13ProfileByEmail.id !== signInData.user.id) {
+          await supabase
+            .from('dc13_profiles')
+            .update({ id: signInData.user.id })
+            .eq('email', normalizedEmail);
+        }
+
         if (ctx) await ctx.refreshFullName();
         onSuccess();
         return;
