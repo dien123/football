@@ -59,7 +59,7 @@ const DC13AuthModal: React.FC<DC13AuthModalProps> = ({ isOpen, onClose, onSucces
 
       // CASE 1: Email already in dc13_profiles
       if (profileByEmail) {
-        if (profileByEmail.full_name !== fullName) {
+        if (profileByEmail.full_name && profileByEmail.full_name !== fullName) {
           setError(`Email đã đăng ký DC_13 với tên khác. Vui lòng nhập đúng Tên "${profileByEmail.full_name}" để đăng nhập.`);
           setLoading(false);
           return;
@@ -96,9 +96,13 @@ const DC13AuthModal: React.FC<DC13AuthModalProps> = ({ isOpen, onClose, onSucces
 
             if (signUpData.user) {
               // Update dc13_profiles id to match the new Auth user id
+              const updateData: any = { id: signUpData.user.id };
+              if (!profileByEmail.full_name) {
+                updateData.full_name = fullName;
+              }
               await supabase
                 .from('dc13_profiles')
-                .update({ id: signUpData.user.id })
+                .update(updateData)
                 .eq('email', normalizedEmail);
             }
 
@@ -111,12 +115,21 @@ const DC13AuthModal: React.FC<DC13AuthModalProps> = ({ isOpen, onClose, onSucces
 
         if (signInError) throw signInError;
 
-        // If sign in succeeded, ensure dc13_profiles id is synced
-        if (signInData.user && profileByEmail.id !== signInData.user.id) {
-          await supabase
-            .from('dc13_profiles')
-            .update({ id: signInData.user.id })
-            .eq('email', normalizedEmail);
+        // If sign in succeeded, ensure dc13_profiles id and name are synced
+        if (signInData.user) {
+          const updateData: any = {};
+          if (profileByEmail.id !== signInData.user.id) {
+            updateData.id = signInData.user.id;
+          }
+          if (!profileByEmail.full_name) {
+            updateData.full_name = fullName;
+          }
+          if (Object.keys(updateData).length > 0) {
+            await supabase
+              .from('dc13_profiles')
+              .update(updateData)
+              .eq('email', normalizedEmail);
+          }
         }
 
         if (ctx) await ctx.refreshFullName();

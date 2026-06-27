@@ -66,13 +66,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
 
       // CASE 1: Email already in profiles or dc13_profiles
       if (profileByEmail || dc13ProfileByEmail) {
-        if (profileByEmail && profileByEmail.full_name !== fullName) {
+        if (profileByEmail && profileByEmail.full_name && profileByEmail.full_name !== fullName) {
           setError(`Email đã tồn tại với tên khác. Vui lòng nhập đúng Tên "${profileByEmail.full_name}" để đăng nhập.`);
           setLoading(false);
           return;
         }
 
-        if (!profileByEmail && dc13ProfileByEmail && dc13ProfileByEmail.full_name !== fullName) {
+        if (!profileByEmail && dc13ProfileByEmail && dc13ProfileByEmail.full_name && dc13ProfileByEmail.full_name !== fullName) {
           setError(`Email đã đăng ký DC_13 với tên khác. Vui lòng nhập đúng Tên "${dc13ProfileByEmail.full_name}" để đăng nhập.`);
           setLoading(false);
           return;
@@ -109,19 +109,28 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
             }
 
             if (signUpData.user) {
-              // Auto-create profiles if missing
+              // Auto-create profiles if missing or update if missing name
               if (!profileByEmail) {
                 await supabase.from('profiles').insert({
                   id: signUpData.user.id,
                   email: normalizedEmail,
                   full_name: fullName
                 });
+              } else if (!profileByEmail.full_name) {
+                await supabase
+                  .from('profiles')
+                  .update({ full_name: fullName })
+                  .eq('id', signUpData.user.id);
               }
               // Update dc13_profiles id to match the new Auth user id
               if (dc13ProfileByEmail) {
+                const updateData: any = { id: signUpData.user.id };
+                if (!dc13ProfileByEmail.full_name) {
+                  updateData.full_name = fullName;
+                }
                 await supabase
                   .from('dc13_profiles')
-                  .update({ id: signUpData.user.id })
+                  .update(updateData)
                   .eq('email', normalizedEmail);
               }
             }
@@ -135,21 +144,37 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, hideC
 
         if (signInError) throw signInError;
 
-        // If sign in succeeded, but profiles record is missing (they only had dc13_profile)
-        if (signInData.user && !profileByEmail) {
-          await supabase.from('profiles').insert({
-            id: signInData.user.id,
-            email: normalizedEmail,
-            full_name: fullName
-          });
+        // If sign in succeeded, but profiles record is missing or has no name
+        if (signInData.user) {
+          if (!profileByEmail) {
+            await supabase.from('profiles').insert({
+              id: signInData.user.id,
+              email: normalizedEmail,
+              full_name: fullName
+            });
+          } else if (!profileByEmail.full_name) {
+            await supabase
+              .from('profiles')
+              .update({ full_name: fullName })
+              .eq('id', signInData.user.id);
+          }
         }
 
-        // Also ensure dc13_profiles id is synced
-        if (signInData.user && dc13ProfileByEmail && dc13ProfileByEmail.id !== signInData.user.id) {
-          await supabase
-            .from('dc13_profiles')
-            .update({ id: signInData.user.id })
-            .eq('email', normalizedEmail);
+        // Also ensure dc13_profiles id and name are synced
+        if (signInData.user && dc13ProfileByEmail) {
+          const updateData: any = {};
+          if (dc13ProfileByEmail.id !== signInData.user.id) {
+            updateData.id = signInData.user.id;
+          }
+          if (!dc13ProfileByEmail.full_name) {
+            updateData.full_name = fullName;
+          }
+          if (Object.keys(updateData).length > 0) {
+            await supabase
+              .from('dc13_profiles')
+              .update(updateData)
+              .eq('email', normalizedEmail);
+          }
         }
 
         if (ctx) await ctx.refreshFullName();
