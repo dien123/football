@@ -190,8 +190,8 @@ const BracketMatchCard: React.FC<{
   scoreB: number;
   title: string;
   onSelectTeam: (team: { name: string; code: string }) => void;
-  onUpdateScore: (matchId: string, scoreA: number, scoreB: number) => void;
-  onInsertAndScore: (roundName: string, teamA: string, teamACode: string | null, teamB: string, teamBCode: string | null, scoreA: number, scoreB: number) => void;
+  onUpdateScore: (matchId: string, scoreA: number, scoreB: number, winnerTeam?: 'teamA' | 'teamB' | null) => void;
+  onInsertAndScore: (roundName: string, teamA: string, teamACode: string | null, teamB: string, teamBCode: string | null, scoreA: number, scoreB: number, winnerTeam?: 'teamA' | 'teamB' | null) => void;
   roundName?: string;
   rawTeamA?: any;
   rawTeamB?: any;
@@ -205,19 +205,15 @@ const BracketMatchCard: React.FC<{
 
   const handleScoreChange = (isTeamA: boolean, val: number) => {
     if (!isAdmin) return;
+    const nextScoreA = isTeamA ? val : scoreA;
+    const nextScoreB = isTeamA ? scoreB : val;
+    const isDraw = nextScoreA === nextScoreB;
+
     if (match) {
-      if (isTeamA) {
-        onUpdateScore(match.id, val, scoreB);
-      } else {
-        onUpdateScore(match.id, scoreA, val);
-      }
+      // If it's no longer a draw, clear the custom winner (set to null)
+      onUpdateScore(match.id, nextScoreA, nextScoreB, isDraw ? undefined : null);
     } else if (roundName && rawTeamA && rawTeamB) {
-      // Create match in DB on the fly when score is edited
-      if (isTeamA) {
-        onInsertAndScore(roundName, rawTeamA.name, rawTeamA.code, rawTeamB.name, rawTeamB.code, val, 0);
-      } else {
-        onInsertAndScore(roundName, rawTeamA.name, rawTeamA.code, rawTeamB.name, rawTeamB.code, 0, val);
-      }
+      onInsertAndScore(roundName, rawTeamA.name, rawTeamA.code, rawTeamB.name, rawTeamB.code, nextScoreA, nextScoreB, isDraw ? undefined : null);
     }
   };
 
@@ -225,17 +221,15 @@ const BracketMatchCard: React.FC<{
     if (!isAdmin) return;
     if (match) {
       if (isTeamA) {
-        const newScoreA = scoreA > scoreB ? scoreA : scoreB + 1;
-        onUpdateScore(match.id, newScoreA, scoreB);
+        onUpdateScore(match.id, scoreA, scoreB, 'teamA');
       } else {
-        const newScoreB = scoreB > scoreA ? scoreB : scoreA + 1;
-        onUpdateScore(match.id, scoreA, newScoreB);
+        onUpdateScore(match.id, scoreA, scoreB, 'teamB');
       }
     } else if (roundName && rawTeamA && rawTeamB) {
       if (isTeamA) {
-        onInsertAndScore(roundName, rawTeamA.name, rawTeamA.code, rawTeamB.name, rawTeamB.code, 1, 0);
+        onInsertAndScore(roundName, rawTeamA.name, rawTeamA.code, rawTeamB.name, rawTeamB.code, 0, 0, 'teamA');
       } else {
-        onInsertAndScore(roundName, rawTeamA.name, rawTeamA.code, rawTeamB.name, rawTeamB.code, 0, 1);
+        onInsertAndScore(roundName, rawTeamA.name, rawTeamA.code, rawTeamB.name, rawTeamB.code, 0, 0, 'teamB');
       }
     }
   };
@@ -445,8 +439,15 @@ const StandingsPage: React.FC = () => {
       
       let winner = null;
       if (isFinished) {
-        if (scoreA > scoreB) winner = { name: m.team_a_name, code: m.team_a_code };
-        else if (scoreB > scoreA) winner = { name: m.team_b_name, code: m.team_b_code };
+        if (m.commentator === 'teamA') {
+          winner = { name: m.team_a_name, code: m.team_a_code };
+        } else if (m.commentator === 'teamB') {
+          winner = { name: m.team_b_name, code: m.team_b_code };
+        } else if (scoreA > scoreB) {
+          winner = { name: m.team_a_name, code: m.team_a_code };
+        } else if (scoreB > scoreA) {
+          winner = { name: m.team_b_name, code: m.team_b_code };
+        }
       }
       
       return { scoreA, scoreB, isFinished, isLive, winner };
@@ -805,19 +806,25 @@ const StandingsPage: React.FC = () => {
     };
   }, [matches]);
 
-  const handleUpdateScore = async (matchId: string, scoreA: number, scoreB: number) => {
+  const handleUpdateScore = async (matchId: string, scoreA: number, scoreB: number, winnerTeam?: 'teamA' | 'teamB' | null) => {
     try {
       const status = 'finished';
+      const updatePayload: any = {
+        score_a: scoreA,
+        score_b: scoreB,
+        status: status,
+        dc13_score_a: scoreA,
+        dc13_score_b: scoreB,
+        dc13_status: status
+      };
+
+      if (winnerTeam !== undefined) {
+        updatePayload.commentator = winnerTeam;
+      }
+
       const { error } = await supabase
         .from('matches')
-        .update({
-          score_a: scoreA,
-          score_b: scoreB,
-          status: status,
-          dc13_score_a: scoreA,
-          dc13_score_b: scoreB,
-          dc13_status: status
-        })
+        .update(updatePayload)
         .eq('id', matchId);
 
       if (error) {
@@ -837,7 +844,8 @@ const StandingsPage: React.FC = () => {
     teamB: string,
     teamBCode: string | null,
     scoreA: number,
-    scoreB: number
+    scoreB: number,
+    winnerTeam?: 'teamA' | 'teamB' | null
   ) => {
     try {
       let league = 'World Cup 2026 - ';
@@ -846,7 +854,7 @@ const StandingsPage: React.FC = () => {
       else if (roundName === 'sf') league += 'Bán Kết';
       else if (roundName === 'final') league += 'Chung Kết';
 
-      const payload = {
+      const payload: any = {
         team_a_name: teamA,
         team_b_name: teamB,
         team_a_code: teamACode || '',
@@ -861,6 +869,10 @@ const StandingsPage: React.FC = () => {
         dc13_status: 'finished',
         dc13_handicap_set: false
       };
+
+      if (winnerTeam) {
+        payload.commentator = winnerTeam;
+      }
 
       const { error } = await supabase.from('matches').insert([payload]);
       if (error) {
