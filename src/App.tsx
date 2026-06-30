@@ -14,7 +14,6 @@ import HistoryPage from './pages/HistoryPage';
 import AdminGuard from './components/AdminGuard';
 import AuthModal from './components/AuthModal';
 import RealTimeClock from './components/RealTimeClock';
-import CountdownClock from './components/CountdownClock';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/Footer';
 import { supabase } from './lib/supabase';
@@ -423,7 +422,6 @@ function App() {
             <div className="hidden lg:block fixed top-[120px] left-4 z-40 pointer-events-none">
               <div className="pointer-events-auto flex flex-col gap-8 pl-2">
                 <RealTimeClock />
-                <CountdownClock />
               </div>
             </div>
             <Footer />
