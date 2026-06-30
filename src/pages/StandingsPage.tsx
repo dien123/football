@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { supabase } from '../lib/supabase';
 import { Match } from '../types';
+import { AppContext } from '../App';
 
 // Data Structures
 interface TeamStat {
@@ -196,10 +197,14 @@ const BracketMatchCard: React.FC<{
   rawTeamB?: any;
   isFinal?: boolean;
 }> = ({ match, teamA, teamB, scoreA, scoreB, title, onSelectTeam, onUpdateScore, onInsertAndScore, roundName, rawTeamA, rawTeamB, isFinal }) => {
+  const ctx = useContext(AppContext);
+  const isAdmin = ctx?.isAdminAuthenticated || false;
+
   const isFinished = match?.status === 'finished' || match?.dc13_status === 'finished';
   const isLive = match?.status === 'live' || match?.dc13_status === 'live';
 
   const handleScoreChange = (isTeamA: boolean, val: number) => {
+    if (!isAdmin) return;
     if (match) {
       if (isTeamA) {
         onUpdateScore(match.id, val, scoreB);
@@ -217,6 +222,7 @@ const BracketMatchCard: React.FC<{
   };
 
   const handleAdvanceClick = (isTeamA: boolean) => {
+    if (!isAdmin) return;
     if (match) {
       if (isTeamA) {
         const newScoreA = scoreA > scoreB ? scoreA : scoreB + 1;
@@ -247,7 +253,7 @@ const BracketMatchCard: React.FC<{
     .replace('Chung Kết', 'CK');
 
   return (
-    <div className={`w-[170px] bg-[#141414]/90 backdrop-blur-sm rounded-xl border p-1.5 shadow-md shrink-0 flex flex-col gap-1 transition-all select-none ${
+    <div className={`w-[170px] h-[56px] bg-[#141414]/90 backdrop-blur-sm rounded-xl border px-2 py-1 shadow-md shrink-0 flex flex-col justify-between transition-all select-none ${
       isFinal ? 'border-amber-500/40 hover:border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.15)] bg-[#1a1510]/95' : 'border-white/5 hover:border-emerald-500/30'
     }`}>
       {/* Card Header */}
@@ -263,7 +269,7 @@ const BracketMatchCard: React.FC<{
       </div>
 
       {/* Teams list */}
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-0.5">
         {/* Team A */}
         <div className="flex items-center justify-between gap-1 min-w-0">
           <div 
@@ -278,26 +284,34 @@ const BracketMatchCard: React.FC<{
           </div>
           
           {showInputs && (
-            <div className="flex items-center gap-0.5 shrink-0">
-              <input
-                type="number"
-                value={match ? scoreA : ''}
-                placeholder="0"
-                onChange={(e) => handleScoreChange(true, parseInt(e.target.value) || 0)}
-                className="w-7 h-4.5 bg-black/60 border border-white/10 rounded text-center text-[9px] font-mono font-bold text-white focus:border-emerald-500 focus:outline-none"
-              />
-              <button
-                onClick={() => handleAdvanceClick(true)}
-                title="Chọn thắng"
-                className={`w-4 h-4.5 rounded flex items-center justify-center text-[7px] border transition-all ${
-                  teamA.isWinner 
-                    ? 'bg-emerald-500 border-emerald-400 text-white' 
-                    : 'bg-white/5 border-white/10 text-slate-500 hover:bg-emerald-500/20 hover:text-emerald-400'
-                }`}
-              >
-                ✓
-              </button>
-            </div>
+            isAdmin ? (
+              <div className="flex items-center gap-0.5 shrink-0">
+                <input
+                  type="number"
+                  value={match ? scoreA : ''}
+                  placeholder="0"
+                  onChange={(e) => handleScoreChange(true, parseInt(e.target.value) || 0)}
+                  className="w-7 h-4 bg-black/60 border border-white/10 rounded text-center text-[9px] font-mono font-bold text-white focus:border-emerald-500 focus:outline-none"
+                />
+                <button
+                  onClick={() => handleAdvanceClick(true)}
+                  title="Chọn thắng"
+                  className={`w-4 h-4 rounded flex items-center justify-center text-[7px] border transition-all ${
+                    teamA.isWinner 
+                      ? 'bg-emerald-500 border-emerald-400 text-white' 
+                      : 'bg-white/5 border-white/10 text-slate-500 hover:bg-emerald-500/20 hover:text-emerald-400'
+                  }`}
+                >
+                  ✓
+                </button>
+              </div>
+            ) : (
+              match && (
+                <span className={`text-[10px] font-mono font-black pr-1 w-6 text-right ${teamA.isWinner ? 'text-emerald-400 font-black' : 'text-slate-400'}`}>
+                  {scoreA}
+                </span>
+              )
+            )
           )}
         </div>
 
@@ -315,26 +329,34 @@ const BracketMatchCard: React.FC<{
           </div>
           
           {showInputs && (
-            <div className="flex items-center gap-0.5 shrink-0">
-              <input
-                type="number"
-                value={match ? scoreB : ''}
-                placeholder="0"
-                onChange={(e) => handleScoreChange(false, parseInt(e.target.value) || 0)}
-                className="w-7 h-4.5 bg-black/60 border border-white/10 rounded text-center text-[9px] font-mono font-bold text-white focus:border-emerald-500 focus:outline-none"
-              />
-              <button
-                onClick={() => handleAdvanceClick(false)}
-                title="Chọn thắng"
-                className={`w-4 h-4.5 rounded flex items-center justify-center text-[7px] border transition-all ${
-                  teamB.isWinner 
-                    ? 'bg-emerald-500 border-emerald-400 text-white' 
-                    : 'bg-white/5 border-white/10 text-slate-500 hover:bg-emerald-500/20 hover:text-emerald-400'
-                }`}
-              >
-                ✓
-              </button>
-            </div>
+            isAdmin ? (
+              <div className="flex items-center gap-0.5 shrink-0">
+                <input
+                  type="number"
+                  value={match ? scoreB : ''}
+                  placeholder="0"
+                  onChange={(e) => handleScoreChange(false, parseInt(e.target.value) || 0)}
+                  className="w-7 h-4 bg-black/60 border border-white/10 rounded text-center text-[9px] font-mono font-bold text-white focus:border-emerald-500 focus:outline-none"
+                />
+                <button
+                  onClick={() => handleAdvanceClick(false)}
+                  title="Chọn thắng"
+                  className={`w-4 h-4 rounded flex items-center justify-center text-[7px] border transition-all ${
+                    teamB.isWinner 
+                      ? 'bg-emerald-500 border-emerald-400 text-white' 
+                      : 'bg-white/5 border-white/10 text-slate-500 hover:bg-emerald-500/20 hover:text-emerald-400'
+                  }`}
+                >
+                  ✓
+                </button>
+              </div>
+            ) : (
+              match && (
+                <span className={`text-[10px] font-mono font-black pr-1 w-6 text-right ${teamB.isWinner ? 'text-emerald-400 font-black' : 'text-slate-400'}`}>
+                  {scoreB}
+                </span>
+              )
+            )
           )}
         </div>
       </div>
