@@ -1080,42 +1080,52 @@ const StandingsPage: React.FC = () => {
                     {/* LEFT BRACKET */}
                     <div className="flex gap-3.5 items-stretch h-full">
                       {/* Vòng 32 Left */}
-                      <div className="flex flex-col pt-[10px] space-y-[12px] h-[700px] shrink-0">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Vòng 32 (Trái)</div>
-                        {knockoutData.left.r32.map((slot, i) => (
-                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
-                        ))}
+                      <div className="flex flex-col h-[740px] shrink-0">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-1">Vòng 32 (Trái)</div>
+                        <div className="flex flex-col pt-[10px] space-y-[12px] h-[700px]">
+                          {knockoutData.left.r32.map((slot, i) => (
+                            <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                          ))}
+                        </div>
                       </div>
                       
                       {/* Vòng 16 Left */}
-                      <div className="flex flex-col pt-[53px] space-y-[98px] h-[700px] shrink-0">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Vòng 16 (Trái)</div>
-                        {knockoutData.left.r16.map((slot, i) => (
-                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
-                        ))}
+                      <div className="flex flex-col h-[740px] shrink-0">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-1">Vòng 16 (Trái)</div>
+                        <div className="flex flex-col pt-[53px] space-y-[98px] h-[700px]">
+                          {knockoutData.left.r16.map((slot, i) => (
+                            <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                          ))}
+                        </div>
                       </div>
 
                       {/* Tứ kết Left */}
-                      <div className="flex flex-col pt-[139px] space-y-[270px] h-[700px] shrink-0">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Tứ Kết (Trái)</div>
-                        {knockoutData.left.qf.map((slot, i) => (
-                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
-                        ))}
+                      <div className="flex flex-col h-[740px] shrink-0">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-1">Tứ Kết (Trái)</div>
+                        <div className="flex flex-col pt-[139px] space-y-[270px] h-[700px]">
+                          {knockoutData.left.qf.map((slot, i) => (
+                            <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                          ))}
+                        </div>
                       </div>
 
                       {/* Bán kết Left */}
-                      <div className="flex flex-col pt-[311px] h-[700px] shrink-0">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Bán Kết (Trái)</div>
-                        {knockoutData.left.sf.map((slot, i) => (
-                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
-                        ))}
+                      <div className="flex flex-col h-[740px] shrink-0">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-1">Bán Kết (Trái)</div>
+                        <div className="flex flex-col pt-[311px] h-[700px]">
+                          {knockoutData.left.sf.map((slot, i) => (
+                            <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                          ))}
+                        </div>
                       </div>
                     </div>
 
                     {/* CENTER COLUMN (TROPHY & FINALS) */}
-                    <div className="flex flex-col pt-[311px] h-[700px] w-[180px] shrink-0 relative px-2">
+                    <div className="flex flex-col h-[740px] w-[180px] shrink-0 relative px-2">
+                      <div className="text-center font-black uppercase text-amber-400 text-[9px] tracking-widest pb-1 border-b border-amber-500/20">🏆 CHUNG KẾT</div>
+                      
                       {/* World Cup Trophy Background */}
-                      <div className="absolute inset-0 z-0 opacity-15 flex items-center justify-center pointer-events-none">
+                      <div className="absolute inset-0 z-0 opacity-15 flex items-center justify-center pointer-events-none mt-[30px]">
                         <img
                           src="/world_cup_trophy.png"
                           alt="Trophy"
@@ -1127,8 +1137,7 @@ const StandingsPage: React.FC = () => {
                       </div>
                       
                       {/* Final Match Card */}
-                      <div className="relative z-10">
-                        <div className="text-center font-black uppercase text-amber-400 text-[9px] tracking-widest mb-1.5 animate-pulse">🏆 CHUNG KẾT</div>
+                      <div className="flex flex-col pt-[311px] h-[700px] relative z-10 items-center">
                         <BracketMatchCard {...knockoutData.final[0]} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} isFinal />
                       </div>
                     </div>
@@ -1136,35 +1145,43 @@ const StandingsPage: React.FC = () => {
                     {/* RIGHT BRACKET */}
                     <div className="flex gap-3.5 items-stretch h-full">
                       {/* Bán kết Right */}
-                      <div className="flex flex-col pt-[311px] h-[700px] shrink-0">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Bán Kết (Phải)</div>
-                        {knockoutData.right.sf.map((slot, i) => (
-                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
-                        ))}
+                      <div className="flex flex-col h-[740px] shrink-0">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-1">Bán Kết (Phải)</div>
+                        <div className="flex flex-col pt-[311px] h-[700px]">
+                          {knockoutData.right.sf.map((slot, i) => (
+                            <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                          ))}
+                        </div>
                       </div>
 
                       {/* Tứ kết Right */}
-                      <div className="flex flex-col pt-[139px] space-y-[270px] h-[700px] shrink-0">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Tứ Kết (Phải)</div>
-                        {knockoutData.right.qf.map((slot, i) => (
-                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
-                        ))}
+                      <div className="flex flex-col h-[740px] shrink-0">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-1">Tứ Kết (Phải)</div>
+                        <div className="flex flex-col pt-[139px] space-y-[270px] h-[700px]">
+                          {knockoutData.right.qf.map((slot, i) => (
+                            <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                          ))}
+                        </div>
                       </div>
 
                       {/* Vòng 16 Right */}
-                      <div className="flex flex-col pt-[53px] space-y-[98px] h-[700px] shrink-0">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Vòng 16 (Phải)</div>
-                        {knockoutData.right.r16.map((slot, i) => (
-                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
-                        ))}
+                      <div className="flex flex-col h-[740px] shrink-0">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-1">Vòng 16 (Phải)</div>
+                        <div className="flex flex-col pt-[53px] space-y-[98px] h-[700px]">
+                          {knockoutData.right.r16.map((slot, i) => (
+                            <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                          ))}
+                        </div>
                       </div>
 
                       {/* Vòng 32 Right */}
-                      <div className="flex flex-col pt-[10px] space-y-[12px] h-[700px] shrink-0">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Vòng 32 (Phải)</div>
-                        {knockoutData.right.r32.map((slot, i) => (
-                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
-                        ))}
+                      <div className="flex flex-col h-[740px] shrink-0">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-1">Vòng 32 (Phải)</div>
+                        <div className="flex flex-col pt-[10px] space-y-[12px] h-[700px]">
+                          {knockoutData.right.r32.map((slot, i) => (
+                            <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                          ))}
+                        </div>
                       </div>
                     </div>
 
