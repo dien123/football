@@ -7,6 +7,37 @@ import { formatVND, normalizeBetAmount } from '../utils/format';
 
 const PENALTY_AMOUNT = 5000;
 const ADMIN_PIN = 'DC13123';
+const normalizeForOutright = (name: string): string => {
+  const norm = name.trim().toLowerCase();
+  if (norm === 'mỹ' || norm === 'hoa kỳ') return 'hoa kỳ';
+  if (norm === 'bosnia' || norm === 'bosnia & hz' || norm === 'bosnia & herzegovina') return 'bosnia & hz';
+  if (norm === 'séngal' || norm === 'senegal') return 'senegal';
+  if (norm === 'cape verde' || norm === 'cabo verde') return 'cape verde';
+  if (norm === 'bờ biển ngà' || norm === 'ivory coast') return 'bờ biển ngà';
+  if (norm === 'cộng hòa dân chủ congo' || norm === 'chdc congo' || norm === 'dr congo') return 'chdc congo';
+  if (norm === 'ai cập' || norm === 'egypt') return 'ai cập';
+  if (norm === 'thụy sĩ' || norm === 'switzerland') return 'thụy sĩ';
+  if (norm === 'thụy điển' || norm === 'sweden') return 'thụy điển';
+  if (norm === 'bỉ' || norm === 'belgium') return 'bỉ';
+  if (norm === 'pháp' || norm === 'france') return 'pháp';
+  if (norm === 'bồ đào nha' || norm === 'portugal') return 'bồ đào nha';
+  if (norm === 'croatia') return 'croatia';
+  if (norm === 'tây ban nha' || norm === 'spain') return 'tây ban nha';
+  if (norm === 'áo' || norm === 'austria') return 'áo';
+  if (norm === 'anh' || norm === 'england') return 'anh';
+  if (norm === 'nam phi' || norm === 'south africa') return 'nam phi';
+  if (norm === 'canada') return 'canada';
+  if (norm === 'hà lan' || norm === 'netherlands') return 'hà lan';
+  if (norm === 'maroc' || norm === 'morocco') return 'maroc';
+  if (norm === 'đức' || norm === 'germany') return 'đức';
+  if (norm === 'paraguay') return 'paraguay';
+  if (norm === 'chile') return 'chile';
+  if (norm === 'algeria') return 'algeria';
+  if (norm === 'ghana') return 'ghana';
+  if (norm === 'na uy' || norm === 'norway') return 'na uy';
+  return norm;
+};
+
 const INACTIVE_USERS: string[] = ['Dien_dc13', 'Hoang_DC13'];
 
 const DC13_TEAMS = [
@@ -207,6 +238,62 @@ const DC13Page: React.FC = () => {
   const [editOutrightAmount, setEditOutrightAmount] = useState<number | ''>('');
   const [outrightSearch, setOutrightSearch] = useState('');
   const [showOutrightRules, setShowOutrightRules] = useState(false);
+
+  const eliminatedTeamsSet = useMemo(() => {
+    const set = new Set<string>();
+    const R32_TEAM_NAMES = [
+      'Đức', 'Paraguay', 'Pháp', 'Thụy Điển', 'Nam Phi', 'Canada', 'Hà Lan', 'Maroc', 'Bồ Đào Nha', 'Croatia', 'Tây Ban Nha', 'Áo', 'Hoa Kỳ', 'Bosnia & HZ', 'Bỉ', 'Senegal',
+      'Brazil', 'Nhật Bản', 'Bờ Biển Ngà', 'Na Uy', 'Mexico', 'Ecuador', 'Anh', 'CHDC Congo', 'Argentina', 'Cape Verde', 'Úc', 'Ai Cập', 'Thụy Sĩ', 'Algeria', 'Colombia', 'Ghana'
+    ].map(t => normalizeForOutright(t));
+
+    const r32Set = new Set(R32_TEAM_NAMES);
+    DC13_TEAMS.forEach(t => {
+      const norm = normalizeForOutright(t.name);
+      if (!r32Set.has(norm)) {
+        set.add(norm);
+      }
+    });
+
+    matches.forEach(m => {
+      const lg = (m.league || '').toLowerCase();
+      const isKnockout = lg.includes('vòng 32') || lg.includes('vòng 16') || lg.includes('tứ kết') || lg.includes('bán kết') || lg.includes('chung kết') ||
+                         lg.includes('round of 32') || lg.includes('round of 16') || lg.includes('quarter') || lg.includes('semi') || lg.includes('final') || lg.includes('1/8');
+      if (!isKnockout) return;
+      const isFinished = m.dc13_status === 'finished' || m.status === 'finished';
+      if (!isFinished) return;
+
+      const scoreA = m.dc13_status === 'finished' ? (m.dc13_score_a ?? 0) : (m.score_a ?? 0);
+      const scoreB = m.dc13_status === 'finished' ? (m.dc13_score_b ?? 0) : (m.score_b ?? 0);
+
+      let loserName = '';
+      if (m.commentator === 'teamA') {
+        loserName = m.team_b_name;
+      } else if (m.commentator === 'teamB') {
+        loserName = m.team_a_name;
+      } else if (scoreA > scoreB) {
+        loserName = m.team_b_name;
+      } else if (scoreB > scoreA) {
+        loserName = m.team_a_name;
+      }
+
+      if (loserName) {
+        set.add(normalizeForOutright(loserName));
+      }
+    });
+
+    return set;
+  }, [matches]);
+
+  const sortedOutrightBets = useMemo(() => {
+    return [...outrightBets].sort((a, b) => {
+      const isEliminatedA = eliminatedTeamsSet.has(normalizeForOutright(a.team_name));
+      const isEliminatedB = eliminatedTeamsSet.has(normalizeForOutright(b.team_name));
+      
+      if (isEliminatedA && !isEliminatedB) return 1;
+      if (!isEliminatedA && isEliminatedB) return -1;
+      return 0;
+    });
+  }, [outrightBets, eliminatedTeamsSet]);
 
   // Date Filtering
   const [filter, setFilter] = useState<'date' | 'live' | 'all' | 'unplayed'>('date');
@@ -1939,11 +2026,12 @@ const DC13Page: React.FC = () => {
                     const teamBets = outrightBets.filter(b => b.team_name === team.name);
                     const teamTotalBet = teamBets.reduce((sum, b) => sum + b.amount, 0);
                     const hasOwnBetOnTeam = user && outrightBets.some(b => b.user_id === user.id && b.team_name === team.name);
+                    const isEliminated = eliminatedTeamsSet.has(normalizeForOutright(team.name));
 
                     return (
                       <button
                         key={team.name}
-                        disabled={isOutrightLocked || !!hasOwnBetOnTeam}
+                        disabled={isOutrightLocked || !!hasOwnBetOnTeam || isEliminated}
                         onClick={() => {
                           if (!session) {
                             setShowAuthModal(true);
@@ -1955,7 +2043,9 @@ const DC13Page: React.FC = () => {
                           ? 'border-white/[0.03] opacity-60 cursor-not-allowed'
                           : hasOwnBetOnTeam
                             ? 'border-emerald-500/40 bg-emerald-500/5 cursor-not-allowed'
-                            : 'border-white/[0.08] hover:border-cyan-500/40 hover:bg-cyan-500/5 active:scale-[0.98]'
+                            : isEliminated
+                              ? 'border-red-500/20 bg-red-950/10 opacity-50 cursor-not-allowed'
+                              : 'border-white/[0.08] hover:border-cyan-500/40 hover:bg-cyan-500/5 active:scale-[0.98]'
                           }`}
                       >
                         {/* Flag image */}
@@ -1963,7 +2053,10 @@ const DC13Page: React.FC = () => {
                           <img src={`https://flagcdn.com/w80/${team.code.toLowerCase()}.png`} className="w-full h-full object-cover" alt={team.name} />
                         </div>
 
-                        <span className="text-xs font-black text-white uppercase tracking-tight line-clamp-1">{team.name}</span>
+                        <span className="text-xs font-black text-white uppercase tracking-tight line-clamp-1">
+                          {team.name}
+                          {isEliminated && <span className="ml-1 text-red-500" title="Đã bị loại">❌</span>}
+                        </span>
 
                         {/* Bet Stats on Team */}
                         <div className="mt-2 space-y-0.5">
@@ -1971,6 +2064,8 @@ const DC13Page: React.FC = () => {
                             <span className="block text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center justify-center gap-1">
                               <span>✓</span> Bạn đã chọn
                             </span>
+                          ) : isEliminated ? (
+                            <span className="block text-[10px] font-black text-red-500 uppercase tracking-widest">Đã bị loại</span>
                           ) : (
                             <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Đã dự đoán</span>
                           )}
@@ -2024,7 +2119,7 @@ const DC13Page: React.FC = () => {
                           </td>
                         </tr>
                       ) : (
-                        outrightBets.map(bet => {
+                        sortedOutrightBets.map(bet => {
                           const isOwnBet = user && bet.user_id === user.id;
                           const teamBets = outrightBets.filter(b => b.team_name === bet.team_name);
                           const teamCount = teamBets.length;
@@ -2034,6 +2129,7 @@ const DC13Page: React.FC = () => {
                           let estWinnings = 0;
                           let estTotal = 0;
                           let statusColor = 'text-cyan-400';
+                          const isEliminated = eliminatedTeamsSet.has(normalizeForOutright(bet.team_name));
 
                           if (outrightWinner && outrightWinner !== '__LOCKED__') {
                             if (bet.team_name === outrightWinner) {
@@ -2049,6 +2145,10 @@ const DC13Page: React.FC = () => {
                               estTotal = 0;
                               statusColor = 'text-rose-400 font-bold';
                             }
+                          } else if (isEliminated) {
+                            estWinnings = -bet.amount;
+                            estTotal = 0;
+                            statusColor = 'text-rose-400/80 font-bold';
                           } else {
                             // Estimated winnings: (totalPool - teamPool) / teamCount
                             estWinnings = teamCount > 0 ? (totalOutrightPool - teamTotalBet) / teamCount : 0;
@@ -2070,6 +2170,9 @@ const DC13Page: React.FC = () => {
                                     <img src={`https://flagcdn.com/w80/${getDC13TeamFlag(bet.team_name).toLowerCase()}.png`} className="w-full h-full object-cover" alt={bet.team_name} />
                                   </div>
                                   <span className="uppercase tracking-wide">{bet.team_name}</span>
+                                  {isEliminated && (
+                                    <span className="ml-1.5 text-red-500 font-black animate-pulse" title="Đã bị loại">❌</span>
+                                  )}
                                 </div>
                               </td>
                               <td className="py-4 px-4 text-right font-mono font-bold text-slate-300">
