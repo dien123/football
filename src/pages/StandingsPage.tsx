@@ -159,20 +159,20 @@ const RIGHT_R32_PAIRS = [
 // Component to render a team in the bracket
 const TeamDisplay: React.FC<{ name: string; code?: string | null; isWinner: boolean; isPlaceholder: boolean }> = ({ name, code, isWinner, isPlaceholder }) => {
   return (
-    <div className={`flex items-center justify-between px-3 py-1.5 rounded-xl transition-all ${isWinner ? 'bg-emerald-500/10 border border-emerald-500/20' : 'border border-transparent'}`}>
-      <div className="flex items-center gap-2 min-w-0 w-full">
+    <div className={`flex items-center justify-between px-2 py-1 rounded-lg transition-all ${isWinner ? 'bg-emerald-500/10 border border-emerald-500/20' : 'border border-transparent'}`}>
+      <div className="flex items-center gap-1.5 min-w-0 w-full">
         {code ? (
           <img
             src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
-            className="w-6 h-4 object-cover rounded-[2px] shadow-sm shrink-0"
+            className="w-5 h-3.5 object-cover rounded-[1px] shadow-sm shrink-0"
             alt={name}
           />
         ) : (
-          <div className="w-6 h-4 bg-white/10 rounded-[2px] flex items-center justify-center shrink-0">
-            <span className="text-[9px] text-slate-500">❓</span>
+          <div className="w-5 h-3.5 bg-white/10 rounded-[1px] flex items-center justify-center shrink-0">
+            <span className="text-[8px] text-slate-500">❓</span>
           </div>
         )}
-        <span className={`text-[12px] uppercase truncate flex-1 ${isWinner ? 'text-emerald-400 font-black' : isPlaceholder ? 'text-slate-500 font-normal italic' : 'text-slate-200 font-bold'}`}>
+        <span className={`text-[10px] uppercase truncate flex-1 ${isWinner ? 'text-emerald-400 font-bold' : isPlaceholder ? 'text-slate-600 font-normal italic' : 'text-slate-300 font-semibold'}`}>
           {name}
         </span>
       </div>
@@ -239,26 +239,33 @@ const BracketMatchCard: React.FC<{
   const bothResolved = isTeamAClickable && isTeamBClickable;
   const showInputs = !!match || bothResolved;
 
+  const displayTitle = title
+    .replace('Vòng 32 - Trận ', 'T32-')
+    .replace('Vòng 16 - Trận ', 'T16-')
+    .replace('Tứ Kết - Trận ', 'TK-')
+    .replace('Bán Kết - Trận ', 'BK-')
+    .replace('Chung Kết', 'CK');
+
   return (
-    <div className={`w-[260px] bg-[#141414]/90 backdrop-blur-sm rounded-2xl border p-3 shadow-lg shrink-0 flex flex-col gap-2 transition-all select-none ${
-      isFinal ? 'border-amber-500/40 hover:border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.15)] bg-[#1a1510]/95' : 'border-white/10 hover:border-emerald-500/30'
+    <div className={`w-[170px] bg-[#141414]/90 backdrop-blur-sm rounded-xl border p-1.5 shadow-md shrink-0 flex flex-col gap-1 transition-all select-none ${
+      isFinal ? 'border-amber-500/40 hover:border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.15)] bg-[#1a1510]/95' : 'border-white/5 hover:border-emerald-500/30'
     }`}>
       {/* Card Header */}
-      <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-white/5 pb-1.5">
-        <span>{title}</span>
+      <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-slate-500 border-b border-white/5 pb-0.5">
+        <span>{displayTitle}</span>
         {match ? (
-          <span className={isLive ? 'text-rose-500 animate-pulse' : isFinished ? 'text-slate-500' : 'text-emerald-400'}>
-            {isLive ? '🔴 LIVE' : isFinished ? 'Kết thúc' : 'Chờ đấu'}
+          <span className={isLive ? 'text-rose-500 animate-pulse text-[7px]' : isFinished ? 'text-slate-600 text-[7px]' : 'text-emerald-500 text-[7px]'}>
+            {isLive ? 'LIVE' : isFinished ? 'DONE' : 'WAIT'}
           </span>
         ) : (
-          <span className="text-slate-600">Chờ ghép cặp</span>
+          <span className="text-slate-700 text-[7px]">WAIT</span>
         )}
       </div>
 
       {/* Teams list */}
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1">
         {/* Team A */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-1 min-w-0">
           <div 
             onClick={() => {
               if (match && teamA.code && isTeamAClickable) {
@@ -271,18 +278,18 @@ const BracketMatchCard: React.FC<{
           </div>
           
           {showInputs && (
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-0.5 shrink-0">
               <input
                 type="number"
                 value={match ? scoreA : ''}
                 placeholder="0"
                 onChange={(e) => handleScoreChange(true, parseInt(e.target.value) || 0)}
-                className="w-8 h-6 bg-black/60 border border-white/10 rounded-md text-center text-xs font-mono font-black text-white focus:border-emerald-500 focus:outline-none"
+                className="w-7 h-4.5 bg-black/60 border border-white/10 rounded text-center text-[9px] font-mono font-bold text-white focus:border-emerald-500 focus:outline-none"
               />
               <button
                 onClick={() => handleAdvanceClick(true)}
-                title="Chọn thắng / Đi tiếp"
-                className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] border transition-all ${
+                title="Chọn thắng"
+                className={`w-4 h-4.5 rounded flex items-center justify-center text-[7px] border transition-all ${
                   teamA.isWinner 
                     ? 'bg-emerald-500 border-emerald-400 text-white' 
                     : 'bg-white/5 border-white/10 text-slate-500 hover:bg-emerald-500/20 hover:text-emerald-400'
@@ -295,7 +302,7 @@ const BracketMatchCard: React.FC<{
         </div>
 
         {/* Team B */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-1 min-w-0">
           <div 
             onClick={() => {
               if (match && teamB.code && isTeamBClickable) {
@@ -308,18 +315,18 @@ const BracketMatchCard: React.FC<{
           </div>
           
           {showInputs && (
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-0.5 shrink-0">
               <input
                 type="number"
                 value={match ? scoreB : ''}
                 placeholder="0"
                 onChange={(e) => handleScoreChange(false, parseInt(e.target.value) || 0)}
-                className="w-8 h-6 bg-black/60 border border-white/10 rounded-md text-center text-xs font-mono font-black text-white focus:border-emerald-500 focus:outline-none"
+                className="w-7 h-4.5 bg-black/60 border border-white/10 rounded text-center text-[9px] font-mono font-bold text-white focus:border-emerald-500 focus:outline-none"
               />
               <button
                 onClick={() => handleAdvanceClick(false)}
-                title="Chọn thắng / Đi tiếp"
-                className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] border transition-all ${
+                title="Chọn thắng"
+                className={`w-4 h-4.5 rounded flex items-center justify-center text-[7px] border transition-all ${
                   teamB.isWinner 
                     ? 'bg-emerald-500 border-emerald-400 text-white' 
                     : 'bg-white/5 border-white/10 text-slate-500 hover:bg-emerald-500/20 hover:text-emerald-400'
@@ -331,21 +338,6 @@ const BracketMatchCard: React.FC<{
           )}
         </div>
       </div>
-
-      {/* Card Footer: Match Time */}
-      {match && (
-        <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono mt-0.5 border-t border-white/5 pt-1">
-          <span>
-            {new Date(match.start_time).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}{' '}
-            {new Date(match.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })}
-          </span>
-          {match.stadium && (
-            <span className="truncate max-w-[120px]" title={match.stadium}>
-              {match.stadium.split(',')[0]}
-            </span>
-          )}
-        </div>
-      )}
     </div>
   );
 };
@@ -377,7 +369,7 @@ const StandingsPage: React.FC = () => {
     fetchMatches();
 
     const channel = supabase
-      .channel('public:matches_standings_new2')
+      .channel('public:matches_standings_symmetric')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => {
         fetchMatches();
       })
@@ -988,24 +980,24 @@ const StandingsPage: React.FC = () => {
 
       <div className="relative z-10">
         {/* Header Banner */}
-        <div className="bg-[#1a2f1a] border-b border-white/10 px-6 py-12 mb-8 relative">
+        <div className="bg-[#1a2f1a] border-b border-white/10 px-6 py-6 mb-6 relative">
           <div className="max-w-7xl mx-auto flex flex-col items-center">
-            <h1 className="text-2xl md:text-4xl font-black text-white mb-2 uppercase tracking-widest flex items-center gap-4 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+            <h1 className="text-xl md:text-3xl font-black text-white mb-1 uppercase tracking-widest flex items-center gap-4 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
               <span className="text-emerald-400">
                 {activeTab === 'bracket' ? '🏆 SƠ ĐỒ NHÁNH KNOCKOUT' : '📈 BẢNG ĐẤU'}
               </span>
             </h1>
-            <p className="text-sm font-bold text-slate-400 tracking-widest uppercase text-center">
-              {activeTab === 'bracket' ? 'World Cup 2026 - Nhánh đấu 2 bên đối xứng' : 'Vòng Bảng - World Cup 2026'}
+            <p className="text-xs font-bold text-slate-400 tracking-widest uppercase text-center">
+              {activeTab === 'bracket' ? 'World Cup 2026 - Giao diện thu gọn trực quan' : 'Vòng Bảng - World Cup 2026'}
             </p>
           </div>
         </div>
 
         {/* Tab Controls */}
-        <div className="max-w-7xl mx-auto px-4 mb-8 flex justify-center gap-4">
+        <div className="max-w-7xl mx-auto px-4 mb-6 flex justify-center gap-4">
           <button
             onClick={() => setActiveTab('bracket')}
-            className={`px-6 py-3 rounded-full text-xs md:text-sm font-black uppercase tracking-wider transition-all border flex items-center gap-2 ${
+            className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all border flex items-center gap-2 ${
               activeTab === 'bracket'
                 ? 'bg-emerald-500 text-white border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]'
                 : 'bg-[#141414] text-slate-400 border-white/10 hover:bg-white/5 hover:text-white'
@@ -1015,7 +1007,7 @@ const StandingsPage: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('groups')}
-            className={`px-6 py-3 rounded-full text-xs md:text-sm font-black uppercase tracking-wider transition-all border flex items-center gap-2 ${
+            className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all border flex items-center gap-2 ${
               activeTab === 'groups'
                 ? 'bg-emerald-500 text-white border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]'
                 : 'bg-[#141414] text-slate-400 border-white/10 hover:bg-white/5 hover:text-white'
@@ -1026,12 +1018,12 @@ const StandingsPage: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="w-full max-w-[100vw] px-2 sm:px-4">
           {activeTab === 'bracket' ? (
             /* Knockout Bracket View */
-            <div className="space-y-8">
+            <div className="space-y-4">
               {/* Round Selector Tabs */}
-              <div className="flex justify-start md:justify-center overflow-x-auto no-scrollbar gap-2 pb-2">
+              <div className="flex justify-start md:justify-center overflow-x-auto no-scrollbar gap-1.5 pb-2 max-w-7xl mx-auto">
                 {[
                   { id: 'all', label: 'Tất cả (Sơ đồ chia 2 bên)' },
                   { id: 'r32', label: 'Vòng 32' },
@@ -1043,7 +1035,7 @@ const StandingsPage: React.FC = () => {
                   <button
                     key={tab.id}
                     onClick={() => setSelectedRoundTab(tab.id as any)}
-                    className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider shrink-0 transition-all ${
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider shrink-0 transition-all ${
                       selectedRoundTab === tab.id
                         ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                         : 'bg-[#141414]/80 text-slate-400 border border-white/5 hover:text-white'
@@ -1059,39 +1051,39 @@ const StandingsPage: React.FC = () => {
                   <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : selectedRoundTab === 'all' ? (
-                /* Horizontal Tree bracket layout: divided symmetric Left-Right */
-                <div className="w-full overflow-x-auto no-scrollbar py-8 px-4 bg-[#111]/60 border border-white/5 rounded-[32px] shadow-2xl">
-                  <div className="flex justify-between items-center gap-6 min-h-[980px] w-max mx-auto select-none py-6">
+                /* Compact Symmetric Horizontal Tree Bracket Layout */
+                <div className="w-full overflow-x-auto no-scrollbar py-4 px-2 bg-[#111]/70 border border-white/5 rounded-3xl shadow-2xl flex justify-center">
+                  <div className="flex justify-between items-center gap-3.5 min-h-[580px] w-max select-none py-1">
                     
                     {/* LEFT BRACKET */}
-                    <div className="flex gap-8 items-stretch h-full">
+                    <div className="flex gap-3.5 items-stretch h-full">
                       {/* Vòng 32 Left */}
-                      <div className="flex flex-col justify-around h-[920px] gap-2">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Vòng 32 (Trái)</div>
+                      <div className="flex flex-col justify-around h-[540px] gap-1">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Vòng 32 (Trái)</div>
                         {knockoutData.left.r32.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
                         ))}
                       </div>
                       
                       {/* Vòng 16 Left */}
-                      <div className="flex flex-col justify-around h-[920px] gap-2">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Vòng 16 (Trái)</div>
+                      <div className="flex flex-col justify-around h-[540px] gap-1">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Vòng 16 (Trái)</div>
                         {knockoutData.left.r16.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
                         ))}
                       </div>
 
                       {/* Tứ kết Left */}
-                      <div className="flex flex-col justify-around h-[920px] gap-2">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Tứ Kết (Trái)</div>
+                      <div className="flex flex-col justify-around h-[540px] gap-1">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Tứ Kết (Trái)</div>
                         {knockoutData.left.qf.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
                         ))}
                       </div>
 
                       {/* Bán kết Left */}
-                      <div className="flex flex-col justify-around h-[920px] gap-2">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Bán Kết (Trái)</div>
+                      <div className="flex flex-col justify-around h-[540px] gap-1">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Bán Kết (Trái)</div>
                         {knockoutData.left.sf.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
                         ))}
@@ -1099,13 +1091,13 @@ const StandingsPage: React.FC = () => {
                     </div>
 
                     {/* CENTER COLUMN (TROPHY & FINALS) */}
-                    <div className="flex flex-col justify-center items-center h-[920px] w-[300px] shrink-0 gap-6 relative px-4">
+                    <div className="flex flex-col justify-center items-center h-[540px] w-[180px] shrink-0 gap-4 relative px-2">
                       {/* World Cup Trophy Background */}
-                      <div className="absolute inset-0 z-0 opacity-20 flex items-center justify-center pointer-events-none">
+                      <div className="absolute inset-0 z-0 opacity-15 flex items-center justify-center pointer-events-none">
                         <img
                           src="/world_cup_trophy.png"
                           alt="Trophy"
-                          className="h-[420px] object-contain"
+                          className="h-[280px] object-contain"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                           }}
@@ -1114,40 +1106,40 @@ const StandingsPage: React.FC = () => {
                       
                       {/* Final Match Card */}
                       <div className="relative z-10">
-                        <div className="text-center font-black uppercase text-amber-400 text-xs tracking-widest mb-3 animate-pulse">🏆 CHUNG KẾT 🏆</div>
+                        <div className="text-center font-black uppercase text-amber-400 text-[9px] tracking-widest mb-1.5 animate-pulse">🏆 CHUNG KẾT</div>
                         <BracketMatchCard {...knockoutData.final[0]} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} isFinal />
                       </div>
                     </div>
 
                     {/* RIGHT BRACKET */}
-                    <div className="flex gap-8 items-stretch h-full">
+                    <div className="flex gap-3.5 items-stretch h-full">
                       {/* Bán kết Right */}
-                      <div className="flex flex-col justify-around h-[920px] gap-2">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Bán Kết (Phải)</div>
+                      <div className="flex flex-col justify-around h-[540px] gap-1">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Bán Kết (Phải)</div>
                         {knockoutData.right.sf.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
                         ))}
                       </div>
 
                       {/* Tứ kết Right */}
-                      <div className="flex flex-col justify-around h-[920px] gap-2">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Tứ Kết (Phải)</div>
+                      <div className="flex flex-col justify-around h-[540px] gap-1">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Tứ Kết (Phải)</div>
                         {knockoutData.right.qf.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
                         ))}
                       </div>
 
                       {/* Vòng 16 Right */}
-                      <div className="flex flex-col justify-around h-[920px] gap-2">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Vòng 16 (Phải)</div>
+                      <div className="flex flex-col justify-around h-[540px] gap-1">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Vòng 16 (Phải)</div>
                         {knockoutData.right.r16.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
                         ))}
                       </div>
 
                       {/* Vòng 32 Right */}
-                      <div className="flex flex-col justify-around h-[920px] gap-2">
-                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Vòng 32 (Phải)</div>
+                      <div className="flex flex-col justify-around h-[540px] gap-1">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Vòng 32 (Phải)</div>
                         {knockoutData.right.r32.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
                         ))}
@@ -1158,7 +1150,7 @@ const StandingsPage: React.FC = () => {
                 </div>
               ) : (
                 /* Focus Round Grid View */
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center max-w-7xl mx-auto">
                   {getSelectedRoundSlots().map((slot, i) => (
                     <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
                   ))}
@@ -1167,7 +1159,7 @@ const StandingsPage: React.FC = () => {
             </div>
           ) : (
             /* Group Stage Standings View */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="bg-[#1a1a1a] rounded-[24px] border border-white/10 overflow-hidden shadow-2xl animate-pulse">
