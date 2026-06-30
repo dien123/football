@@ -160,7 +160,7 @@ const RIGHT_R32_PAIRS = [
 // Component to render a team in the bracket
 const TeamDisplay: React.FC<{ name: string; code?: string | null; isWinner: boolean; isPlaceholder: boolean }> = ({ name, code, isWinner, isPlaceholder }) => {
   return (
-    <div className={`flex items-center justify-between px-2 py-1 rounded-lg transition-all ${isWinner ? 'bg-emerald-500/10 border border-emerald-500/20' : 'border border-transparent'}`}>
+    <div className={`flex items-center justify-between px-2 py-0.5 rounded-lg transition-all ${isWinner ? 'bg-emerald-500/10 border border-emerald-500/20' : 'border border-transparent'}`}>
       <div className="flex items-center gap-1.5 min-w-0 w-full">
         {code ? (
           <img
@@ -253,7 +253,7 @@ const BracketMatchCard: React.FC<{
     .replace('Chung Kết', 'CK');
 
   return (
-    <div className={`w-[170px] h-[56px] bg-[#141414]/90 backdrop-blur-sm rounded-xl border px-2 py-1 shadow-md shrink-0 flex flex-col justify-between transition-all select-none ${
+    <div className={`w-[170px] h-[74px] bg-[#141414]/90 backdrop-blur-sm rounded-xl border px-2 py-1 shadow-md shrink-0 flex flex-col justify-between transition-all select-none ${
       isFinal ? 'border-amber-500/40 hover:border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.15)] bg-[#1a1510]/95' : 'border-white/5 hover:border-emerald-500/30'
     }`}>
       {/* Card Header */}
@@ -1075,12 +1075,12 @@ const StandingsPage: React.FC = () => {
               ) : selectedRoundTab === 'all' ? (
                 /* Compact Symmetric Horizontal Tree Bracket Layout */
                 <div className="w-full overflow-x-auto no-scrollbar py-4 px-2 bg-[#111]/70 border border-white/5 rounded-3xl shadow-2xl flex justify-center">
-                  <div className="flex justify-between items-center gap-3.5 min-h-[780px] w-max select-none py-1">
+                  <div className="flex justify-between items-center gap-3.5 min-h-[740px] w-max select-none py-1">
                     
                     {/* LEFT BRACKET */}
                     <div className="flex gap-3.5 items-stretch h-full">
                       {/* Vòng 32 Left */}
-                      <div className="flex flex-col justify-around h-[740px] gap-1">
+                      <div className="flex flex-col pt-[10px] space-y-[12px] h-[700px] shrink-0">
                         <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Vòng 32 (Trái)</div>
                         {knockoutData.left.r32.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
@@ -1088,7 +1088,7 @@ const StandingsPage: React.FC = () => {
                       </div>
                       
                       {/* Vòng 16 Left */}
-                      <div className="flex flex-col justify-around h-[740px] gap-1">
+                      <div className="flex flex-col pt-[53px] space-y-[98px] h-[700px] shrink-0">
                         <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Vòng 16 (Trái)</div>
                         {knockoutData.left.r16.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
@@ -1096,7 +1096,7 @@ const StandingsPage: React.FC = () => {
                       </div>
 
                       {/* Tứ kết Left */}
-                      <div className="flex flex-col justify-around h-[740px] gap-1">
+                      <div className="flex flex-col pt-[139px] space-y-[270px] h-[700px] shrink-0">
                         <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Tứ Kết (Trái)</div>
                         {knockoutData.left.qf.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
@@ -1104,7 +1104,7 @@ const StandingsPage: React.FC = () => {
                       </div>
 
                       {/* Bán kết Left */}
-                      <div className="flex flex-col justify-around h-[740px] gap-1">
+                      <div className="flex flex-col pt-[311px] h-[700px] shrink-0">
                         <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Bán Kết (Trái)</div>
                         {knockoutData.left.sf.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
@@ -1113,7 +1113,7 @@ const StandingsPage: React.FC = () => {
                     </div>
 
                     {/* CENTER COLUMN (TROPHY & FINALS) */}
-                    <div className="flex flex-col justify-center items-center h-[740px] w-[180px] shrink-0 gap-4 relative px-2">
+                    <div className="flex flex-col pt-[311px] h-[700px] w-[180px] shrink-0 relative px-2">
                       {/* World Cup Trophy Background */}
                       <div className="absolute inset-0 z-0 opacity-15 flex items-center justify-center pointer-events-none">
                         <img
@@ -1136,7 +1136,7 @@ const StandingsPage: React.FC = () => {
                     {/* RIGHT BRACKET */}
                     <div className="flex gap-3.5 items-stretch h-full">
                       {/* Bán kết Right */}
-                      <div className="flex flex-col justify-around h-[740px] gap-1">
+                      <div className="flex flex-col pt-[311px] h-[700px] shrink-0">
                         <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Bán Kết (Phải)</div>
                         {knockoutData.right.sf.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
@@ -1144,7 +1144,7 @@ const StandingsPage: React.FC = () => {
                       </div>
 
                       {/* Tứ kết Right */}
-                      <div className="flex flex-col justify-around h-[740px] gap-1">
+                      <div className="flex flex-col pt-[139px] space-y-[270px] h-[700px] shrink-0">
                         <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Tứ Kết (Phải)</div>
                         {knockoutData.right.qf.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
@@ -1152,7 +1152,7 @@ const StandingsPage: React.FC = () => {
                       </div>
 
                       {/* Vòng 16 Right */}
-                      <div className="flex flex-col justify-around h-[740px] gap-1">
+                      <div className="flex flex-col pt-[53px] space-y-[98px] h-[700px] shrink-0">
                         <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Vòng 16 (Phải)</div>
                         {knockoutData.right.r16.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
@@ -1160,7 +1160,7 @@ const StandingsPage: React.FC = () => {
                       </div>
 
                       {/* Vòng 32 Right */}
-                      <div className="flex flex-col justify-around h-[740px] gap-1">
+                      <div className="flex flex-col pt-[10px] space-y-[12px] h-[700px] shrink-0">
                         <div className="text-center font-black uppercase text-emerald-400 text-[8px] tracking-wider shrink-0 border-b border-emerald-500/20 pb-0.5">Vòng 32 (Phải)</div>
                         {knockoutData.right.r32.map((slot, i) => (
                           <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
