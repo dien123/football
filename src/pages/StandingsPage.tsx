@@ -132,10 +132,34 @@ const GROUPS_DATA: Group[] = [
   }
 ];
 
+// Left Bracket R32 pairs from user's image
+const LEFT_R32_PAIRS = [
+  { a: 'Germany', b: 'Paraguay' },
+  { a: 'France', b: 'Sweden' },
+  { a: 'South Africa', b: 'Canada' },
+  { a: 'Netherlands', b: 'Morocco' },
+  { a: 'Portugal', b: 'Croatia' },
+  { a: 'Spain', b: 'Austria' },
+  { a: 'USA', b: 'Bosnia and Herzegovina' },
+  { a: 'Belgium', b: 'Senegal' }
+];
+
+// Right Bracket R32 pairs from user's image
+const RIGHT_R32_PAIRS = [
+  { a: 'Brazil', b: 'Japan' },
+  { a: 'Ivory Coast', b: 'Norway' },
+  { a: 'Mexico', b: 'Ecuador' },
+  { a: 'England', b: 'DR Congo' },
+  { a: 'Argentina', b: 'Cape Verde' },
+  { a: 'Australia', b: 'Egypt' },
+  { a: 'Switzerland', b: 'Algeria' },
+  { a: 'Colombia', b: 'Ghana' }
+];
+
 // Component to render a team in the bracket
 const TeamDisplay: React.FC<{ name: string; code?: string | null; isWinner: boolean; isPlaceholder: boolean }> = ({ name, code, isWinner, isPlaceholder }) => {
   return (
-    <div className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all ${isWinner ? 'bg-emerald-500/10 border border-emerald-500/20' : 'border border-transparent'}`}>
+    <div className={`flex items-center justify-between px-3 py-1.5 rounded-xl transition-all ${isWinner ? 'bg-emerald-500/10 border border-emerald-500/20' : 'border border-transparent'}`}>
       <div className="flex items-center gap-2 min-w-0 w-full">
         {code ? (
           <img
@@ -156,19 +180,69 @@ const TeamDisplay: React.FC<{ name: string; code?: string | null; isWinner: bool
   );
 };
 
-// Component to render a match card in the bracket
+// Component to render a match card in the bracket with score inputs and advancement selectors
 const BracketMatchCard: React.FC<{
   match?: Match;
   teamA: { name: string; code?: string | null; isWinner: boolean };
   teamB: { name: string; code?: string | null; isWinner: boolean };
+  scoreA: number;
+  scoreB: number;
   title: string;
   onSelectTeam: (team: { name: string; code: string }) => void;
-}> = ({ match, teamA, teamB, title, onSelectTeam }) => {
-  const isFinished = match?.status === 'finished';
-  const isLive = match?.status === 'live';
+  onUpdateScore: (matchId: string, scoreA: number, scoreB: number) => void;
+  onInsertAndScore: (roundName: string, teamA: string, teamACode: string | null, teamB: string, teamBCode: string | null, scoreA: number, scoreB: number) => void;
+  roundName?: string;
+  rawTeamA?: any;
+  rawTeamB?: any;
+  isFinal?: boolean;
+}> = ({ match, teamA, teamB, scoreA, scoreB, title, onSelectTeam, onUpdateScore, onInsertAndScore, roundName, rawTeamA, rawTeamB, isFinal }) => {
+  const isFinished = match?.status === 'finished' || match?.dc13_status === 'finished';
+  const isLive = match?.status === 'live' || match?.dc13_status === 'live';
+
+  const handleScoreChange = (isTeamA: boolean, val: number) => {
+    if (match) {
+      if (isTeamA) {
+        onUpdateScore(match.id, val, scoreB);
+      } else {
+        onUpdateScore(match.id, scoreA, val);
+      }
+    } else if (roundName && rawTeamA && rawTeamB) {
+      // Create match in DB on the fly when score is edited
+      if (isTeamA) {
+        onInsertAndScore(roundName, rawTeamA.name, rawTeamA.code, rawTeamB.name, rawTeamB.code, val, 0);
+      } else {
+        onInsertAndScore(roundName, rawTeamA.name, rawTeamA.code, rawTeamB.name, rawTeamB.code, 0, val);
+      }
+    }
+  };
+
+  const handleAdvanceClick = (isTeamA: boolean) => {
+    if (match) {
+      if (isTeamA) {
+        const newScoreA = scoreA > scoreB ? scoreA : scoreB + 1;
+        onUpdateScore(match.id, newScoreA, scoreB);
+      } else {
+        const newScoreB = scoreB > scoreA ? scoreB : scoreA + 1;
+        onUpdateScore(match.id, scoreA, newScoreB);
+      }
+    } else if (roundName && rawTeamA && rawTeamB) {
+      if (isTeamA) {
+        onInsertAndScore(roundName, rawTeamA.name, rawTeamA.code, rawTeamB.name, rawTeamB.code, 1, 0);
+      } else {
+        onInsertAndScore(roundName, rawTeamA.name, rawTeamA.code, rawTeamB.name, rawTeamB.code, 0, 1);
+      }
+    }
+  };
+
+  const isTeamAClickable = !teamA.name.startsWith('Thắng') && !teamA.name.startsWith('Đội tuyển');
+  const isTeamBClickable = !teamB.name.startsWith('Thắng') && !teamB.name.startsWith('Đội tuyển');
+  const bothResolved = isTeamAClickable && isTeamBClickable;
+  const showInputs = !!match || bothResolved;
 
   return (
-    <div className="w-[260px] bg-[#141414] rounded-2xl border border-white/10 p-3 shadow-lg shrink-0 flex flex-col gap-2 hover:border-emerald-500/30 transition-all select-none">
+    <div className={`w-[260px] bg-[#141414]/90 backdrop-blur-sm rounded-2xl border p-3 shadow-lg shrink-0 flex flex-col gap-2 transition-all select-none ${
+      isFinal ? 'border-amber-500/40 hover:border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.15)] bg-[#1a1510]/95' : 'border-white/10 hover:border-emerald-500/30'
+    }`}>
       {/* Card Header */}
       <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-white/5 pb-1.5">
         <span>{title}</span>
@@ -182,47 +256,96 @@ const BracketMatchCard: React.FC<{
       </div>
 
       {/* Teams list */}
-      <div className="flex flex-col gap-1">
-        <div 
-          onClick={() => {
-            if (match && teamA.code) {
-              onSelectTeam({ name: teamA.name, code: teamA.code });
-            }
-          }}
-          className={match && teamA.code ? 'cursor-pointer' : ''}
-        >
-          <TeamDisplay name={teamA.name} code={teamA.code} isWinner={teamA.isWinner} isPlaceholder={!match || !teamA.code} />
+      <div className="flex flex-col gap-1.5">
+        {/* Team A */}
+        <div className="flex items-center justify-between gap-2">
+          <div 
+            onClick={() => {
+              if (match && teamA.code && isTeamAClickable) {
+                onSelectTeam({ name: teamA.name, code: teamA.code });
+              }
+            }}
+            className={`flex-1 min-w-0 ${match && teamA.code && isTeamAClickable ? 'cursor-pointer' : ''}`}
+          >
+            <TeamDisplay name={teamA.name} code={teamA.code} isWinner={teamA.isWinner} isPlaceholder={!isTeamAClickable} />
+          </div>
+          
+          {showInputs && (
+            <div className="flex items-center gap-1 shrink-0">
+              <input
+                type="number"
+                value={match ? scoreA : ''}
+                placeholder="0"
+                onChange={(e) => handleScoreChange(true, parseInt(e.target.value) || 0)}
+                className="w-8 h-6 bg-black/60 border border-white/10 rounded-md text-center text-xs font-mono font-black text-white focus:border-emerald-500 focus:outline-none"
+              />
+              <button
+                onClick={() => handleAdvanceClick(true)}
+                title="Chọn thắng / Đi tiếp"
+                className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] border transition-all ${
+                  teamA.isWinner 
+                    ? 'bg-emerald-500 border-emerald-400 text-white' 
+                    : 'bg-white/5 border-white/10 text-slate-500 hover:bg-emerald-500/20 hover:text-emerald-400'
+                }`}
+              >
+                ✓
+              </button>
+            </div>
+          )}
         </div>
-        <div 
-          onClick={() => {
-            if (match && teamB.code) {
-              onSelectTeam({ name: teamB.name, code: teamB.code });
-            }
-          }}
-          className={match && teamB.code ? 'cursor-pointer' : ''}
-        >
-          <TeamDisplay name={teamB.name} code={teamB.code} isWinner={teamB.isWinner} isPlaceholder={!match || !teamB.code} />
+
+        {/* Team B */}
+        <div className="flex items-center justify-between gap-2">
+          <div 
+            onClick={() => {
+              if (match && teamB.code && isTeamBClickable) {
+                onSelectTeam({ name: teamB.name, code: teamB.code });
+              }
+            }}
+            className={`flex-1 min-w-0 ${match && teamB.code && isTeamBClickable ? 'cursor-pointer' : ''}`}
+          >
+            <TeamDisplay name={teamB.name} code={teamB.code} isWinner={teamB.isWinner} isPlaceholder={!isTeamBClickable} />
+          </div>
+          
+          {showInputs && (
+            <div className="flex items-center gap-1 shrink-0">
+              <input
+                type="number"
+                value={match ? scoreB : ''}
+                placeholder="0"
+                onChange={(e) => handleScoreChange(false, parseInt(e.target.value) || 0)}
+                className="w-8 h-6 bg-black/60 border border-white/10 rounded-md text-center text-xs font-mono font-black text-white focus:border-emerald-500 focus:outline-none"
+              />
+              <button
+                onClick={() => handleAdvanceClick(false)}
+                title="Chọn thắng / Đi tiếp"
+                className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] border transition-all ${
+                  teamB.isWinner 
+                    ? 'bg-emerald-500 border-emerald-400 text-white' 
+                    : 'bg-white/5 border-white/10 text-slate-500 hover:bg-emerald-500/20 hover:text-emerald-400'
+                }`}
+              >
+                ✓
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Card Footer: Match Time & Score */}
-      <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mt-1">
-        {match ? (
-          <>
-            <span className="text-[10px] text-slate-500 font-mono">
-              {new Date(match.start_time).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}{' '}
-              {new Date(match.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })}
+      {/* Card Footer: Match Time */}
+      {match && (
+        <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono mt-0.5 border-t border-white/5 pt-1">
+          <span>
+            {new Date(match.start_time).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}{' '}
+            {new Date(match.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })}
+          </span>
+          {match.stadium && (
+            <span className="truncate max-w-[120px]" title={match.stadium}>
+              {match.stadium.split(',')[0]}
             </span>
-            {(isFinished || isLive) && (
-              <span className={`px-2 py-0.5 rounded font-mono font-black text-xs ${isLive ? 'bg-rose-500/20 text-rose-400' : 'bg-white/5 text-white'}`}>
-                {match.score_a} - {match.score_b}
-              </span>
-            )}
-          </>
-        ) : (
-          <span className="text-[9px] italic text-slate-600">Chưa xếp lịch...</span>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -234,27 +357,27 @@ const StandingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'bracket' | 'groups'>('bracket');
   const [selectedRoundTab, setSelectedRoundTab] = useState<'all' | 'r32' | 'r16' | 'qf' | 'sf' | 'final'>('all');
 
-  useEffect(() => {
-    const fetchMatches = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('matches')
-          .select('*')
-          .order('start_time', { ascending: true });
-        if (!error && data) {
-          setMatches(data);
-        }
-      } catch (err) {
-        console.error('Error fetching matches:', err);
-      } finally {
-        setLoading(false);
+  const fetchMatches = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('matches')
+        .select('*')
+        .order('start_time', { ascending: true });
+      if (!error && data) {
+        setMatches(data);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching matches:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchMatches();
 
     const channel = supabase
-      .channel('public:matches_standings')
+      .channel('public:matches_standings_new2')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => {
         fetchMatches();
       })
@@ -271,197 +394,477 @@ const StandingsPage: React.FC = () => {
     if (normalized === 'bosnia') return 'bosnia & hz';
     if (normalized === 'bosnia & herzegovina') return 'bosnia & hz';
     if (normalized === 'séngal') return 'senegal';
+    if (normalized === 'cape verde') return 'cabo verde';
     return normalized;
   };
 
-  // Memoized resolved knockout bracket data structure
-  const knockoutData = useMemo(() => {
-    const r32 = matches.filter(m => /vòng 32|round of 32/i.test(m.league || '')).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-    const r16 = matches.filter(m => /vòng 16|round of 16|1\/8/i.test(m.league || '')).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-    const qf = matches.filter(m => /tứ kết|quarter/i.test(m.league || '')).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-    const sf = matches.filter(m => /bán kết|semi/i.test(m.league || '')).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-    const final = matches.filter(m => /chung kết|final/i.test(m.league || '') && !/bán|tứ/i.test(m.league || '')).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+  // Helper to find match by team names in database
+  const findMatchByTeams = (roundRegex: RegExp, teamA: string, teamB: string) => {
+    const normA = normalizeTeamName(teamA);
+    const normB = normalizeTeamName(teamB);
+    return matches.find(m => {
+      const isRound = roundRegex.test(m.league || '');
+      if (!isRound) return false;
+      const matchA = normalizeTeamName(m.team_a_name);
+      const matchB = normalizeTeamName(m.team_b_name);
+      return (matchA === normA && matchB === normB) || (matchA === normB && matchB === normA);
+    });
+  };
 
-    // Helper to get winner info
-    const getMatchWinner = (m?: Match) => {
-      if (!m || m.status !== 'finished') return null;
-      const scoreA = m.score_a ?? 0;
-      const scoreB = m.score_b ?? 0;
-      if (scoreA > scoreB) return { name: m.team_a_name, code: m.team_a_code };
-      if (scoreB > scoreA) return { name: m.team_b_name, code: m.team_b_code };
+  // Memoized resolved split knockout bracket data structure
+  const knockoutData = useMemo(() => {
+    const r32Regex = /vòng 32|round of 32/i;
+    const r16Regex = /vòng 16|round of 16|1\/8/i;
+    const qfRegex = /tứ kết|quarter/i;
+    const sfRegex = /bán kết|semi/i;
+    const finalRegex = /chung kết|final/i;
+
+    // Helper to extract score & winner from a match
+    const getMatchDetails = (m?: Match) => {
+      if (!m) return { scoreA: 0, scoreB: 0, isFinished: false, isLive: false, winner: null };
+      
+      const isFinished = m.dc13_status === 'finished' || m.status === 'finished';
+      const isLive = m.dc13_status === 'live' || m.status === 'live';
+      
+      const scoreA = m.dc13_status === 'finished' ? (m.dc13_score_a ?? 0) : (m.score_a ?? 0);
+      const scoreB = m.dc13_status === 'finished' ? (m.dc13_score_b ?? 0) : (m.score_b ?? 0);
+      
+      let winner = null;
+      if (isFinished) {
+        if (scoreA > scoreB) winner = { name: m.team_a_name, code: m.team_a_code };
+        else if (scoreB > scoreA) winner = { name: m.team_b_name, code: m.team_b_code };
+      }
+      
+      return { scoreA, scoreB, isFinished, isLive, winner };
+    };
+
+    // 1. Resolve R32 Left Slots (8 slots)
+    const r32Left = LEFT_R32_PAIRS.map((pair, idx) => {
+      const dbMatch = findMatchByTeams(r32Regex, pair.a, pair.b);
+      const { scoreA, scoreB, winner } = getMatchDetails(dbMatch);
+      const isSwapped = dbMatch && normalizeTeamName(dbMatch.team_a_name) !== normalizeTeamName(pair.a);
+      
+      return {
+        match: dbMatch,
+        teamA: {
+          name: pair.a,
+          code: isSwapped ? dbMatch?.team_b_code : dbMatch?.team_a_code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(pair.a) : false
+        },
+        teamB: {
+          name: pair.b,
+          code: isSwapped ? dbMatch?.team_a_code : dbMatch?.team_b_code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(pair.b) : false
+        },
+        scoreA: isSwapped ? scoreB : scoreA,
+        scoreB: isSwapped ? scoreA : scoreB,
+        title: `Vòng 32 - Trận L${idx + 1}`
+      };
+    });
+
+    // 2. Resolve R32 Right Slots (8 slots)
+    const r32Right = RIGHT_R32_PAIRS.map((pair, idx) => {
+      const dbMatch = findMatchByTeams(r32Regex, pair.a, pair.b);
+      const { scoreA, scoreB, winner } = getMatchDetails(dbMatch);
+      const isSwapped = dbMatch && normalizeTeamName(dbMatch.team_a_name) !== normalizeTeamName(pair.a);
+      
+      return {
+        match: dbMatch,
+        teamA: {
+          name: pair.a,
+          code: isSwapped ? dbMatch?.team_b_code : dbMatch?.team_a_code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(pair.a) : false
+        },
+        teamB: {
+          name: pair.b,
+          code: isSwapped ? dbMatch?.team_a_code : dbMatch?.team_b_code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(pair.b) : false
+        },
+        scoreA: isSwapped ? scoreB : scoreA,
+        scoreB: isSwapped ? scoreA : scoreB,
+        title: `Vòng 32 - Trận R${idx + 1}`
+      };
+    });
+
+    // Helpers to get R32 Winners
+    const getR32LeftWinner = (idx: number) => {
+      const slot = r32Left[idx];
+      if (slot.teamA.isWinner) return { name: slot.teamA.name, code: slot.teamA.code };
+      if (slot.teamB.isWinner) return { name: slot.teamB.name, code: slot.teamB.code };
       return null;
     };
 
-    // 1. Build Round of 32 Slots (16 slots)
-    const r32Slots = Array.from({ length: 16 }).map((_, i) => {
-      const dbMatch = r32[i];
-      return {
-        match: dbMatch,
-        teamA: {
-          name: dbMatch ? dbMatch.team_a_name : `Đội tuyển ${2 * i + 1}`,
-          code: dbMatch ? dbMatch.team_a_code : null,
-          isWinner: dbMatch && dbMatch.status === 'finished' && (dbMatch.score_a ?? 0) > (dbMatch.score_b ?? 0)
-        },
-        teamB: {
-          name: dbMatch ? dbMatch.team_b_name : `Đội tuyển ${2 * i + 2}`,
-          code: dbMatch ? dbMatch.team_b_code : null,
-          isWinner: dbMatch && dbMatch.status === 'finished' && (dbMatch.score_b ?? 0) > (dbMatch.score_a ?? 0)
-        },
-        title: `Vòng 32 - Trận ${i + 1}`
-      };
-    });
-
-    // 2. Build Round of 16 Slots (8 slots)
-    const r16Slots = Array.from({ length: 8 }).map((_, i) => {
-      const dbMatch = r16[i];
-      
-      const prevMatchA = r32[2 * i];
-      const winnerA = getMatchWinner(prevMatchA);
-      const teamAPlaceholder = prevMatchA 
-        ? (winnerA ? winnerA.name : `Thắng T${2 * i + 1} (${prevMatchA.team_a_name}/${prevMatchA.team_b_name})`) 
-        : `Thắng Trận 32 #${2 * i + 1}`;
-      const codeAPlaceholder = winnerA?.code || null;
-
-      const prevMatchB = r32[2 * i + 1];
-      const winnerB = getMatchWinner(prevMatchB);
-      const teamBPlaceholder = prevMatchB 
-        ? (winnerB ? winnerB.name : `Thắng T${2 * i + 2} (${prevMatchB.team_a_name}/${prevMatchB.team_b_name})`) 
-        : `Thắng Trận 32 #${2 * i + 2}`;
-      const codeBPlaceholder = winnerB?.code || null;
-
-      return {
-        match: dbMatch,
-        teamA: {
-          name: dbMatch ? dbMatch.team_a_name : teamAPlaceholder,
-          code: dbMatch ? dbMatch.team_a_code : codeAPlaceholder,
-          isWinner: dbMatch && dbMatch.status === 'finished' && (dbMatch.score_a ?? 0) > (dbMatch.score_b ?? 0)
-        },
-        teamB: {
-          name: dbMatch ? dbMatch.team_b_name : teamBPlaceholder,
-          code: dbMatch ? dbMatch.team_b_code : codeBPlaceholder,
-          isWinner: dbMatch && dbMatch.status === 'finished' && (dbMatch.score_b ?? 0) > (dbMatch.score_a ?? 0)
-        },
-        title: `Vòng 16 - Trận ${i + 1}`
-      };
-    });
-
-    const getR16Winner = (idx: number) => {
-      const slot = r16Slots[idx];
-      if (slot.match && slot.match.status === 'finished') {
-        const winner = getMatchWinner(slot.match);
-        if (winner) return winner;
-      }
-      if (slot.match) {
-        return { name: `Thắng: ${slot.match.team_a_name}/${slot.match.team_b_name}`, code: null };
-      }
-      return { name: `Thắng Trận 16 #${idx + 1}`, code: null };
+    const getR32RightWinner = (idx: number) => {
+      const slot = r32Right[idx];
+      if (slot.teamA.isWinner) return { name: slot.teamA.name, code: slot.teamA.code };
+      if (slot.teamB.isWinner) return { name: slot.teamB.name, code: slot.teamB.code };
+      return null;
     };
 
-    // 3. Build QF Slots (4 slots)
-    const qfSlots = Array.from({ length: 4 }).map((_, i) => {
-      const dbMatch = qf[i];
-      const winnerA = getR16Winner(2 * i);
-      const winnerB = getR16Winner(2 * i + 1);
+    // 3. Resolve R16 Left Slots (4 slots)
+    const r16Left = Array.from({ length: 4 }).map((_, idx) => {
+      const wA = getR32LeftWinner(2 * idx);
+      const wB = getR32LeftWinner(2 * idx + 1);
+
+      const nameAPlaceholder = wA ? wA.name : `Thắng Trận L${2 * idx + 1}`;
+      const nameBPlaceholder = wB ? wB.name : `Thắng Trận L${2 * idx + 2}`;
+
+      const dbMatch = (wA && wB) ? findMatchByTeams(r16Regex, wA.name, wB.name) : undefined;
+      const { scoreA, scoreB, winner } = getMatchDetails(dbMatch);
+      const isSwapped = dbMatch && wA && normalizeTeamName(dbMatch.team_a_name) !== normalizeTeamName(wA.name);
 
       return {
         match: dbMatch,
+        roundName: 'r16',
         teamA: {
-          name: dbMatch ? dbMatch.team_a_name : winnerA.name,
-          code: dbMatch ? dbMatch.team_a_code : winnerA.code,
-          isWinner: dbMatch && dbMatch.status === 'finished' && (dbMatch.score_a ?? 0) > (dbMatch.score_b ?? 0)
+          name: dbMatch ? (isSwapped ? dbMatch.team_b_name : dbMatch.team_a_name) : nameAPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_b_code : dbMatch.team_a_code) : wA?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wA?.name || '') : false
         },
         teamB: {
-          name: dbMatch ? dbMatch.team_b_name : winnerB.name,
-          code: dbMatch ? dbMatch.team_b_code : winnerB.code,
-          isWinner: dbMatch && dbMatch.status === 'finished' && (dbMatch.score_b ?? 0) > (dbMatch.score_a ?? 0)
+          name: dbMatch ? (isSwapped ? dbMatch.team_a_name : dbMatch.team_b_name) : nameBPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_a_code : dbMatch.team_b_code) : wB?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wB?.name || '') : false
         },
-        title: `Tứ Kết ${i + 1}`
+        scoreA: dbMatch ? (isSwapped ? scoreB : scoreA) : 0,
+        scoreB: dbMatch ? (isSwapped ? scoreA : scoreB) : 0,
+        title: `Vòng 16 - Trận L${idx + 1}`,
+        rawTeamA: wA,
+        rawTeamB: wB
       };
     });
 
-    const getQFWinner = (idx: number) => {
-      const slot = qfSlots[idx];
-      if (slot.match && slot.match.status === 'finished') {
-        const winner = getMatchWinner(slot.match);
-        if (winner) return winner;
-      }
-      if (slot.match) {
-        return { name: `Thắng: ${slot.match.team_a_name}/${slot.match.team_b_name}`, code: null };
-      }
-      return { name: `Thắng Tứ Kết ${idx + 1}`, code: null };
-    };
+    // 4. Resolve R16 Right Slots (4 slots)
+    const r16Right = Array.from({ length: 4 }).map((_, idx) => {
+      const wA = getR32RightWinner(2 * idx);
+      const wB = getR32RightWinner(2 * idx + 1);
 
-    // 4. Build SF Slots (2 slots)
-    const sfSlots = Array.from({ length: 2 }).map((_, i) => {
-      const dbMatch = sf[i];
-      const winnerA = getQFWinner(2 * i);
-      const winnerB = getQFWinner(2 * i + 1);
+      const nameAPlaceholder = wA ? wA.name : `Thắng Trận R${2 * idx + 1}`;
+      const nameBPlaceholder = wB ? wB.name : `Thắng Trận R${2 * idx + 2}`;
+
+      const dbMatch = (wA && wB) ? findMatchByTeams(r16Regex, wA.name, wB.name) : undefined;
+      const { scoreA, scoreB, winner } = getMatchDetails(dbMatch);
+      const isSwapped = dbMatch && wA && normalizeTeamName(dbMatch.team_a_name) !== normalizeTeamName(wA.name);
 
       return {
         match: dbMatch,
+        roundName: 'r16',
         teamA: {
-          name: dbMatch ? dbMatch.team_a_name : winnerA.name,
-          code: dbMatch ? dbMatch.team_a_code : winnerA.code,
-          isWinner: dbMatch && dbMatch.status === 'finished' && (dbMatch.score_a ?? 0) > (dbMatch.score_b ?? 0)
+          name: dbMatch ? (isSwapped ? dbMatch.team_b_name : dbMatch.team_a_name) : nameAPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_b_code : dbMatch.team_a_code) : wA?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wA?.name || '') : false
         },
         teamB: {
-          name: dbMatch ? dbMatch.team_b_name : winnerB.name,
-          code: dbMatch ? dbMatch.team_b_code : winnerB.code,
-          isWinner: dbMatch && dbMatch.status === 'finished' && (dbMatch.score_b ?? 0) > (dbMatch.score_a ?? 0)
+          name: dbMatch ? (isSwapped ? dbMatch.team_a_name : dbMatch.team_b_name) : nameBPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_a_code : dbMatch.team_b_code) : wB?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wB?.name || '') : false
         },
-        title: `Bán Kết ${i + 1}`
+        scoreA: dbMatch ? (isSwapped ? scoreB : scoreA) : 0,
+        scoreB: dbMatch ? (isSwapped ? scoreA : scoreB) : 0,
+        title: `Vòng 16 - Trận R${idx + 1}`,
+        rawTeamA: wA,
+        rawTeamB: wB
       };
     });
 
-    const getSFWinner = (idx: number) => {
-      const slot = sfSlots[idx];
-      if (slot.match && slot.match.status === 'finished') {
-        const winner = getMatchWinner(slot.match);
-        if (winner) return winner;
-      }
-      if (slot.match) {
-        return { name: `Thắng: ${slot.match.team_a_name}/${slot.match.team_b_name}`, code: null };
-      }
-      return { name: `Thắng Bán Kết ${idx + 1}`, code: null };
+    const getR16LeftWinner = (idx: number) => {
+      const slot = r16Left[idx];
+      if (slot.teamA.isWinner) return { name: slot.teamA.name, code: slot.teamA.code };
+      if (slot.teamB.isWinner) return { name: slot.teamB.name, code: slot.teamB.code };
+      return null;
     };
 
-    // 5. Build Final Slot (1 slot)
-    const finalSlots = Array.from({ length: 1 }).map((_, i) => {
-      const dbMatch = final[i];
-      const winnerA = getSFWinner(0);
-      const winnerB = getSFWinner(1);
+    const getR16RightWinner = (idx: number) => {
+      const slot = r16Right[idx];
+      if (slot.teamA.isWinner) return { name: slot.teamA.name, code: slot.teamA.code };
+      if (slot.teamB.isWinner) return { name: slot.teamB.name, code: slot.teamB.code };
+      return null;
+    };
+
+    // 5. Resolve QF Left Slots (2 slots)
+    const qfLeft = Array.from({ length: 2 }).map((_, idx) => {
+      const wA = getR16LeftWinner(2 * idx);
+      const wB = getR16LeftWinner(2 * idx + 1);
+
+      const nameAPlaceholder = wA ? wA.name : `Thắng V16 L${2 * idx + 1}`;
+      const nameBPlaceholder = wB ? wB.name : `Thắng V16 L${2 * idx + 2}`;
+
+      const dbMatch = (wA && wB) ? findMatchByTeams(qfRegex, wA.name, wB.name) : undefined;
+      const { scoreA, scoreB, winner } = getMatchDetails(dbMatch);
+      const isSwapped = dbMatch && wA && normalizeTeamName(dbMatch.team_a_name) !== normalizeTeamName(wA.name);
 
       return {
         match: dbMatch,
+        roundName: 'qf',
         teamA: {
-          name: dbMatch ? dbMatch.team_a_name : winnerA.name,
-          code: dbMatch ? dbMatch.team_a_code : winnerA.code,
-          isWinner: dbMatch && dbMatch.status === 'finished' && (dbMatch.score_a ?? 0) > (dbMatch.score_b ?? 0)
+          name: dbMatch ? (isSwapped ? dbMatch.team_b_name : dbMatch.team_a_name) : nameAPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_b_code : dbMatch.team_a_code) : wA?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wA?.name || '') : false
         },
         teamB: {
-          name: dbMatch ? dbMatch.team_b_name : winnerB.name,
-          code: dbMatch ? dbMatch.team_b_code : winnerB.code,
-          isWinner: dbMatch && dbMatch.status === 'finished' && (dbMatch.score_b ?? 0) > (dbMatch.score_a ?? 0)
+          name: dbMatch ? (isSwapped ? dbMatch.team_a_name : dbMatch.team_b_name) : nameBPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_a_code : dbMatch.team_b_code) : wB?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wB?.name || '') : false
         },
-        title: `Chung Kết`
+        scoreA: dbMatch ? (isSwapped ? scoreB : scoreA) : 0,
+        scoreB: dbMatch ? (isSwapped ? scoreA : scoreB) : 0,
+        title: `Tứ Kết - Trận L${idx + 1}`,
+        rawTeamA: wA,
+        rawTeamB: wB
+      };
+    });
+
+    // 6. Resolve QF Right Slots (2 slots)
+    const qfRight = Array.from({ length: 2 }).map((_, idx) => {
+      const wA = getR16RightWinner(2 * idx);
+      const wB = getR16RightWinner(2 * idx + 1);
+
+      const nameAPlaceholder = wA ? wA.name : `Thắng V16 R${2 * idx + 1}`;
+      const nameBPlaceholder = wB ? wB.name : `Thắng V16 R${2 * idx + 2}`;
+
+      const dbMatch = (wA && wB) ? findMatchByTeams(qfRegex, wA.name, wB.name) : undefined;
+      const { scoreA, scoreB, winner } = getMatchDetails(dbMatch);
+      const isSwapped = dbMatch && wA && normalizeTeamName(dbMatch.team_a_name) !== normalizeTeamName(wA.name);
+
+      return {
+        match: dbMatch,
+        roundName: 'qf',
+        teamA: {
+          name: dbMatch ? (isSwapped ? dbMatch.team_b_name : dbMatch.team_a_name) : nameAPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_b_code : dbMatch.team_a_code) : wA?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wA?.name || '') : false
+        },
+        teamB: {
+          name: dbMatch ? (isSwapped ? dbMatch.team_a_name : dbMatch.team_b_name) : nameBPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_a_code : dbMatch.team_b_code) : wB?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wB?.name || '') : false
+        },
+        scoreA: dbMatch ? (isSwapped ? scoreB : scoreA) : 0,
+        scoreB: dbMatch ? (isSwapped ? scoreA : scoreB) : 0,
+        title: `Tứ Kết - Trận R${idx + 1}`,
+        rawTeamA: wA,
+        rawTeamB: wB
+      };
+    });
+
+    const getQFLeftWinner = (idx: number) => {
+      const slot = qfLeft[idx];
+      if (slot.teamA.isWinner) return { name: slot.teamA.name, code: slot.teamA.code };
+      if (slot.teamB.isWinner) return { name: slot.teamB.name, code: slot.teamB.code };
+      return null;
+    };
+
+    const getQFRightWinner = (idx: number) => {
+      const slot = qfRight[idx];
+      if (slot.teamA.isWinner) return { name: slot.teamA.name, code: slot.teamA.code };
+      if (slot.teamB.isWinner) return { name: slot.teamB.name, code: slot.teamB.code };
+      return null;
+    };
+
+    // 7. Resolve SF Left Slot (1 slot)
+    const sfLeft = Array.from({ length: 1 }).map(() => {
+      const wA = getQFLeftWinner(0);
+      const wB = getQFLeftWinner(1);
+
+      const nameAPlaceholder = wA ? wA.name : `Thắng Tứ Kết L1`;
+      const nameBPlaceholder = wB ? wB.name : `Thắng Tứ Kết L2`;
+
+      const dbMatch = (wA && wB) ? findMatchByTeams(sfRegex, wA.name, wB.name) : undefined;
+      const { scoreA, scoreB, winner } = getMatchDetails(dbMatch);
+      const isSwapped = dbMatch && wA && normalizeTeamName(dbMatch.team_a_name) !== normalizeTeamName(wA.name);
+
+      return {
+        match: dbMatch,
+        roundName: 'sf',
+        teamA: {
+          name: dbMatch ? (isSwapped ? dbMatch.team_b_name : dbMatch.team_a_name) : nameAPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_b_code : dbMatch.team_a_code) : wA?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wA?.name || '') : false
+        },
+        teamB: {
+          name: dbMatch ? (isSwapped ? dbMatch.team_a_name : dbMatch.team_b_name) : nameBPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_a_code : dbMatch.team_b_code) : wB?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wB?.name || '') : false
+        },
+        scoreA: dbMatch ? (isSwapped ? scoreB : scoreA) : 0,
+        scoreB: dbMatch ? (isSwapped ? scoreA : scoreB) : 0,
+        title: `Bán Kết - Trận L1`,
+        rawTeamA: wA,
+        rawTeamB: wB
+      };
+    });
+
+    // 8. Resolve SF Right Slot (1 slot)
+    const sfRight = Array.from({ length: 1 }).map(() => {
+      const wA = getQFRightWinner(0);
+      const wB = getQFRightWinner(1);
+
+      const nameAPlaceholder = wA ? wA.name : `Thắng Tứ Kết R1`;
+      const nameBPlaceholder = wB ? wB.name : `Thắng Tứ Kết R2`;
+
+      const dbMatch = (wA && wB) ? findMatchByTeams(sfRegex, wA.name, wB.name) : undefined;
+      const { scoreA, scoreB, winner } = getMatchDetails(dbMatch);
+      const isSwapped = dbMatch && wA && normalizeTeamName(dbMatch.team_a_name) !== normalizeTeamName(wA.name);
+
+      return {
+        match: dbMatch,
+        roundName: 'sf',
+        teamA: {
+          name: dbMatch ? (isSwapped ? dbMatch.team_b_name : dbMatch.team_a_name) : nameAPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_b_code : dbMatch.team_a_code) : wA?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wA?.name || '') : false
+        },
+        teamB: {
+          name: dbMatch ? (isSwapped ? dbMatch.team_a_name : dbMatch.team_b_name) : nameBPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_a_code : dbMatch.team_b_code) : wB?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wB?.name || '') : false
+        },
+        scoreA: dbMatch ? (isSwapped ? scoreB : scoreA) : 0,
+        scoreB: dbMatch ? (isSwapped ? scoreA : scoreB) : 0,
+        title: `Bán Kết - Trận R1`,
+        rawTeamA: wA,
+        rawTeamB: wB
+      };
+    });
+
+    const getSFLeftWinner = () => {
+      const slot = sfLeft[0];
+      if (slot.teamA.isWinner) return { name: slot.teamA.name, code: slot.teamA.code };
+      if (slot.teamB.isWinner) return { name: slot.teamB.name, code: slot.teamB.code };
+      return null;
+    };
+
+    const getSFRightWinner = () => {
+      const slot = sfRight[0];
+      if (slot.teamA.isWinner) return { name: slot.teamA.name, code: slot.teamA.code };
+      if (slot.teamB.isWinner) return { name: slot.teamB.name, code: slot.teamB.code };
+      return null;
+    };
+
+    // 9. Resolve Finals Slot (1 slot)
+    const finalSlots = Array.from({ length: 1 }).map(() => {
+      const wA = getSFLeftWinner();
+      const wB = getSFRightWinner();
+
+      const nameAPlaceholder = wA ? wA.name : `Thắng Bán Kết L1`;
+      const nameBPlaceholder = wB ? wB.name : `Thắng Bán Kết R1`;
+
+      const dbMatch = (wA && wB) ? findMatchByTeams(finalRegex, wA.name, wB.name) : undefined;
+      const { scoreA, scoreB, winner } = getMatchDetails(dbMatch);
+      const isSwapped = dbMatch && wA && normalizeTeamName(dbMatch.team_a_name) !== normalizeTeamName(wA.name);
+
+      return {
+        match: dbMatch,
+        roundName: 'final',
+        teamA: {
+          name: dbMatch ? (isSwapped ? dbMatch.team_b_name : dbMatch.team_a_name) : nameAPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_b_code : dbMatch.team_a_code) : wA?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wA?.name || '') : false
+        },
+        teamB: {
+          name: dbMatch ? (isSwapped ? dbMatch.team_a_name : dbMatch.team_b_name) : nameBPlaceholder,
+          code: dbMatch ? (isSwapped ? dbMatch.team_a_code : dbMatch.team_b_code) : wB?.code,
+          isWinner: winner ? normalizeTeamName(winner.name) === normalizeTeamName(wB?.name || '') : false
+        },
+        scoreA: dbMatch ? (isSwapped ? scoreB : scoreA) : 0,
+        scoreB: dbMatch ? (isSwapped ? scoreA : scoreB) : 0,
+        title: `Chung Kết`,
+        rawTeamA: wA,
+        rawTeamB: wB
       };
     });
 
     return {
-      r32: r32Slots,
-      r16: r16Slots,
-      qf: qfSlots,
-      sf: sfSlots,
+      left: {
+        r32: r32Left,
+        r16: r16Left,
+        qf: qfLeft,
+        sf: sfLeft
+      },
+      right: {
+        r32: r32Right,
+        r16: r16Right,
+        qf: qfRight,
+        sf: sfRight
+      },
       final: finalSlots
     };
   }, [matches]);
 
+  const handleUpdateScore = async (matchId: string, scoreA: number, scoreB: number) => {
+    try {
+      const status = 'finished';
+      const { error } = await supabase
+        .from('matches')
+        .update({
+          score_a: scoreA,
+          score_b: scoreB,
+          status: status,
+          dc13_score_a: scoreA,
+          dc13_score_b: scoreB,
+          dc13_status: status
+        })
+        .eq('id', matchId);
+
+      if (error) {
+        console.error('Error updating score:', error);
+      } else {
+        fetchMatches();
+      }
+    } catch (err) {
+      console.error('Catch error updating score:', err);
+    }
+  };
+
+  const handleInsertAndScore = async (
+    roundName: string,
+    teamA: string,
+    teamACode: string | null,
+    teamB: string,
+    teamBCode: string | null,
+    scoreA: number,
+    scoreB: number
+  ) => {
+    try {
+      let league = 'World Cup 2026 - ';
+      if (roundName === 'r16') league += 'Vòng 16';
+      else if (roundName === 'qf') league += 'Tứ Kết';
+      else if (roundName === 'sf') league += 'Bán Kết';
+      else if (roundName === 'final') league += 'Chung Kết';
+
+      const payload = {
+        team_a_name: teamA,
+        team_b_name: teamB,
+        team_a_code: teamACode || '',
+        team_b_code: teamBCode || '',
+        league: league,
+        start_time: new Date().toISOString(),
+        score_a: scoreA,
+        score_b: scoreB,
+        status: 'finished',
+        dc13_score_a: scoreA,
+        dc13_score_b: scoreB,
+        dc13_status: 'finished',
+        dc13_handicap_set: false
+      };
+
+      const { error } = await supabase.from('matches').insert([payload]);
+      if (error) {
+        console.error('Error inserting match:', error);
+      } else {
+        fetchMatches();
+      }
+    } catch (err) {
+      console.error('Catch error inserting match:', err);
+    }
+  };
+
   // Helper to fetch grid cards for the focused round tab
   const getSelectedRoundSlots = () => {
-    if (selectedRoundTab === 'r32') return knockoutData.r32;
-    if (selectedRoundTab === 'r16') return knockoutData.r16;
-    if (selectedRoundTab === 'qf') return knockoutData.qf;
-    if (selectedRoundTab === 'sf') return knockoutData.sf;
+    if (selectedRoundTab === 'r32') return [...knockoutData.left.r32, ...knockoutData.right.r32];
+    if (selectedRoundTab === 'r16') return [...knockoutData.left.r16, ...knockoutData.right.r16];
+    if (selectedRoundTab === 'qf') return [...knockoutData.left.qf, ...knockoutData.right.qf];
+    if (selectedRoundTab === 'sf') return [...knockoutData.left.sf, ...knockoutData.right.sf];
     if (selectedRoundTab === 'final') return knockoutData.final;
     return [];
   };
@@ -589,11 +992,11 @@ const StandingsPage: React.FC = () => {
           <div className="max-w-7xl mx-auto flex flex-col items-center">
             <h1 className="text-2xl md:text-4xl font-black text-white mb-2 uppercase tracking-widest flex items-center gap-4 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
               <span className="text-emerald-400">
-                {activeTab === 'bracket' ? '🏆 NHÁNH ĐẤU KNOCKOUT' : '📈 BẢNG ĐẤU'}
+                {activeTab === 'bracket' ? '🏆 SƠ ĐỒ NHÁNH KNOCKOUT' : '📈 BẢNG ĐẤU'}
               </span>
             </h1>
             <p className="text-sm font-bold text-slate-400 tracking-widest uppercase text-center">
-              {activeTab === 'bracket' ? 'World Cup 2026 - Vòng Loại Trực Tiếp' : 'Vòng Bảng - World Cup 2026'}
+              {activeTab === 'bracket' ? 'World Cup 2026 - Nhánh đấu 2 bên đối xứng' : 'Vòng Bảng - World Cup 2026'}
             </p>
           </div>
         </div>
@@ -630,7 +1033,7 @@ const StandingsPage: React.FC = () => {
               {/* Round Selector Tabs */}
               <div className="flex justify-start md:justify-center overflow-x-auto no-scrollbar gap-2 pb-2">
                 {[
-                  { id: 'all', label: 'Tất cả (Sơ đồ)' },
+                  { id: 'all', label: 'Tất cả (Sơ đồ chia 2 bên)' },
                   { id: 'r32', label: 'Vòng 32' },
                   { id: 'r16', label: 'Vòng 16' },
                   { id: 'qf', label: 'Tứ Kết' },
@@ -656,48 +1059,99 @@ const StandingsPage: React.FC = () => {
                   <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : selectedRoundTab === 'all' ? (
-                /* Horizontal Tree bracket layout */
+                /* Horizontal Tree bracket layout: divided symmetric Left-Right */
                 <div className="w-full overflow-x-auto no-scrollbar py-8 px-4 bg-[#111]/60 border border-white/5 rounded-[32px] shadow-2xl">
-                  <div className="flex gap-12 items-stretch min-h-[1600px] w-max select-none">
+                  <div className="flex justify-between items-center gap-6 min-h-[980px] w-max mx-auto select-none py-6">
                     
-                    {/* Vòng 32 */}
-                    <div className="flex flex-col justify-around py-4 gap-4">
-                      <div className="text-center font-black uppercase text-emerald-400 text-xs tracking-wider mb-2 shrink-0 border-b border-emerald-500/20 pb-2">Vòng 32 đội</div>
-                      {knockoutData.r32.map((slot, i) => (
-                        <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} />
-                      ))}
+                    {/* LEFT BRACKET */}
+                    <div className="flex gap-8 items-stretch h-full">
+                      {/* Vòng 32 Left */}
+                      <div className="flex flex-col justify-around h-[920px] gap-2">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Vòng 32 (Trái)</div>
+                        {knockoutData.left.r32.map((slot, i) => (
+                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                        ))}
+                      </div>
+                      
+                      {/* Vòng 16 Left */}
+                      <div className="flex flex-col justify-around h-[920px] gap-2">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Vòng 16 (Trái)</div>
+                        {knockoutData.left.r16.map((slot, i) => (
+                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                        ))}
+                      </div>
+
+                      {/* Tứ kết Left */}
+                      <div className="flex flex-col justify-around h-[920px] gap-2">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Tứ Kết (Trái)</div>
+                        {knockoutData.left.qf.map((slot, i) => (
+                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                        ))}
+                      </div>
+
+                      {/* Bán kết Left */}
+                      <div className="flex flex-col justify-around h-[920px] gap-2">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Bán Kết (Trái)</div>
+                        {knockoutData.left.sf.map((slot, i) => (
+                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                        ))}
+                      </div>
                     </div>
 
-                    {/* Vòng 16 */}
-                    <div className="flex flex-col justify-around py-4 gap-4">
-                      <div className="text-center font-black uppercase text-emerald-400 text-xs tracking-wider mb-2 shrink-0 border-b border-emerald-500/20 pb-2">Vòng 16 đội</div>
-                      {knockoutData.r16.map((slot, i) => (
-                        <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} />
-                      ))}
+                    {/* CENTER COLUMN (TROPHY & FINALS) */}
+                    <div className="flex flex-col justify-center items-center h-[920px] w-[300px] shrink-0 gap-6 relative px-4">
+                      {/* World Cup Trophy Background */}
+                      <div className="absolute inset-0 z-0 opacity-20 flex items-center justify-center pointer-events-none">
+                        <img
+                          src="/world_cup_trophy.png"
+                          alt="Trophy"
+                          className="h-[420px] object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Final Match Card */}
+                      <div className="relative z-10">
+                        <div className="text-center font-black uppercase text-amber-400 text-xs tracking-widest mb-3 animate-pulse">🏆 CHUNG KẾT 🏆</div>
+                        <BracketMatchCard {...knockoutData.final[0]} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} isFinal />
+                      </div>
                     </div>
 
-                    {/* Tứ kết */}
-                    <div className="flex flex-col justify-around py-4 gap-4">
-                      <div className="text-center font-black uppercase text-emerald-400 text-xs tracking-wider mb-2 shrink-0 border-b border-emerald-500/20 pb-2">Tứ Kết</div>
-                      {knockoutData.qf.map((slot, i) => (
-                        <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} />
-                      ))}
-                    </div>
+                    {/* RIGHT BRACKET */}
+                    <div className="flex gap-8 items-stretch h-full">
+                      {/* Bán kết Right */}
+                      <div className="flex flex-col justify-around h-[920px] gap-2">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Bán Kết (Phải)</div>
+                        {knockoutData.right.sf.map((slot, i) => (
+                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                        ))}
+                      </div>
 
-                    {/* Bán kết */}
-                    <div className="flex flex-col justify-around py-4 gap-4">
-                      <div className="text-center font-black uppercase text-emerald-400 text-xs tracking-wider mb-2 shrink-0 border-b border-emerald-500/20 pb-2">Bán Kết</div>
-                      {knockoutData.sf.map((slot, i) => (
-                        <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} />
-                      ))}
-                    </div>
+                      {/* Tứ kết Right */}
+                      <div className="flex flex-col justify-around h-[920px] gap-2">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Tứ Kết (Phải)</div>
+                        {knockoutData.right.qf.map((slot, i) => (
+                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                        ))}
+                      </div>
 
-                    {/* Chung kết */}
-                    <div className="flex flex-col justify-around py-4 gap-4">
-                      <div className="text-center font-black uppercase text-emerald-400 text-xs tracking-wider mb-2 shrink-0 border-b border-emerald-500/20 pb-2">Chung Kết</div>
-                      {knockoutData.final.map((slot, i) => (
-                        <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} />
-                      ))}
+                      {/* Vòng 16 Right */}
+                      <div className="flex flex-col justify-around h-[920px] gap-2">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Vòng 16 (Phải)</div>
+                        {knockoutData.right.r16.map((slot, i) => (
+                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                        ))}
+                      </div>
+
+                      {/* Vòng 32 Right */}
+                      <div className="flex flex-col justify-around h-[920px] gap-2">
+                        <div className="text-center font-black uppercase text-emerald-400 text-[10px] tracking-wider mb-1 shrink-0 border-b border-emerald-500/20 pb-1">Vòng 32 (Phải)</div>
+                        {knockoutData.right.r32.map((slot, i) => (
+                          <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
+                        ))}
+                      </div>
                     </div>
 
                   </div>
@@ -706,7 +1160,7 @@ const StandingsPage: React.FC = () => {
                 /* Focus Round Grid View */
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
                   {getSelectedRoundSlots().map((slot, i) => (
-                    <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} />
+                    <BracketMatchCard key={i} {...slot} onSelectTeam={setSelectedTeam} onUpdateScore={handleUpdateScore} onInsertAndScore={handleInsertAndScore} />
                   ))}
                 </div>
               )}
