@@ -38,6 +38,12 @@ const normalizeForOutright = (name: string): string => {
   return norm;
 };
 
+const isSemiOrFinalMatch = (m?: Match | null): boolean => {
+  if (!m) return false;
+  const lg = (m.league || '').toLowerCase();
+  return lg.includes('bán kết') || lg.includes('chung kết') || lg.includes('semi') || lg.includes('final');
+};
+
 const INACTIVE_USERS: string[] = ['Dien_dc13', 'Hoang_DC13'];
 
 const DC13_TEAMS = [
@@ -813,19 +819,43 @@ const DC13Page: React.FC = () => {
       return;
     }
 
-    const dc13Handicap = Number(match.dc13_handicap || 0);
-    const effectiveScore = (scoreA - scoreB) - dc13Handicap;
+    // Fetch latest match state to get updated commentator column
+    const { data: latestMatch } = await supabase
+      .from('matches')
+      .select('commentator')
+      .eq('id', match.id)
+      .single();
+
+    const isSemiOrFinal = isSemiOrFinalMatch(match);
     const teamAName = match.team_a_name;
     const teamBName = match.team_b_name;
 
+    let winner: 'teamA' | 'teamB' | null = null;
+    let isDrawResult = false;
+
+    if (isSemiOrFinal) {
+      const diff = scoreA - scoreB;
+      if (diff > 0) winner = 'teamA';
+      else if (diff < 0) winner = 'teamB';
+      else if (latestMatch?.commentator === 'teamA') winner = 'teamA';
+      else if (latestMatch?.commentator === 'teamB') winner = 'teamB';
+      else isDrawResult = true; // Temporary fallback if admin didn't set shootout winner yet
+    } else {
+      const dc13Handicap = Number(match.dc13_handicap || 0);
+      const effectiveScore = (scoreA - scoreB) - dc13Handicap;
+      if (effectiveScore > 0) winner = 'teamA';
+      else if (effectiveScore < 0) winner = 'teamB';
+      else isDrawResult = true;
+    }
+
     // Calculate and update bet results in DB (without restricting to 'pending' in case of corrections)
-    if (effectiveScore > 0) {
+    if (winner === 'teamA') {
       await supabase.from('dc13_bets').update({ result: 'win' }).eq('match_id', match.id).in('chosen_team', ['teamA', teamAName]);
       await supabase.from('dc13_bets').update({ result: 'loss' }).eq('match_id', match.id).in('chosen_team', ['teamB', teamBName]);
-    } else if (effectiveScore < 0) {
+    } else if (winner === 'teamB') {
       await supabase.from('dc13_bets').update({ result: 'loss' }).eq('match_id', match.id).in('chosen_team', ['teamA', teamAName]);
       await supabase.from('dc13_bets').update({ result: 'win' }).eq('match_id', match.id).in('chosen_team', ['teamB', teamBName]);
-    } else {
+    } else if (isDrawResult) {
       await supabase.from('dc13_bets').update({ result: 'draw' }).eq('match_id', match.id);
     }
 
@@ -1115,6 +1145,14 @@ const DC13Page: React.FC = () => {
     const scoreB = match.dc13_score_b ?? 0;
     if (status !== 'finished') return null;
 
+    if (isSemiOrFinalMatch(match)) {
+      if (scoreA > scoreB) return 'teamA';
+      if (scoreB > scoreA) return 'teamB';
+      if (match.commentator === 'teamA') return 'teamA';
+      if (match.commentator === 'teamB') return 'teamB';
+      return 'draw'; // Fallback if no shootout winner chosen yet
+    }
+
     const handicap = match.dc13_handicap || 0;
     const effectiveScore = (scoreA - scoreB) - handicap;
     if (effectiveScore > 0) return 'teamA';
@@ -1185,15 +1223,34 @@ const DC13Page: React.FC = () => {
 
       // Dynamic calculation for finished matches with pending bets
       if (effectiveResult === 'pending' && match && (match.dc13_status || 'scheduled') === 'finished') {
-        const diff = (match.dc13_score_a ?? 0) - (match.dc13_score_b ?? 0);
-        const handicap = match.dc13_handicap || 0;
-        const effectiveScore = diff - handicap;
-        if (effectiveScore > 0) {
-          effectiveResult = (bet.chosen_team === 'teamA' || bet.chosen_team === match.team_a_name) ? 'win' : 'loss';
-        } else if (effectiveScore < 0) {
-          effectiveResult = (bet.chosen_team === 'teamB' || bet.chosen_team === match.team_b_name) ? 'win' : 'loss';
+        const scoreA = match.dc13_score_a ?? 0;
+        const scoreB = match.dc13_score_b ?? 0;
+        const diff = scoreA - scoreB;
+
+        if (isSemiOrFinalMatch(match)) {
+          let winner: 'teamA' | 'teamB' | null = null;
+          if (diff > 0) winner = 'teamA';
+          else if (diff < 0) winner = 'teamB';
+          else if (match.commentator === 'teamA') winner = 'teamA';
+          else if (match.commentator === 'teamB') winner = 'teamB';
+
+          if (winner === 'teamA') {
+            effectiveResult = (bet.chosen_team === 'teamA' || bet.chosen_team === match.team_a_name) ? 'win' : 'loss';
+          } else if (winner === 'teamB') {
+            effectiveResult = (bet.chosen_team === 'teamB' || bet.chosen_team === match.team_b_name) ? 'win' : 'loss';
+          } else {
+            effectiveResult = 'draw';
+          }
         } else {
-          effectiveResult = 'draw';
+          const handicap = match.dc13_handicap || 0;
+          const effectiveScore = diff - handicap;
+          if (effectiveScore > 0) {
+            effectiveResult = (bet.chosen_team === 'teamA' || bet.chosen_team === match.team_a_name) ? 'win' : 'loss';
+          } else if (effectiveScore < 0) {
+            effectiveResult = (bet.chosen_team === 'teamB' || bet.chosen_team === match.team_b_name) ? 'win' : 'loss';
+          } else {
+            effectiveResult = 'draw';
+          }
         }
       }
 
@@ -3314,6 +3371,11 @@ const DC13Page: React.FC = () => {
                 <p className="text-[14px] text-slate-400 font-bold text-center">
                   ⚠️ Thua = <span className="text-rose-400 font-black">-{formatVND(PENALTY_AMOUNT)}</span> • Thắng = <span className="text-emerald-400 font-black">0 point</span>
                 </p>
+                {isSemiOrFinalMatch(betMatch) && (
+                  <p className="text-[10px] text-cyan-400 font-black text-center mt-1 uppercase tracking-wider animate-pulse">
+                    👉 Dự đoán đội THẮNG/ĐI TIẾP (Tính cả Hiệp phụ & Pen)
+                  </p>
+                )}
               </div>
             </div>
 
@@ -3329,7 +3391,7 @@ const DC13Page: React.FC = () => {
                   </div>
                 )}
                 <span>
-                  {betMatch.team_a_name} {betMatch.dc13_handicap === 0 || betMatch.dc13_handicap === undefined ? '(0)' : betMatch.dc13_favorite_team === 'teamB' ? `(+${Math.abs(betMatch.dc13_handicap)})` : ''}
+                  {betMatch.team_a_name} {isSemiOrFinalMatch(betMatch) ? '' : (betMatch.dc13_handicap === 0 || betMatch.dc13_handicap === undefined ? '(0)' : betMatch.dc13_favorite_team === 'teamB' ? `(+${Math.abs(betMatch.dc13_handicap)})` : '')}
                 </span>
               </button>
               <button
@@ -3342,7 +3404,7 @@ const DC13Page: React.FC = () => {
                   </div>
                 )}
                 <span>
-                  {betMatch.team_b_name} {betMatch.dc13_handicap === 0 || betMatch.dc13_handicap === undefined ? '(0)' : betMatch.dc13_favorite_team === 'teamA' ? `(+${Math.abs(betMatch.dc13_handicap)})` : ''}
+                  {betMatch.team_b_name} {isSemiOrFinalMatch(betMatch) ? '' : (betMatch.dc13_handicap === 0 || betMatch.dc13_handicap === undefined ? '(0)' : betMatch.dc13_favorite_team === 'teamA' ? `(+${Math.abs(betMatch.dc13_handicap)})` : '')}
                 </span>
               </button>
             </div>
@@ -3406,6 +3468,33 @@ const DC13Page: React.FC = () => {
               {/* Result Preview & Confirm */}
               <div className="space-y-4">
                 {(() => {
+                  const isSemiOrFinal = isSemiOrFinalMatch(resultModal);
+                  if (isSemiOrFinal) {
+                    const diff = resultScoreA - resultScoreB;
+                    let predictedWinnerStr = '';
+                    let predictedWinnerColor = 'text-cyan-400';
+                    if (diff > 0) {
+                      predictedWinnerStr = `${resultModal.team_a_name} đi tiếp (Thắng kèo)`;
+                      predictedWinnerColor = 'text-emerald-400';
+                    } else if (diff < 0) {
+                      predictedWinnerStr = `${resultModal.team_b_name} đi tiếp (Thắng kèo)`;
+                      predictedWinnerColor = 'text-emerald-400';
+                    } else {
+                      predictedWinnerStr = 'Hòa - Cần chọn đội đi tiếp trên Sơ đồ thi đấu';
+                      predictedWinnerColor = 'text-amber-400 font-bold';
+                    }
+
+                    return (
+                      <div className="p-4 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition-all text-center bg-slate-900/50 border-white/5">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kèo trận đấu</p>
+                        <p className="text-xs font-bold text-white">Đi tiếp (Không chấp)</p>
+                        <div className="w-full border-t border-white/5 my-1.5" />
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kết quả dự kiến</p>
+                        <p className={`text-sm font-black uppercase tracking-tight ${predictedWinnerColor}`}>{predictedWinnerStr}</p>
+                      </div>
+                    );
+                  }
+
                   const handicapVal = resultModal.dc13_handicap || 0;
                   const favoriteTeamName = handicapVal > 0 ? resultModal.team_a_name : (handicapVal < 0 ? resultModal.team_b_name : '');
                   const handicapText = handicapVal === 0 ? 'Đồng banh (0)' : `${favoriteTeamName} chấp ${Math.abs(handicapVal)}`;
