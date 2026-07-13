@@ -1191,9 +1191,14 @@ const DC13Page: React.FC = () => {
               }
             }
 
-            // Determine underdog team
-            const favorite = match.dc13_favorite_team || 'teamA';
-            const underdogTeamName = favorite === 'teamA' ? match.team_b_name : match.team_a_name;
+            // Determine default team for forgotten bets
+            let defaultTeamName = '';
+            if (isSemiOrFinalMatch(match)) {
+              defaultTeamName = match.team_b_name; // Default to the team on the right (Team B)
+            } else {
+              const favorite = match.dc13_favorite_team || 'teamA';
+              defaultTeamName = favorite === 'teamA' ? match.team_b_name : match.team_a_name;
+            }
 
             // Add virtual bet
             list.push({
@@ -1201,7 +1206,7 @@ const DC13Page: React.FC = () => {
               match_id: match.id,
               user_id: profile.id,
               user_name: profile.full_name,
-              chosen_team: underdogTeamName,
+              chosen_team: defaultTeamName,
               result: 'pending', // Will be calculated dynamically if finished
               created_at: match.start_time,
               isVirtual: true
@@ -2609,7 +2614,7 @@ const DC13Page: React.FC = () => {
                       </p>
                     </div>
                     <div className="text-[12px] text-amber-400 font-bold border-t border-white/5 pt-2.5 mt-3 leading-relaxed">
-                      ⚠️ Luật bổ sung (từ 18:00 ngày 15/06/2026): Nếu quên bet/không chọn đội trước giờ khóa, hệ thống sẽ tự động xếp bạn vào cửa đội kèo dưới (được chấp).
+                      ⚠️ Luật bổ sung (từ 18:00 ngày 15/06/2026): Nếu quên bet/không chọn đội trước giờ khóa, hệ thống sẽ tự động xếp bạn vào cửa đội kèo dưới (được chấp). Riêng từ vòng Bán Kết, hệ thống mặc định chọn đội bên phải.
                     </div>
                   </div>
                   <div className="bg-slate-900/40 border border-white/[0.04] rounded-2xl p-4 hover:border-rose-500/20 transition-all duration-300 shadow-sm">
@@ -3352,7 +3357,7 @@ const DC13Page: React.FC = () => {
               <div className="flex gap-3 items-start border-t border-white/5 pt-4">
                 <span className="text-rose-400 text-lg">⚠️</span>
                 <p className="text-sm text-slate-300 leading-relaxed font-semibold">
-                  Nếu người chơi <span className="text-rose-400 font-black">quên không bet</span> hoặc <span className="text-rose-400 font-black">không chọn kèo</span> trước thời điểm đóng  (30 phút trước giờ bóng lăn), hệ thống sẽ <span className="text-cyan-400 font-black">tự động xếp người chơi đó vào cửa đội kèo dưới (đội được chấp)</span> cho trận đấu đó.
+                  Nếu người chơi <span className="text-rose-400 font-black">quên không bet</span> hoặc <span className="text-rose-400 font-black">không chọn kèo</span> trước thời điểm đóng (30 phút trước giờ bóng lăn), hệ thống sẽ <span className="text-cyan-400 font-black">tự động xếp người chơi đó vào cửa đội kèo dưới (đội được chấp)</span> cho trận đấu đó. Riêng từ vòng Bán Kết, hệ thống mặc định chọn đội bên phải.
                 </p>
               </div>
             </div>
