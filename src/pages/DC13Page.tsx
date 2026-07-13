@@ -38,7 +38,7 @@ const normalizeForOutright = (name: string): string => {
   return norm;
 };
 
-const isSemiOrFinalMatch = (m?: Match | null): boolean => {
+const isSemiOrFinalMatch = (m?: Match | Partial<Match> | null): boolean => {
   if (!m) return false;
   const lg = (m.league || '').toLowerCase();
   return lg.includes('bán kết') || lg.includes('chung kết') || lg.includes('semi') || lg.includes('final');
@@ -1627,6 +1627,8 @@ const DC13Page: React.FC = () => {
                             <div className="mt-1.5">
                               {!match.dc13_handicap_set ? (
                                 <span className="text-[9px] font-black text-rose-500/80 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/10 uppercase tracking-widest">Chưa có kèo</span>
+                              ) : isSemiOrFinalMatch(match) ? (
+                                <span className="text-[9px] font-black text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 uppercase tracking-widest">Đi tiếp</span>
                               ) : match.dc13_handicap === 0 || match.dc13_handicap === undefined ? (
                                 <span className="text-[9px] font-black text-slate-500 bg-white/5 px-2 py-0.5 rounded border border-white/5 uppercase tracking-widest">Đồng banh</span>
                               ) : match.dc13_favorite_team === 'teamB' ? (
@@ -1670,6 +1672,8 @@ const DC13Page: React.FC = () => {
                             <div className="mt-1.5">
                               {!match.dc13_handicap_set ? (
                                 <span className="text-[9px] font-black text-rose-500/80 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/10 uppercase tracking-widest">Chưa có kèo</span>
+                              ) : isSemiOrFinalMatch(match) ? (
+                                <span className="text-[9px] font-black text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 uppercase tracking-widest">Đi tiếp</span>
                               ) : match.dc13_handicap === 0 || match.dc13_handicap === undefined ? (
                                 <span className="text-[9px] font-black text-slate-500 bg-white/5 px-2 py-0.5 rounded border border-white/5 uppercase tracking-widest">Đồng banh</span>
                               ) : match.dc13_favorite_team === 'teamA' ? (
@@ -1731,15 +1735,33 @@ const DC13Page: React.FC = () => {
                           {myBet && (() => {
                             let effRes = myBet.result;
                             if (effRes === 'pending' && (match.dc13_status || 'scheduled') === 'finished') {
-                              const diff = (match.dc13_score_a ?? 0) - (match.dc13_score_b ?? 0);
-                              const handicap = match.dc13_handicap || 0;
-                              const effectiveScore = diff - handicap;
-                              if (effectiveScore > 0) {
-                                effRes = (myBet.chosen_team === 'teamA' || myBet.chosen_team === match.team_a_name) ? 'win' : 'loss';
-                              } else if (effectiveScore < 0) {
-                                effRes = (myBet.chosen_team === 'teamB' || myBet.chosen_team === match.team_b_name) ? 'win' : 'loss';
+                              const scoreA = match.dc13_score_a ?? 0;
+                              const scoreB = match.dc13_score_b ?? 0;
+                              const diff = scoreA - scoreB;
+                              if (isSemiOrFinalMatch(match)) {
+                                let winner: 'teamA' | 'teamB' | null = null;
+                                if (diff > 0) winner = 'teamA';
+                                else if (diff < 0) winner = 'teamB';
+                                else if (match.commentator === 'teamA') winner = 'teamA';
+                                else if (match.commentator === 'teamB') winner = 'teamB';
+
+                                if (winner === 'teamA') {
+                                  effRes = (myBet.chosen_team === 'teamA' || myBet.chosen_team === match.team_a_name) ? 'win' : 'loss';
+                                } else if (winner === 'teamB') {
+                                  effRes = (myBet.chosen_team === 'teamB' || myBet.chosen_team === match.team_b_name) ? 'win' : 'loss';
+                                } else {
+                                  effRes = 'draw';
+                                }
                               } else {
-                                effRes = 'draw';
+                                const handicap = match.dc13_handicap || 0;
+                                const effectiveScore = diff - handicap;
+                                if (effectiveScore > 0) {
+                                  effRes = (myBet.chosen_team === 'teamA' || myBet.chosen_team === match.team_a_name) ? 'win' : 'loss';
+                                } else if (effectiveScore < 0) {
+                                  effRes = (myBet.chosen_team === 'teamB' || myBet.chosen_team === match.team_b_name) ? 'win' : 'loss';
+                                } else {
+                                  effRes = 'draw';
+                                }
                               }
                             }
 
@@ -2832,55 +2854,61 @@ const DC13Page: React.FC = () => {
                         </div>
                         <div className="col-span-1 md:col-span-2">
                           <label className={labelCls}>Kèo DC13</label>
-                          <select
-                            className={inputCls}
-                            value={dc13KeoType}
-                            onChange={e => {
-                              if (!editingMatch) return;
-                              const val = e.target.value as 'unset' | 'draw' | 'handicap';
-                              setDc13KeoType(val);
-                              if (val === 'unset') {
-                                setHandicapInputA('');
-                                setHandicapInputB('');
-                                setEditingMatch({
-                                  ...editingMatch,
-                                  dc13_handicap_set: false,
-                                  dc13_handicap: 0,
-                                  dc13_favorite_team: 'teamA'
-                                });
-                              } else if (val === 'draw') {
-                                setHandicapInputA('');
-                                setHandicapInputB('');
-                                setEditingMatch({
-                                  ...editingMatch,
-                                  dc13_handicap_set: true,
-                                  dc13_handicap: 0,
-                                  dc13_favorite_team: 'teamA'
-                                });
-                              } else {
-                                const initialHandicap = editingMatch.dc13_handicap || 0.5;
-                                if (initialHandicap < 0 || editingMatch.dc13_favorite_team === 'teamB') {
-                                  setHandicapInputA(String(Math.abs(initialHandicap)));
-                                  setHandicapInputB('');
-                                } else {
+                          {isSemiOrFinalMatch(editingMatch) ? (
+                            <div className="p-3 bg-cyan-950/20 border border-cyan-500/30 rounded-2xl text-xs font-black text-cyan-400">
+                              ℹ️ Vòng Bán Kết/Chung Kết mặc định chọn đội đi tiếp (Không chấp)
+                            </div>
+                          ) : (
+                            <select
+                              className={inputCls}
+                              value={dc13KeoType}
+                              onChange={e => {
+                                if (!editingMatch) return;
+                                const val = e.target.value as 'unset' | 'draw' | 'handicap';
+                                setDc13KeoType(val);
+                                if (val === 'unset') {
                                   setHandicapInputA('');
-                                  setHandicapInputB(String(Math.abs(initialHandicap)));
+                                  setHandicapInputB('');
+                                  setEditingMatch({
+                                    ...editingMatch,
+                                    dc13_handicap_set: false,
+                                    dc13_handicap: 0,
+                                    dc13_favorite_team: 'teamA'
+                                  });
+                                } else if (val === 'draw') {
+                                  setHandicapInputA('');
+                                  setHandicapInputB('');
+                                  setEditingMatch({
+                                    ...editingMatch,
+                                    dc13_handicap_set: true,
+                                    dc13_handicap: 0,
+                                    dc13_favorite_team: 'teamA'
+                                  });
+                                } else {
+                                  const initialHandicap = editingMatch.dc13_handicap || 0.5;
+                                  if (initialHandicap < 0 || editingMatch.dc13_favorite_team === 'teamB') {
+                                    setHandicapInputA(String(Math.abs(initialHandicap)));
+                                    setHandicapInputB('');
+                                  } else {
+                                    setHandicapInputA('');
+                                    setHandicapInputB(String(Math.abs(initialHandicap)));
+                                  }
+                                  setEditingMatch({
+                                    ...editingMatch,
+                                    dc13_handicap_set: true,
+                                    dc13_handicap: initialHandicap,
+                                    dc13_favorite_team: editingMatch.dc13_favorite_team || 'teamA'
+                                  });
                                 }
-                                setEditingMatch({
-                                  ...editingMatch,
-                                  dc13_handicap_set: true,
-                                  dc13_handicap: initialHandicap,
-                                  dc13_favorite_team: editingMatch.dc13_favorite_team || 'teamA'
-                                });
-                              }
-                            }}
-                          >
-                            <option value="unset">🔴 Chưa set kèo (Khóa )</option>
-                            <option value="draw">🤝 Đồng banh (0)</option>
-                            <option value="handicap">⚽ Có kèo chấp (Nhập tỷ lệ)</option>
-                          </select>
+                              }}
+                            >
+                              <option value="unset">🔴 Chưa set kèo (Khóa )</option>
+                              <option value="draw">🤝 Đồng banh (0)</option>
+                              <option value="handicap">⚽ Có kèo chấp (Nhập tỷ lệ)</option>
+                            </select>
+                          )}
                         </div>
-                        {dc13KeoType === 'handicap' && (
+                        {!isSemiOrFinalMatch(editingMatch) && dc13KeoType === 'handicap' && (
                           <>
                             <div>
                               <label className={labelCls}>Kèo được chấp - {editingMatch?.team_a_name || 'Đội A'}</label>
