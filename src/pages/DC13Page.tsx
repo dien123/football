@@ -41,7 +41,7 @@ const normalizeForOutright = (name: string): string => {
 const isSemiOrFinalMatch = (m?: Match | Partial<Match> | null): boolean => {
   if (!m) return false;
   const lg = (m.league || '').toLowerCase();
-  return lg.includes('bán kết') || lg.includes('chung kết') || lg.includes('semi') || lg.includes('final');
+  return lg.includes('bán kết') || lg.includes('chung kết') || lg.includes('semi') || lg.includes('final') || lg.includes('hạng ba') || lg.includes('third') || lg.includes('play-off');
 };
 
 const INACTIVE_USERS: string[] = ['Dien_dc13', 'Hoang_DC13'];
