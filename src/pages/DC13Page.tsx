@@ -44,6 +44,18 @@ const isSemiOrFinalMatch = (m?: Match | Partial<Match> | null): boolean => {
   return lg.includes('bán kết') || lg.includes('chung kết') || lg.includes('semi') || lg.includes('final') || lg.includes('hạng ba') || lg.includes('third') || lg.includes('play-off');
 };
 
+const getMatchBadgeLabel = (m?: Match | Partial<Match> | null): string => {
+  if (!m) return 'Đi tiếp';
+  const lg = (m.league || '').toLowerCase();
+  if (lg.includes('hạng ba') || lg.includes('third') || lg.includes('play-off')) {
+    return 'Hạng 3';
+  }
+  if (lg.includes('chung kết') || lg.includes('final')) {
+    return 'Vô địch';
+  }
+  return 'Đi tiếp';
+};
+
 const INACTIVE_USERS: string[] = ['Dien_dc13', 'Hoang_DC13'];
 
 const DC13_TEAMS = [
@@ -1633,7 +1645,7 @@ const DC13Page: React.FC = () => {
                               {!match.dc13_handicap_set ? (
                                 <span className="text-[9px] font-black text-rose-500/80 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/10 uppercase tracking-widest">Chưa có kèo</span>
                               ) : isSemiOrFinalMatch(match) ? (
-                                <span className="text-[9px] font-black text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 uppercase tracking-widest">Đi tiếp</span>
+                                <span className="text-[9px] font-black text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 uppercase tracking-widest">{getMatchBadgeLabel(match)}</span>
                               ) : match.dc13_handicap === 0 || match.dc13_handicap === undefined ? (
                                 <span className="text-[9px] font-black text-slate-500 bg-white/5 px-2 py-0.5 rounded border border-white/5 uppercase tracking-widest">Đồng banh</span>
                               ) : match.dc13_favorite_team === 'teamB' ? (
@@ -1678,7 +1690,7 @@ const DC13Page: React.FC = () => {
                               {!match.dc13_handicap_set ? (
                                 <span className="text-[9px] font-black text-rose-500/80 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/10 uppercase tracking-widest">Chưa có kèo</span>
                               ) : isSemiOrFinalMatch(match) ? (
-                                <span className="text-[9px] font-black text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 uppercase tracking-widest">Đi tiếp</span>
+                                <span className="text-[9px] font-black text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 uppercase tracking-widest">{getMatchBadgeLabel(match)}</span>
                               ) : match.dc13_handicap === 0 || match.dc13_handicap === undefined ? (
                                 <span className="text-[9px] font-black text-slate-500 bg-white/5 px-2 py-0.5 rounded border border-white/5 uppercase tracking-widest">Đồng banh</span>
                               ) : match.dc13_favorite_team === 'teamA' ? (
@@ -2861,7 +2873,7 @@ const DC13Page: React.FC = () => {
                           <label className={labelCls}>Kèo DC13</label>
                           {isSemiOrFinalMatch(editingMatch) ? (
                             <div className="p-3 bg-cyan-950/20 border border-cyan-500/30 rounded-2xl text-xs font-black text-cyan-400">
-                              ℹ️ Vòng Bán Kết/Chung Kết mặc định chọn đội đi tiếp (Không chấp)
+                              ℹ️ Trận đấu mặc định chọn đội thắng (Không chấp)
                             </div>
                           ) : (
                             <select
@@ -3406,7 +3418,7 @@ const DC13Page: React.FC = () => {
                 </p>
                 {isSemiOrFinalMatch(betMatch) && (
                   <p className="text-[10px] text-cyan-400 font-black text-center mt-1 uppercase tracking-wider animate-pulse">
-                    👉 Dự đoán đội THẮNG/ĐI TIẾP (Tính cả Hiệp phụ & Pen)
+                    👉 Dự đoán đội {getMatchBadgeLabel(betMatch).toUpperCase()} (Tính cả Hiệp phụ & Pen)
                   </p>
                 )}
               </div>
@@ -3504,23 +3516,24 @@ const DC13Page: React.FC = () => {
                   const isSemiOrFinal = isSemiOrFinalMatch(resultModal);
                   if (isSemiOrFinal) {
                     const diff = resultScoreA - resultScoreB;
+                    const badgeLabel = getMatchBadgeLabel(resultModal);
                     let predictedWinnerStr = '';
                     let predictedWinnerColor = 'text-cyan-400';
                     if (diff > 0) {
-                      predictedWinnerStr = `${resultModal.team_a_name} đi tiếp (Thắng kèo)`;
+                      predictedWinnerStr = `${resultModal.team_a_name} ${badgeLabel.toLowerCase()} (Thắng kèo)`;
                       predictedWinnerColor = 'text-emerald-400';
                     } else if (diff < 0) {
-                      predictedWinnerStr = `${resultModal.team_b_name} đi tiếp (Thắng kèo)`;
+                      predictedWinnerStr = `${resultModal.team_b_name} ${badgeLabel.toLowerCase()} (Thắng kèo)`;
                       predictedWinnerColor = 'text-emerald-400';
                     } else {
-                      predictedWinnerStr = 'Hòa - Cần chọn đội đi tiếp trên Sơ đồ thi đấu';
+                      predictedWinnerStr = `Hòa - Cần chọn đội ${badgeLabel.toLowerCase()} trên Sơ đồ thi đấu`;
                       predictedWinnerColor = 'text-amber-400 font-bold';
                     }
 
                     return (
                       <div className="p-4 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition-all text-center bg-slate-900/50 border-white/5">
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kèo trận đấu</p>
-                        <p className="text-xs font-bold text-white">Đi tiếp (Không chấp)</p>
+                        <p className="text-xs font-bold text-white">{badgeLabel} (Không chấp)</p>
                         <div className="w-full border-t border-white/5 my-1.5" />
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kết quả dự kiến</p>
                         <p className={`text-sm font-black uppercase tracking-tight ${predictedWinnerColor}`}>{predictedWinnerStr}</p>
